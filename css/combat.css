@@ -3,11 +3,26 @@
 .combat-wrap {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.combat-wrap > .row {
+  flex-shrink: 0;
+}
+
+.combat-wrap h2 {
+  font-size: 1.1rem;
 }
 
 #combat-canvas {
   width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  height: auto;
   background: #1a1612;
   border: 3px solid var(--ink);
   display: block;
@@ -15,17 +30,22 @@
   box-shadow: var(--shadow-stamp);
 }
 
+body.play-fit #combat-canvas {
+  /* canvas height driven by flex parent via JS resize using parent clientHeight */
+}
+
 .combat-hud {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .combat-hud .stat {
   border: 2px solid var(--ink);
   background: var(--bone);
-  padding: 10px;
-  font-size: 0.8rem;
+  padding: 6px 8px;
+  font-size: 0.72rem;
   font-weight: 600;
   box-shadow: var(--shadow-stamp);
 }
@@ -33,38 +53,44 @@
 .combat-hud .stat b {
   display: block;
   font-family: var(--font-display);
-  font-size: 1.05rem;
-  margin-top: 2px;
+  font-size: 0.95rem;
+  margin-top: 1px;
 }
 
 .spell-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .spell-row button {
-  font-size: 0.82rem;
-  line-height: 1.25;
+  font-size: 0.75rem;
+  line-height: 1.2;
   font-weight: 700;
   text-align: left;
+  min-height: 44px;
+  padding: 6px 8px;
 }
 
 .spell-row button small {
   display: block;
   color: var(--muted);
   font-weight: 500;
-  margin-top: 2px;
-  font-size: 0.7rem;
+  margin-top: 1px;
+  font-size: 0.62rem;
 }
 
 .combat-controls {
   display: flex;
-  gap: 8px;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .combat-controls button {
   flex: 1;
+  min-height: 38px;
+  padding: 0.4rem 0.5rem;
 }
 
 .reward-stage {

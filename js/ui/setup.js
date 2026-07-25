@@ -121,28 +121,31 @@ export function renderSetup(root, ctx) {
 
     root.innerHTML = `
       <div class="setup-layout">
-        <div class="row spread">
+        <div class="setup-top">
           <div>
-            <p class="section-label" style="margin:0">Setup</p>
-            <h2 style="margin:0">Xếp trận</h2>
+            <p class="section-label">Setup</p>
+            <h2>Xếp trận</h2>
           </div>
           <button type="button" class="ghost" id="btn-scout">← Trinh sát</button>
         </div>
         <div class="room-tabs">${tabs}</div>
         <div class="room-board">
-          <div class="row spread">
-            <strong>${room.name}</strong>
-            <span class="muted" style="font-size:0.8rem">${TERRAIN_LABELS[room.terrain]}</span>
+          <div class="board-meta">
+            <div class="row spread">
+              <strong>${room.name}</strong>
+              <span class="muted" style="font-size:0.72rem">${TERRAIN_LABELS[room.terrain]} · ${used}/${room.costCap}</span>
+            </div>
+            <div class="cost-bar"><span class="${costPct > 90 ? 'hot' : ''}" style="width:${costPct}%"></span></div>
           </div>
-          <div class="cost-bar"><span class="${costPct > 90 ? 'hot' : ''}" style="width:${costPct}%"></span></div>
-          <div class="muted" style="font-size:0.8rem">Cost ${used}/${room.costCap} · Chạm ô để thả / gỡ</div>
-          <div class="grid-board" style="grid-template-columns:repeat(${room.cols},1fr)">${cells.join('')}</div>
+          <div class="grid-board" style="grid-template-columns:repeat(${room.cols},minmax(0,1fr));grid-template-rows:repeat(${room.rows},minmax(0,1fr))">${cells.join('')}</div>
         </div>
-        <p class="section-label">Kho run</p>
-        <div class="monster-tray">${tray || '<span class="muted">Hết quái — quay gacha</span>'}</div>
-        <div class="setup-footer">
-          <button type="button" id="btn-clear">Xóa phòng</button>
-          <button type="button" class="primary" id="btn-start">START</button>
+        <div class="setup-bottom">
+          <p class="section-label">Kho run · chọn quái rồi chạm ô</p>
+          <div class="monster-tray">${tray || '<span class="muted">Hết quái — quay gacha</span>'}</div>
+          <div class="setup-footer">
+            <button type="button" id="btn-clear">Xóa phòng</button>
+            <button type="button" class="primary" id="btn-start">START</button>
+          </div>
         </div>
       </div>
     `;

@@ -134,9 +134,18 @@ export class CombatEngine {
 
   _resize() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const parent = this.canvas.parentElement;
-    const cssW = parent ? parent.clientWidth : window.innerWidth;
-    const cssH = Math.min(window.innerHeight * 0.55, 420);
+    const wrap = this.canvas.closest('.combat-wrap') || this.canvas.parentElement;
+    const cssW = wrap ? wrap.clientWidth : window.innerWidth;
+    // Chiều cao còn lại trong combat-wrap (đã trừ HUD/nút)
+    let cssH = 220;
+    if (wrap) {
+      const used = [...wrap.children].reduce((sum, el) => {
+        if (el === this.canvas) return sum;
+        return sum + el.getBoundingClientRect().height;
+      }, 0);
+      const gap = 6 * Math.max(0, wrap.children.length - 1);
+      cssH = Math.max(160, wrap.clientHeight - used - gap);
+    }
     this.canvas.style.width = cssW + 'px';
     this.canvas.style.height = cssH + 'px';
     this.canvas.width = Math.floor(cssW * dpr);

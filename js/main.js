@@ -162,12 +162,25 @@ function go(name) {
   navDock.style.display =
     name === 'combat' || name === 'reward' || name === 'setup' ? 'none' : '';
 
-  showTipBanner(tipSlot, name, state, {
-    onDismiss: () => saveState(state),
-  });
+  const playFit = name === 'setup' || name === 'combat' || name === 'scout' || name === 'reward';
+  document.body.classList.toggle('play-fit', playFit);
+
+  if (!playFit) {
+    showTipBanner(tipSlot, name, state, {
+      onDismiss: () => saveState(state),
+    });
+  } else {
+    tipSlot.innerHTML = '';
+  }
 
   refreshChrome();
   renderScreen(name);
+
+  if (name === 'combat') {
+    requestAnimationFrame(() => {
+      window.dispatchEvent(new Event('resize'));
+    });
+  }
 }
 
 function renderScreen(name) {
