@@ -1,0 +1,133 @@
+/* Combat + Reward */
+
+.combat-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#combat-canvas {
+  width: 100%;
+  background: #1a1612;
+  border: 3px solid var(--ink);
+  display: block;
+  touch-action: none;
+  box-shadow: var(--shadow-stamp);
+}
+
+.combat-hud {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.combat-hud .stat {
+  border: 2px solid var(--ink);
+  background: var(--bone);
+  padding: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-stamp);
+}
+
+.combat-hud .stat b {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  margin-top: 2px;
+}
+
+.spell-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.spell-row button {
+  font-size: 0.82rem;
+  line-height: 1.25;
+  font-weight: 700;
+  text-align: left;
+}
+
+.spell-row button small {
+  display: block;
+  color: var(--muted);
+  font-weight: 500;
+  margin-top: 2px;
+  font-size: 0.7rem;
+}
+
+.combat-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.combat-controls button {
+  flex: 1;
+}
+
+.reward-stage {
+  text-align: center;
+  padding: 28px 12px 16px;
+  min-height: 50vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.reward-stage .seal-mark {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 3px solid var(--ink);
+  background: var(--seal);
+  color: var(--bone);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+  animation: stampIn 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: var(--shadow-stamp);
+}
+
+.reward-stage.lose .seal-mark {
+  background: var(--ink);
+}
+
+.reward-stage.clear .seal-mark {
+  background: var(--brass);
+  width: 88px;
+  height: 88px;
+  font-size: 1.1rem;
+}
+
+.reward-stage h2 {
+  font-size: clamp(1.8rem, 7vw, 2.4rem);
+  margin-bottom: 8px;
+}
+
+.reward-stage .big-num {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--seal);
+  margin: 12px 0 4px;
+}
+
+.reward-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 280px;
+  margin-top: 20px;
+}
+
+.reward-actions button {
+  width: 100%;
+}

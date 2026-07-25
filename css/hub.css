@@ -1,0 +1,234 @@
+/* Hub — brand-first vault lobby */
+
+.hub-stage {
+  position: relative;
+  min-height: min(52vh, 420px);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 8px 0 20px;
+  margin: -4px -4px 8px;
+}
+
+.hub-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0 -20px auto;
+  height: 70%;
+  background:
+    radial-gradient(ellipse 55% 70% at 70% 40%, rgba(196, 60, 40, 0.22), transparent 60%),
+    radial-gradient(ellipse 40% 50% at 20% 70%, rgba(47, 111, 94, 0.18), transparent 55%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hub-gate {
+  position: absolute;
+  top: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(220px, 70%);
+  aspect-ratio: 4/5;
+  z-index: 0;
+  opacity: 0.9;
+  animation: gateBob 5s ease-in-out infinite;
+}
+
+@keyframes gateBob {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-6px); }
+}
+
+.hub-gate svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.hub-brand {
+  position: relative;
+  z-index: 1;
+  text-align: left;
+}
+
+.hub-brand .kicker {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--seal);
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.hub-brand h1 {
+  margin: 0 0 10px;
+  max-width: 12ch;
+}
+
+.hub-brand .tagline {
+  color: var(--ink-soft);
+  font-size: 1rem;
+  line-height: 1.4;
+  max-width: 28ch;
+  margin: 0 0 16px;
+}
+
+.hub-cta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  z-index: 1;
+}
+
+.hub-cta .primary.big {
+  min-height: 56px;
+  font-size: 1.05rem;
+  width: 100%;
+}
+
+.hub-meta {
+  display: flex;
+  gap: 16px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1.5px dashed var(--line-strong);
+  font-size: 0.85rem;
+}
+
+.hub-meta strong {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  display: block;
+  color: var(--ink);
+}
+
+.hub-meta span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.hub-secondary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.hub-secondary button {
+  min-height: 48px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* Desktop hub: brand + CTA | upgrades side-by-side */
+@media (min-width: 1024px) {
+  .hub-layout {
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 28px;
+    align-items: start;
+  }
+
+  .hub-stage {
+    min-height: min(58vh, 520px);
+    margin: 0;
+  }
+
+  .hub-brand h1 {
+    max-width: 14ch;
+    font-size: clamp(2.4rem, 4vw, 3.2rem);
+  }
+
+  .hub-gate {
+    width: min(260px, 55%);
+  }
+
+  .hub-side .section-label {
+    margin-top: 0;
+  }
+}
+
+.upgrade-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 2px solid var(--ink);
+  background: var(--bone);
+  box-shadow: var(--shadow-stamp);
+}
+
+.upgrade-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.upgrade-item:last-child {
+  border-bottom: none;
+}
+
+.upgrade-item .meta {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.upgrade-item button {
+  flex-shrink: 0;
+  min-height: 40px;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.how-inline {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+.how-inline button {
+  margin-left: 4px;
+}
+
+.economy-guide {
+  border: 2px solid var(--ink);
+  background: var(--bone);
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow-stamp);
+}
+
+.economy-guide h3 {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+}
+
+.economy-guide ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.economy-guide li {
+  margin-bottom: 4px;
+}
+
+.economy-zero {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  background: rgba(196, 60, 40, 0.1);
+  border: 1.5px dashed var(--seal);
+  font-size: 0.8rem;
+  color: var(--seal-deep);
+  font-weight: 600;
+  line-height: 1.35;
+}

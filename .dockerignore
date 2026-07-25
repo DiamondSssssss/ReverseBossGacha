@@ -1,0 +1,11 @@
+.git
+.github
+.gitignore
+.dockerignore
+DEPLOY.md
+README.md
+nginx
+supabase
+**/.DS_Store
+.env
+.env.*

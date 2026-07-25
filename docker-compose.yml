@@ -1,0 +1,6 @@
+services:
+  bossgacha-client:
+    image: ${DOCKERHUB_USER}/bossgacha-frontend:latest
+    ports:
+      - "25568:80"
+    restart: always

@@ -1,0 +1,332 @@
+/* Gacha + Collection */
+
+.gacha-hero {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.gacha-hero h2 {
+  font-size: clamp(1.8rem, 7vw, 2.3rem);
+}
+
+.gacha-stage {
+  position: relative;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 12px 0 16px;
+  border: 3px solid var(--ink);
+  background:
+    radial-gradient(circle at 50% 45%, rgba(196, 60, 40, 0.2), transparent 55%),
+    var(--bg-deep);
+  box-shadow: var(--shadow-stamp);
+  overflow: hidden;
+}
+
+.gacha-stage::after {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  border: 1px dashed var(--line-strong);
+  pointer-events: none;
+}
+
+.gacha-orb {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 3px solid var(--ink);
+  background:
+    radial-gradient(circle at 32% 28%, #fff8, transparent 40%),
+    radial-gradient(circle at 50% 50%, #e8c46a, #c43c28 55%, #5a1a12);
+  position: relative;
+  z-index: 1;
+  animation: orbFloat 3.2s ease-in-out infinite;
+}
+
+.gacha-orb.spin {
+  animation: orbPull 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes orbFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-8px) scale(1.03); }
+}
+
+@keyframes orbPull {
+  0% { transform: scale(1) rotate(0deg); }
+  40% { transform: scale(1.2) rotate(160deg); }
+  100% { transform: scale(1) rotate(360deg); }
+}
+
+.pity-wrap {
+  margin-bottom: 14px;
+}
+
+.pity-wrap .row {
+  font-size: 0.82rem;
+  margin-bottom: 6px;
+}
+
+.pity-bar {
+  height: 10px;
+  background: var(--stone);
+  border: 2px solid var(--ink);
+  overflow: hidden;
+}
+
+.pity-bar > span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--moss), var(--brass), var(--seal));
+  width: 0%;
+  transition: width 0.35s ease;
+}
+
+.pull-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.pull-results {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 16px;
+}
+
+@media (min-width: 720px) {
+  .pull-results {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .pull-results {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+.pull-card {
+  padding: 12px 10px;
+  border: 2px solid var(--ink);
+  background: var(--bone);
+  text-align: center;
+  box-shadow: var(--shadow-stamp);
+  animation: stampIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.pull-card.r5 {
+  background: #1a1612;
+  color: var(--bone);
+  border-color: var(--brass);
+}
+
+.pull-card.r5 .muted {
+  color: rgba(247, 241, 230, 0.65);
+}
+
+@keyframes stampIn {
+  from { opacity: 0; transform: scale(0.88) rotate(-2deg); }
+  to { opacity: 1; transform: none; }
+}
+
+.collection-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+@media (min-width: 380px) {
+  .collection-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 720px) {
+  .collection-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .collection-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+}
+
+.collection-head {
+  margin-bottom: 10px;
+}
+
+.collection-head h2 {
+  margin-bottom: 4px;
+}
+
+.collection-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 2px solid var(--ink);
+  background: var(--bone);
+  box-shadow: var(--shadow-stamp);
+}
+
+.filter-search input {
+  width: 100%;
+  font: inherit;
+  padding: 10px 12px;
+  border: 2px solid var(--ink);
+  background: var(--bg);
+  color: var(--ink);
+  border-radius: var(--radius);
+  min-height: 44px;
+}
+
+.filter-search input:focus {
+  outline: 2px solid var(--seal);
+  outline-offset: 1px;
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.filter-row-scroll {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.filter-chip {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  box-shadow: none;
+  background: var(--bg);
+  border-width: 1.5px;
+}
+
+.filter-chip.active {
+  background: var(--ink);
+  color: var(--bone);
+  border-color: var(--ink);
+}
+
+.filter-sort {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.filter-sort select {
+  flex: 1;
+  font: inherit;
+  padding: 8px 10px;
+  border: 2px solid var(--ink);
+  background: var(--bg);
+  border-radius: var(--radius);
+  min-height: 40px;
+}
+
+.collection-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 28px 12px;
+  border: 2px dashed var(--line-strong);
+}
+
+.rarity-tag {
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  font-family: var(--font-body);
+}
+
+@media (min-width: 1024px) {
+  .collection-filters {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 10px 14px;
+    align-items: start;
+  }
+
+  .filter-search {
+    grid-column: 1 / -1;
+  }
+
+  .filter-sort {
+    grid-column: 1 / -1;
+  }
+}
+
+.monster-card {
+  border: 2px solid var(--ink);
+  background: var(--bone);
+  padding: 0;
+  overflow: hidden;
+  box-shadow: var(--shadow-stamp);
+  display: flex;
+  flex-direction: column;
+}
+
+.monster-card .swatch {
+  height: 56px;
+  border-bottom: 2px solid var(--ink);
+  position: relative;
+}
+
+.monster-card .swatch::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 40%, rgba(26, 22, 18, 0.15));
+}
+
+.monster-card .body {
+  padding: 10px 12px 12px;
+}
+
+.monster-card .name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.2;
+}
+
+.monster-card .desc {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 4px;
+  line-height: 1.35;
+}
+
+.monster-card .count {
+  margin-top: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--moss);
+}
+
+.monster-card.locked {
+  opacity: 0.45;
+  filter: grayscale(0.4);
+}
+
+.monster-card.locked .count {
+  color: var(--muted);
+}

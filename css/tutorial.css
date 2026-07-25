@@ -1,0 +1,159 @@
+/* Tutorial + Achievements */
+
+.tip-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  margin-bottom: 4px;
+  background: var(--bone);
+  border: 2px solid var(--ink);
+  box-shadow: var(--shadow-stamp);
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--ink-soft);
+  animation: riseIn 0.3s ease;
+}
+
+.tip-text { flex: 1; }
+
+.tip-close {
+  min-height: 32px;
+  min-width: 32px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: var(--muted);
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.tutorial-modal .tut-progress {
+  font-size: 0.7rem;
+  color: var(--seal);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.tut-body {
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.tut-list {
+  margin: 10px 0 0;
+  padding-left: 1.15rem;
+  line-height: 1.55;
+}
+
+.tut-list li { margin-bottom: 6px; }
+
+.ach-hero {
+  margin-bottom: 14px;
+}
+
+.ach-hero h2 {
+  font-size: clamp(1.7rem, 6vw, 2.1rem);
+}
+
+.ach-summary {
+  border: 2px solid var(--ink);
+  background: var(--bone);
+  padding: 14px;
+  margin-bottom: 8px;
+  box-shadow: var(--shadow-stamp);
+}
+
+.ach-summary .cleared-badge {
+  color: var(--seal);
+  font-weight: 800;
+  font-family: var(--font-display);
+}
+
+.ach-cat {
+  margin: 20px 0 8px;
+  font-size: 0.68rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 700;
+}
+
+.ach-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 2px solid var(--ink);
+  background: var(--bone);
+  box-shadow: var(--shadow-stamp);
+}
+
+.ach-card {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+  opacity: 0.5;
+  filter: grayscale(0.5);
+}
+
+.ach-card:last-child {
+  border-bottom: none;
+}
+
+.ach-card.done {
+  opacity: 1;
+  filter: none;
+  background: linear-gradient(90deg, rgba(196, 60, 40, 0.08), transparent 55%);
+}
+
+.ach-icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border: 2px solid var(--ink);
+  background: var(--bg-deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: var(--ink);
+}
+
+.ach-card.done .ach-icon {
+  background: var(--seal);
+  color: var(--bone);
+  border-color: var(--seal-deep);
+}
+
+.ach-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.ach-desc {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 2px;
+  line-height: 1.35;
+}
+
+.ach-reward {
+  font-size: 0.72rem;
+  color: var(--moss);
+  margin-top: 4px;
+  font-weight: 700;
+}
+
+@media (min-width: 1024px) {
+  .ach-summary {
+    max-width: 480px;
+  }
+}

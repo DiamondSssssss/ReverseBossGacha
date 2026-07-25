@@ -1,0 +1,227 @@
+/* Setup + Scout */
+
+.scout-lead {
+  margin-bottom: 14px;
+}
+
+.counter-box {
+  border: 2px solid var(--ink);
+  background: var(--bone);
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow-stamp);
+}
+
+.counter-box h3 {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+}
+
+.counter-box li,
+.counter-tips {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  line-height: 1.45;
+}
+
+.counter-tips span {
+  display: block;
+  padding: 4px 0;
+  border-bottom: 1px dashed var(--line);
+}
+
+.counter-tips span:last-child {
+  border-bottom: none;
+}
+
+.scout-wave {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 4px 2px 12px;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+}
+
+.hero-chip {
+  flex: 0 0 auto;
+  width: 140px;
+  padding: 12px;
+  border: 2px solid var(--ink);
+  background: var(--bone);
+  scroll-snap-align: start;
+  box-shadow: var(--shadow-stamp);
+}
+
+.hero-chip .cls {
+  font-weight: 800;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+
+.hero-chip.MAGE .cls { color: var(--soul); }
+.hero-chip.WARRIOR .cls { color: var(--seal); }
+.hero-chip.ROGUE .cls { color: var(--moss); }
+
+.room-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 2px solid var(--ink);
+  background: var(--bone);
+  box-shadow: var(--shadow-stamp);
+  margin-bottom: 16px;
+}
+
+.room-strip .room-row {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.room-strip .room-row:last-child {
+  border-bottom: none;
+}
+
+.setup-layout h2 {
+  font-size: 1.5rem;
+}
+
+.room-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 4px 0 10px;
+}
+
+.room-tabs button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 8px 12px;
+  min-height: 40px;
+  box-shadow: none;
+}
+
+.room-tabs button.active {
+  background: var(--ink);
+  color: var(--bone);
+}
+
+.room-board {
+  border: 2px solid var(--ink);
+  background: var(--bg-deep);
+  padding: 10px;
+  box-shadow: var(--shadow-stamp);
+  margin-bottom: 12px;
+}
+
+.cost-bar {
+  height: 8px;
+  background: var(--stone);
+  border: 1.5px solid var(--ink);
+  overflow: hidden;
+  margin: 8px 0;
+}
+
+.cost-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--moss);
+  transition: width 0.2s ease;
+}
+
+.cost-bar > span.hot {
+  background: var(--seal);
+}
+
+.grid-board {
+  display: grid;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.grid-cell {
+  aspect-ratio: 1;
+  background: rgba(247, 241, 230, 0.55);
+  border: 1.5px dashed rgba(26, 22, 18, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.58rem;
+  text-align: center;
+  padding: 2px;
+  min-height: 44px;
+  cursor: pointer;
+  user-select: none;
+  font-weight: 700;
+  line-height: 1.1;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.grid-cell:active {
+  background: rgba(196, 60, 40, 0.12);
+}
+
+.grid-cell.filled {
+  border-style: solid;
+  border-color: var(--ink);
+  background: var(--bone);
+}
+
+.monster-tray {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px 14px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tray-item {
+  flex: 0 0 auto;
+  width: 100px;
+  padding: 10px 8px;
+  border: 2px solid var(--ink);
+  background: var(--bone);
+  text-align: center;
+  font-size: 0.7rem;
+  cursor: pointer;
+  min-height: 96px;
+  box-shadow: none;
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+
+.tray-item.selected {
+  background: var(--ink);
+  color: var(--bone);
+  transform: translateY(-3px);
+}
+
+.tray-item.selected .muted {
+  color: rgba(247, 241, 230, 0.6);
+}
+
+.tray-item .dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  margin: 0 auto 6px;
+  border: 2px solid var(--ink);
+}
+
+.setup-footer {
+  display: flex;
+  gap: 8px;
+  position: sticky;
+  bottom: 8px;
+  padding-top: 10px;
+  background: linear-gradient(180deg, transparent, var(--bg) 35%);
+}
+
+.setup-footer button {
+  flex: 1;
+}
