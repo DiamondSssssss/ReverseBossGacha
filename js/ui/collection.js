@@ -1,10 +1,11 @@
 import { MONSTERS } from '../data/monsters.js';
 import { RARITY_COLORS, RARITY_LABELS } from '../data/constants.js';
+import { monsterDisplayUrl } from '../render/sprites.js';
 
 const filters = {
   q: '',
   rarity: 'all',
-  own: 'owned',
+  own: 'all',
   role: 'all',
   sort: 'rarity',
 };
@@ -39,8 +40,13 @@ function filterList(state) {
     if (!matchesRole(m, filters.role)) return false;
     if (filters.q) {
       const q = filters.q.toLowerCase();
-      const hay = `${m.name} ${m.description} ${m.id}`.toLowerCase();
-      if (!hay.includes(q)) return false;
+      // Chưa mở khóa: chỉ tìm theo độ hiếm / id ẩn, không lộ tên
+      const count = state.inventory[m.id] || 0;
+      const hay =
+        count > 0
+          ? `${m.name} ${m.description} ${m.id}`.toLowerCase()
+          : `${RARITY_LABELS[m.rarity]} ★${m.rarity}`.toLowerCase();
+      if (!hay.includes(q) && !(count <= 0 && q.includes('?'))) return false;
     }
     return true;
   });
@@ -66,16 +72,30 @@ function renderCards(state) {
   const cards = list
     .map((m) => {
       const count = state.inventory[m.id] || 0;
-      const dim = count <= 0;
+      const unlocked = count > 0;
+      const src = monsterDisplayUrl(unlocked, m.id, m.color, m.rarity);
+      if (!unlocked) {
+        return `
+      <article class="monster-card locked">
+        <img class="card-sprite locked-sprite" src="${src}" alt="Chưa mở khóa" width="64" height="64" />
+        <div class="body">
+          <div class="stars" style="color:${RARITY_COLORS[m.rarity]}">${'★'.repeat(m.rarity)} <span class="rarity-tag">${RARITY_LABELS[m.rarity]}</span></div>
+          <div class="name">???</div>
+          <div class="muted" style="font-size:0.75rem;margin-top:2px">Cost ? · HP ? · ATK ?</div>
+          <div class="desc">Chưa mở khóa — quay Gacha hoặc thắng ải để nhận.</div>
+          <div class="count locked-count">Chưa sở hữu</div>
+        </div>
+      </article>`;
+      }
       return `
-      <article class="monster-card ${dim ? 'locked' : ''}">
-        <div class="swatch" style="background:${m.color}"></div>
+      <article class="monster-card">
+        <img class="card-sprite" src="${src}" alt="" width="64" height="64" />
         <div class="body">
           <div class="stars" style="color:${RARITY_COLORS[m.rarity]}">${'★'.repeat(m.rarity)} <span class="rarity-tag">${RARITY_LABELS[m.rarity]}</span></div>
           <div class="name">${m.name}</div>
           <div class="muted" style="font-size:0.75rem;margin-top:2px">Cost ${m.cost} · HP ${m.stats.hp} · ATK ${m.stats.atk}</div>
           <div class="desc">${m.description}</div>
-          <div class="count">${count > 0 ? `Sở hữu ×${count}` : 'Chưa sở hữu'}</div>
+          <div class="count">Sở hữu ×${count}</div>
         </div>
       </article>`;
     })

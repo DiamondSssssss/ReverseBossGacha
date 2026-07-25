@@ -19,11 +19,22 @@ export function renderCombat(root, ctx) {
 
   root.innerHTML = `
     <div class="combat-wrap">
-      <div class="row spread">
-        <h2 style="margin:0">Chiến đấu</h2>
-        <span class="muted" id="combat-status">Đang đánh…</span>
+      <div class="combat-head">
+        <div>
+          <h2>Chiến đấu</h2>
+          <p class="combat-legend">▲ Hero · ● Quái · ■ Bẫy · Cổng → Kho</p>
+        </div>
+        <div class="combat-head-right">
+          <div class="speed-row" id="speed-row" role="group" aria-label="Tốc độ">
+            <button type="button" class="speed-btn active" data-speed="1">×1</button>
+            <button type="button" class="speed-btn" data-speed="2">×2</button>
+            <button type="button" class="speed-btn" data-speed="3">×3</button>
+          </div>
+          <span class="muted" id="combat-status">Đang đánh…</span>
+        </div>
       </div>
       <canvas id="combat-canvas"></canvas>
+      <div class="combat-intent" id="combat-intent">Đợi Hero vào từ Cổng…</div>
       <div class="combat-hud">
         <div class="stat" id="hud-treasure">Kho báu<b>—</b></div>
         <div class="stat" id="hud-wave">Hero còn<b>—</b></div>
@@ -49,9 +60,11 @@ export function renderCombat(root, ctx) {
   const hudT = root.querySelector('#hud-treasure');
   const hudW = root.querySelector('#hud-wave');
   const status = root.querySelector('#combat-status');
+  const intentEl = root.querySelector('#combat-intent');
   const btnSlow = root.querySelector('#spell-slow');
   const btnHeal = root.querySelector('#spell-heal');
   const btnPause = root.querySelector('#btn-pause');
+  const speedRow = root.querySelector('#speed-row');
 
   function onEnd(result) {
     const killed = run.wave.length;
@@ -99,6 +112,18 @@ export function renderCombat(root, ctx) {
     onUpdate(snap) {
       hudT.innerHTML = `Kho báu<b>${Math.ceil(snap.treasureHp)}/${snap.treasureMax}</b>`;
       hudW.innerHTML = `Hero còn<b>${snap.heroesAlive}/${snap.heroesTotal}</b>`;
+      if (snap.draining) {
+        hudT.classList.add('danger');
+      } else {
+        hudT.classList.remove('danger');
+      }
+      if (snap.focusName) {
+        intentEl.innerHTML = `<b style="color:${snap.focusIntentColor || '#333'}">${snap.focusIntent}</b> — ${snap.focusName} <span class="muted">(${snap.focusClass})</span>`;
+      } else if (snap.nextSpawnIn > 0) {
+        intentEl.textContent = `Hero vào Cổng sau ${snap.nextSpawnIn.toFixed(1)}s…`;
+      } else {
+        intentEl.textContent = 'Đợi Hero vào từ Cổng…';
+      }
       btnSlow.disabled = snap.spellCd.slow_wave > 0 || !!snap.result;
       btnHeal.disabled = snap.spellCd.heal_monsters > 0 || !!snap.result;
       if (snap.spellCd.slow_wave > 0) {
@@ -111,7 +136,11 @@ export function renderCombat(root, ctx) {
       } else {
         btnHeal.querySelector('small').textContent = SPELLS.heal_monsters.desc;
       }
-      if (snap.globalSlow) status.textContent = 'Sương Chậm!';
+      if (snap.result) {
+        /* keep end status */
+      } else if (snap.globalSlow) status.textContent = 'Sương Chậm!';
+      else if (snap.draining) status.textContent = 'Hero đang rút Kho!';
+      else status.textContent = `×${snap.speedMul || 1}`;
     },
     onWin() {
       status.textContent = 'Thắng!';
@@ -124,6 +153,12 @@ export function renderCombat(root, ctx) {
   });
 
   engine.start();
+
+  // Layout ổn định sau paint → scale map đúng chiều cao
+  requestAnimationFrame(() => {
+    engine?._resize();
+    requestAnimationFrame(() => engine?._resize());
+  });
 
   function cast(id) {
     if (!engine.castSpell(id)) {
@@ -138,6 +173,16 @@ export function renderCombat(root, ctx) {
 
   btnSlow.onclick = () => cast('slow_wave');
   btnHeal.onclick = () => cast('heal_monsters');
+
+  speedRow.querySelectorAll('.speed-btn').forEach((btn) => {
+    btn.onclick = () => {
+      const mul = Number(btn.getAttribute('data-speed')) || 1;
+      engine.setSpeedMul(mul);
+      speedRow.querySelectorAll('.speed-btn').forEach((b) => {
+        b.classList.toggle('active', b === btn);
+      });
+    };
+  });
 
   let paused = false;
   btnPause.onclick = () => {

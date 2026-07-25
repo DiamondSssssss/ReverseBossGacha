@@ -1,9 +1,11 @@
 import { cloneDungeonRooms } from '../data/rooms.js';
 import { MONSTER_BY_ID } from '../data/monsters.js';
 import { ROOM_UPGRADE } from '../data/constants.js';
-import { buildWave } from '../data/heroes.js';
+import { buildWave, getWavePlan } from '../data/heroes.js';
 
 export function createRunState(playerState) {
+  const level = playerState.dungeonLevel || 1;
+  const plan = getWavePlan(level);
   const rooms = cloneDungeonRooms().map((room) => {
     const lvl = playerState.roomUpgrades[room.id] || 0;
     return {
@@ -15,9 +17,11 @@ export function createRunState(playerState) {
   });
 
   return {
-    level: playerState.dungeonLevel,
+    level,
     rooms,
-    wave: buildWave(playerState.dungeonLevel),
+    wave: buildWave(level),
+    waveTheme: plan.theme,
+    waveTip: plan.tip,
     selectedMonsterId: null,
     selectedRoomIndex: 0,
   };

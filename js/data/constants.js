@@ -29,7 +29,11 @@ export const COMBAT = {
   GRID_ROWS: 3,
   CELL_SIZE: 48,
   TICK_CAP_MS: 50,
-  HERO_SPAWN_INTERVAL: 2.5,
+  HERO_SPAWN_INTERVAL: 3.5,
+  /** Tốc độ gốc chậm để xem được; nút ×1/×2/×3 nhân lên */
+  BASE_TIME_SCALE: 0.52,
+  /** Camera trái tối thiểu — hiện Cổng + hero đang vào */
+  CAMERA_MIN_X: -88,
 };
 
 export const SPELLS = {
@@ -84,6 +88,22 @@ export const TERRAIN_LABELS = {
   DARK: 'Tối',
   HIGH: 'Trần cao / Rộng',
 };
+
+export const TERRAIN_HINTS = {
+  NORMAL: 'Không buff đặc biệt',
+  WATER: 'Buff quái hệ nước / chậm',
+  LOW_CEILING: 'Buff quái trần thấp',
+  DARK: 'Buff quái bóng tối',
+  HIGH: 'Phòng rộng — quái trần thấp yếu đi',
+};
+
+export const HERO_CLASS_LABELS = {
+  MAGE: 'Pháp sư',
+  WARRIOR: 'Chiến sĩ',
+  ROGUE: 'Đạo tặc',
+};
+
+export const LANE_LABELS = ['Trên', 'Giữa', 'Dưới'];
 
 export const RARITY_LABELS = {
   1: 'Common',

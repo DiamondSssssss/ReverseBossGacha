@@ -1,6 +1,12 @@
-import { COMBAT, SPELLS } from '../data/constants.js';
+import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js';
 import { MONSTER_BY_ID } from '../data/monsters.js';
 import { findPath, roomOriginX } from './pathfinding.js';
+import { ParticleSystem } from '../render/particles.js';
+import {
+  getMonsterSprite,
+  getHeroSprite,
+  drawSpriteAt,
+} from '../render/sprites.js';
 
 const CELL = COMBAT.CELL_SIZE;
 const GAP = 28;
@@ -13,6 +19,32 @@ function dist(a, b) {
   const dx = a.x - b.x;
   const dy = a.y - b.y;
   return Math.hypot(dx, dy);
+}
+
+function shortLabel(name) {
+  if (!name) return '?';
+  const parts = String(name).split(/\s+/);
+  return parts.slice(-2).join(' ');
+}
+
+function intentLabel(intent) {
+  switch (intent) {
+    case 'entering':
+      return { text: 'VÀO CỔNG', color: '#81c784' };
+    case 'fighting':
+      return { text: 'ĐÁNH', color: '#ef5350' };
+    case 'draining':
+      return { text: 'RÚT KHO', color: '#ffd54f' };
+    case 'fleeing':
+      return { text: 'BỎ CHẠY', color: '#ffeb3b' };
+    case 'stunned':
+      return { text: 'CHOÁNG', color: '#90a4ae' };
+    case 'frozen':
+      return { text: 'ĐÓNG BĂNG', color: '#81d4fa' };
+    case 'moving':
+    default:
+      return { text: '→ KHO', color: '#81c784' };
+  }
 }
 
 function cellCenter(roomIndex, col, row, roomWidth) {
@@ -86,6 +118,8 @@ export class CombatEngine {
     this.treasureMax = COMBAT.TREASURE_HP;
     this.result = null;
     this.floatTexts = [];
+    this.vfx = [];
+    this.particles = new ParticleSystem();
     this.zones = []; // slow zones {x,y,r,factor,ttl}
     this.globalSlowUntil = 0;
     this.spellCd = { slow_wave: 0, heal_monsters: 0 };
@@ -93,6 +127,10 @@ export class CombatEngine {
 
     this.monsters = [];
     this.heroes = [];
+    this.drawScale = 1;
+    this.drawOffsetY = 40;
+    this.speedMul = 1; // ×1 / ×2 / ×3 (nhân với BASE_TIME_SCALE)
+    this.cameraX = COMBAT.CAMERA_MIN_X;
     this._spawnMonsters();
     this._queueHeroes();
     this._resize();
@@ -123,6 +161,8 @@ export class CombatEngine {
           alive: true,
           firstHitDone: false,
           isTrap: tpl.tags?.includes('trap') && tpl.stats.speed === 0,
+          flash: 0,
+          bobPhase: Math.random() * Math.PI * 2,
         });
       });
     });
@@ -153,6 +193,23 @@ export class CombatEngine {
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     this.viewW = cssW;
     this.viewH = cssH;
+    this._updateDrawLayout();
+  }
+
+  /** Scale map để lấp chiều cao canvas — không để dải mỏng trên đầu. */
+  _updateDrawLayout() {
+    const contentH = COMBAT.GRID_ROWS * CELL + 96; // nhãn + lưới + chân
+    const marginT = 40;
+    const marginB = 30;
+    const avail = Math.max(120, this.viewH - marginT - marginB);
+    this.drawScale = Math.min(2.75, Math.max(1, avail / contentH));
+    const scaledH = contentH * this.drawScale;
+    this.drawOffsetY = marginT + Math.max(0, (avail - scaledH) / 2);
+  }
+
+  /** Chiều ngang thế giới nhìn thấy trên màn (đã chia scale) */
+  _viewWorldW() {
+    return this.viewW / (this.drawScale || 1);
   }
 
   start() {
@@ -169,6 +226,7 @@ export class CombatEngine {
       let dt = (ts - this.lastTs) / 1000;
       this.lastTs = ts;
       if (dt > COMBAT.TICK_CAP_MS / 1000) dt = COMBAT.TICK_CAP_MS / 1000;
+      dt *= COMBAT.BASE_TIME_SCALE * (this.speedMul || 1);
       this.update(dt);
       this.draw();
       if (this.running) this.raf = requestAnimationFrame(loop);
@@ -185,6 +243,12 @@ export class CombatEngine {
     this.paused = p;
   }
 
+  /** @param {1|2|3} mul */
+  setSpeedMul(mul) {
+    this.speedMul = Math.max(1, Math.min(3, mul | 0));
+    this.hooks.onUpdate?.(this.snapshot());
+  }
+
   castSpell(spellId) {
     if (this.spellCd[spellId] > 0 || this.result) return false;
     const spell = SPELLS[spellId];
@@ -193,10 +257,20 @@ export class CombatEngine {
     if (spellId === 'slow_wave') {
       this.globalSlowUntil = this.time + spell.duration;
       this._float(this.viewW / 2 + this.cameraX, 30, 'Sương Chậm!', '#81d4fa');
+      for (const h of this.heroes) {
+        if (h.alive) this.particles.frost(h.x, h.y);
+      }
+      for (let i = 0; i < 6; i++) {
+        this.particles.frost(
+          this.cameraX + (this.viewW * (i + 0.5)) / 6,
+          60 + (i % 2) * 40
+        );
+      }
     } else if (spellId === 'heal_monsters') {
       this.monsters.forEach((m) => {
         if (!m.alive) return;
         m.hp = Math.min(m.maxHp, m.hp + m.maxHp * spell.healRatio);
+        this.particles.heal(m.x, m.y - 8);
       });
       this._float(this.viewW / 2 + this.cameraX, 30, 'Huyết Ấn!', '#ef9a9a');
     }
@@ -206,6 +280,8 @@ export class CombatEngine {
   }
 
   snapshot() {
+    const focus = this.heroes.find((h) => h.alive) || null;
+    const intent = focus ? intentLabel(focus.intent || 'moving') : null;
     return {
       time: this.time,
       treasureHp: this.treasureHp,
@@ -216,7 +292,20 @@ export class CombatEngine {
       spellCd: { ...this.spellCd },
       result: this.result,
       globalSlow: this.time < this.globalSlowUntil,
+      focusName: focus?.name || '',
+      focusClass: focus ? HERO_CLASS_LABELS[focus.class] || focus.class : '',
+      focusIntent: intent?.text || '',
+      focusIntentColor: intent?.color || '',
+      draining: this.heroes.some((h) => h.alive && h.draining),
+      speedMul: this.speedMul || 1,
+      nextSpawnIn: this._nextSpawnIn(),
     };
+  }
+
+  _nextSpawnIn() {
+    const pending = this.spawnQueue.find((h) => !h.spawned);
+    if (!pending) return 0;
+    return Math.max(0, pending.spawnDelay - this.time);
   }
 
   update(dt) {
@@ -234,10 +323,45 @@ export class CombatEngine {
       f.y -= 20 * dt;
       return f.ttl > 0;
     });
+    this.vfx = this.vfx.filter((v) => {
+      v.ttl -= dt;
+      return v.ttl > 0;
+    });
+    this.particles.update(dt);
+    for (const m of this.monsters) {
+      if (m.flash > 0) m.flash -= dt;
+    }
+    for (const h of this.heroes) {
+      if (h.flash > 0) h.flash -= dt;
+    }
 
     this._spawnHeroes();
     this._updateHeroes(dt);
     this._updateMonsters(dt);
+    // ambient VFX
+    for (const m of this.monsters) {
+      if (!m.alive || m.isTrap) continue;
+      if (m.passive === 'SLOW_AURA' && Math.random() < dt * 1.2) {
+        this.particles.frost(m.x + (Math.random() - 0.5) * 12, m.y);
+      } else if (m.passive === 'SILENCE_ON_HIT' && Math.random() < dt * 0.9) {
+        this.particles.magic(m.x, m.y - 8, '#7e57c2');
+      } else if ((m.passive === 'WATER_BUFF' || m.templateId === 'slime_sticky') && Math.random() < dt * 0.8) {
+        this.particles.emit(m.x, m.y + 8, {
+          count: 2,
+          color: m.color,
+          speed: 20,
+          life: 0.5,
+          size: 2,
+          gravity: 30,
+        });
+      }
+    }
+    for (const h of this.heroes) {
+      if (!h.alive) continue;
+      if (h.class === 'MAGE' && Math.random() < dt * 2) {
+        this.particles.magic(h.x + (Math.random() - 0.5) * 10, h.y - 14, h.color);
+      }
+    }
     this._checkEnd();
     this.hooks.onUpdate?.(this.snapshot());
   }
@@ -247,8 +371,10 @@ export class CombatEngine {
       if (h.spawned) continue;
       if (this.time < h.spawnDelay) continue;
       h.spawned = true;
-      const start = cellCenter(0, 0, Math.floor(COMBAT.GRID_ROWS / 2), this.roomWidth);
-      // spawn slightly left of first room
+      const midRow = Math.floor(COMBAT.GRID_ROWS / 2);
+      const entry = cellCenter(0, 0, midRow, this.roomWidth);
+      // Xuất hiện trong Cổng (luôn nằm trong khung nhìn), rồi bước vào P1
+      const gateX = -36;
       this.heroes.push({
         id: uid(),
         templateId: h.id,
@@ -259,10 +385,10 @@ export class CombatEngine {
         maxHp: h.maxHp || h.hp,
         hp: h.maxHp || h.hp,
         atk: h.atk,
-        baseSpeed: h.speed,
-        speed: h.speed,
+        baseSpeed: h.speed * 0.85,
+        speed: h.speed * 0.85,
         range: h.range * CELL,
-        atkSpeed: h.atkSpeed,
+        atkSpeed: h.atkSpeed * 0.9,
         aoeRadius: (h.aoeRadius || 0) * CELL,
         stealth: !!h.stealth,
         revealed: false,
@@ -270,16 +396,31 @@ export class CombatEngine {
         stunnedUntil: 0,
         frozenUntil: 0,
         slowFactor: 1,
-        x: start.x - CELL * 1.5,
-        y: start.y,
+        x: gateX,
+        y: entry.y,
         roomIndex: 0,
-        atkCd: 0,
+        atkCd: 0.4,
         alive: true,
         panicking: false,
-        path: null,
+        path: [{ col: 0, row: midRow }],
         pathIdx: 0,
         draining: false,
+        intent: 'entering',
+        fightTarget: null,
+        facing: 1,
+        flash: 0.35,
+        bobPhase: Math.random() * Math.PI * 2,
+        spawnProtect: 0.6,
       });
+      this.particles.magic(gateX, entry.y, h.color);
+      this.particles.burst(gateX, entry.y, '#81c784');
+      this._float(gateX, entry.y - 24, `${h.name} vào!`, h.color);
+      // Camera kéo về cổng để thấy hero vào
+      const viewW = this._viewWorldW();
+      this.cameraX = Math.max(
+        COMBAT.CAMERA_MIN_X,
+        Math.min(0, gateX - viewW * 0.25)
+      );
     }
   }
 
@@ -344,12 +485,60 @@ export class CombatEngine {
         this._float(hero.x, hero.y, 'Hoảng loạn!', '#ffeb3b');
       }
 
-      hero.roomIndex = roomIndexFromX(hero.x, this.run.rooms.length, this.roomWidth);
+      hero.roomIndex = roomIndexFromX(
+        Math.max(0, hero.x),
+        this.run.rooms.length,
+        this.roomWidth
+      );
 
       // status
       const stunned = this.time < hero.stunnedUntil;
       const frozen = this.time < hero.frozenUntil;
-      if (stunned || frozen) continue;
+      hero.facing = hero.panicking ? -1 : 1;
+      hero.fightTarget = null;
+
+      if (stunned) {
+        hero.intent = 'stunned';
+        continue;
+      }
+      if (frozen) {
+        hero.intent = 'frozen';
+        continue;
+      }
+
+      // Vừa từ Cổng bước vào — chỉ đi, chưa đánh / chưa dính bẫy
+      if (hero.spawnProtect > 0) {
+        hero.spawnProtect -= dt;
+        hero.intent = 'entering';
+        if (!hero.path || hero.pathIdx >= hero.path.length) {
+          const midRow = Math.floor(COMBAT.GRID_ROWS / 2);
+          hero.path = [{ col: 0, row: midRow }];
+          hero.pathIdx = 0;
+        }
+        const node = hero.path[hero.pathIdx];
+        if (node) {
+          const dest = cellCenter(0, node.col, node.row, this.roomWidth);
+          const spd = hero.baseSpeed * CELL * 0.75;
+          const dx = dest.x - hero.x;
+          const dy = dest.y - hero.y;
+          const d = Math.hypot(dx, dy) || 1;
+          if (d < 5) {
+            hero.pathIdx++;
+            hero.x = dest.x;
+            hero.y = dest.y;
+            if (hero.pathIdx >= hero.path.length) {
+              hero.spawnProtect = 0;
+              hero.path = null;
+              hero.intent = 'moving';
+            }
+          } else {
+            hero.x += (dx / d) * spd * dt;
+            hero.y += (dy / d) * spd * dt;
+            hero.facing = 1;
+          }
+        }
+        continue;
+      }
 
       // trap check
       for (const m of this.monsters) {
@@ -358,6 +547,8 @@ export class CombatEngine {
           hero.hp -= m.atk;
           m.hp = 0;
           m.alive = false;
+          this.particles.burst(m.x, m.y, m.color || '#ff7043');
+          this.particles.hit(hero.x, hero.y, '#ff7043');
           this._float(hero.x, hero.y - 10, `Bẫy -${m.atk}`, '#ff7043');
           this._onMonsterDeath(m, hero);
         }
@@ -368,12 +559,15 @@ export class CombatEngine {
       const canFight = target && dist(hero, target) <= hero.range;
 
       if (canFight && !hero.panicking) {
+        hero.intent = 'fighting';
+        hero.fightTarget = target;
         hero.atkCd -= dt;
         if (hero.atkCd <= 0) {
           this._heroAttack(hero, target);
           hero.atkCd = 1 / hero.atkSpeed;
         }
       } else {
+        hero.intent = hero.panicking ? 'fleeing' : 'moving';
         // move
         if (!hero.path || hero.pathIdx >= hero.path.length) this._rebuildPath(hero);
         const node = hero.path[hero.pathIdx];
@@ -394,7 +588,7 @@ export class CombatEngine {
             if (dist(hero, m) < CELL * 2.2) speedMul *= 0.65;
           }
 
-          const spd = hero.baseSpeed * CELL * 0.9 * speedMul;
+          const spd = hero.baseSpeed * CELL * 0.75 * speedMul;
           const dx = dest.x - hero.x;
           const dy = dest.y - hero.y;
           const d = Math.hypot(dx, dy) || 1;
@@ -427,27 +621,38 @@ export class CombatEngine {
           } else {
             hero.x += (dx / d) * spd * dt;
             hero.y += (dy / d) * spd * dt;
+            if (Math.abs(dx) > 1) hero.facing = dx >= 0 ? 1 : -1;
           }
         }
       }
 
       if (hero.draining && hero.alive && !hero.panicking) {
+        hero.intent = 'draining';
         this.treasureHp -= 18 * dt;
         if (this.treasureHp <= 0) {
           this.treasureHp = 0;
+        }
+        if (Math.random() < dt * 10) {
+          this.particles.gold(hero.x, hero.y - 6);
         }
       }
 
       if (hero.hp <= 0) {
         hero.alive = false;
+        this.particles.death(hero.x, hero.y, hero.color);
         this._float(hero.x, hero.y, 'Hạ!', '#fff');
       }
     }
 
-    // follow camera to first living hero or treasure
+    // Camera: luôn thấy Cổng khi hero gần cổng / chưa spawn hết
     const focus = this.heroes.find((h) => h.alive) || null;
+    const viewW = this._viewWorldW();
+    const minCam = COMBAT.CAMERA_MIN_X;
+    const maxCam = Math.max(minCam, this.totalWidth - viewW + 40);
     if (focus) {
-      this.cameraX = Math.max(0, focus.x - this.viewW * 0.35);
+      this.cameraX = Math.max(minCam, Math.min(maxCam, focus.x - viewW * 0.32));
+    } else if (!this.spawnQueue.every((h) => h.spawned)) {
+      this.cameraX = minCam;
     }
   }
 
@@ -488,6 +693,12 @@ export class CombatEngine {
   }
 
   _heroAttack(hero, target) {
+    this._beam(hero, target, hero.color || '#ef9a9a');
+    hero.flash = 0.18;
+    this.particles.hit(target.x, target.y, hero.color || '#ef9a9a');
+    if (hero.class === 'MAGE') {
+      this.particles.magic(target.x, target.y, hero.color);
+    }
     if (hero.silenced && hero.class === 'MAGE') {
       // melee poke only
       target.hp -= Math.round(hero.atk * 0.35);
@@ -508,6 +719,7 @@ export class CombatEngine {
       }
       if (hero.skills.includes('FREEZE') && !hero.silenced) {
         target.frozenUntil = this.time + 1.2;
+        this.particles.frost(target.x, target.y);
       }
       this._float(target.x, target.y, `AoE ${dmg}`, '#ce93d8');
     } else {
@@ -524,6 +736,7 @@ export class CombatEngine {
   }
 
   _onMonsterDeath(m, killerHero) {
+    this.particles.death(m.x, m.y, m.color || '#fff');
     if (m.passive === 'BONE_PILE') {
       this.zones.push({
         x: m.x,
@@ -532,6 +745,7 @@ export class CombatEngine {
         factor: 0.2,
         ttl: 8,
       });
+      this.particles.bone(m.x, m.y);
       this._float(m.x, m.y, 'Xương!', '#c8b89a');
     }
     if (m.passive === 'SLIME_EXPLODE_SILENCE') {
@@ -560,6 +774,7 @@ export class CombatEngine {
       let bestD = Infinity;
       for (const h of this.heroes) {
         if (!h.alive) continue;
+        if (h.spawnProtect > 0) continue;
         if (h.stealth && !h.revealed && m.passive !== 'REVEAL') continue;
         const d = dist(m, h);
         if (d < bestD) {
@@ -576,7 +791,7 @@ export class CombatEngine {
         }
       } else if (!m.isTrap && m.speed > 0) {
         // light chase within room
-        const spd = m.speed * CELL * 0.5;
+        const spd = m.speed * CELL * 0.4;
         const dx = target.x - m.x;
         const dy = target.y - m.y;
         const d = Math.hypot(dx, dy) || 1;
@@ -590,6 +805,9 @@ export class CombatEngine {
   }
 
   _monsterAttack(m, hero) {
+    this._beam(m, hero, m.color || '#66bb6a');
+    m.flash = 0.16;
+    this.particles.hit(hero.x, hero.y, m.color || '#66bb6a');
     let dmg = m.atk;
     if (m.passive === 'BURST_FIRST_HIT' && !m.firstHitDone) {
       dmg *= 2;
@@ -638,124 +856,272 @@ export class CombatEngine {
     this.floatTexts.push({ x, y, text, color, ttl: 0.9 });
   }
 
+  _beam(from, to, color) {
+    this.vfx.push({
+      type: 'beam',
+      x1: from.x,
+      y1: from.y,
+      x2: to.x,
+      y2: to.y,
+      color,
+      ttl: 0.22,
+    });
+  }
+
   draw() {
     const ctx = this.ctx;
     const w = this.viewW;
     const h = this.viewH;
     ctx.clearRect(0, 0, w, h);
 
-    // background
     const g = ctx.createLinearGradient(0, 0, 0, h);
     g.addColorStop(0, '#2a2218');
     g.addColorStop(1, '#14110e');
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, w, h);
 
+    this._updateDrawLayout();
+    const scale = this.drawScale;
+    const offsetY = this.drawOffsetY;
+
     ctx.save();
+    ctx.translate(0, offsetY);
+    ctx.scale(scale, scale);
     ctx.translate(-this.cameraX, 0);
+
+    const gridTop = 40;
+    const gridH = COMBAT.GRID_ROWS * CELL;
+    const roomPad = 10;
+
+    // sàn dưới phòng
+    ctx.fillStyle = '#100e0c';
+    ctx.fillRect(-100, gridTop + gridH + 6, this.totalWidth + 200, 40);
 
     // rooms
     this.run.rooms.forEach((room, ri) => {
       const ox = roomOriginX(ri, this.roomWidth, GAP);
       const terrainColors = {
         NORMAL: '#3a3228',
-        WATER: '#243a38',
+        WATER: '#1e3a38',
         LOW_CEILING: '#3d2a24',
-        DARK: '#1c1814',
+        DARK: '#1a1612',
         HIGH: '#353028',
       };
       ctx.fillStyle = terrainColors[room.terrain] || '#2a3344';
-      ctx.fillRect(ox, 32, this.roomWidth, COMBAT.GRID_ROWS * CELL + 16);
-      ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-      ctx.strokeRect(ox, 32, this.roomWidth, COMBAT.GRID_ROWS * CELL + 16);
+      ctx.fillRect(ox, gridTop - roomPad, this.roomWidth, gridH + roomPad * 2);
+      ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+      ctx.lineWidth = 2.5;
+      ctx.strokeRect(ox, gridTop - roomPad, this.roomWidth, gridH + roomPad * 2);
 
-      // grid
-      ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+      // lane tint: left = entrance, right = exit
+      ctx.fillStyle = 'rgba(129,199,132,0.08)';
+      ctx.fillRect(ox, gridTop, CELL * 0.85, gridH);
+      ctx.fillStyle = 'rgba(255,213,79,0.08)';
+      ctx.fillRect(ox + this.roomWidth - CELL * 0.85, gridTop, CELL * 0.85, gridH);
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      ctx.lineWidth = 1;
       for (let c = 0; c <= COMBAT.GRID_COLS; c++) {
         ctx.beginPath();
-        ctx.moveTo(ox + c * CELL, 40);
-        ctx.lineTo(ox + c * CELL, 40 + COMBAT.GRID_ROWS * CELL);
+        ctx.moveTo(ox + c * CELL, gridTop);
+        ctx.lineTo(ox + c * CELL, gridTop + gridH);
         ctx.stroke();
       }
       for (let r = 0; r <= COMBAT.GRID_ROWS; r++) {
         ctx.beginPath();
-        ctx.moveTo(ox, 40 + r * CELL);
-        ctx.lineTo(ox + this.roomWidth, 40 + r * CELL);
+        ctx.moveTo(ox, gridTop + r * CELL);
+        ctx.lineTo(ox + this.roomWidth, gridTop + r * CELL);
         ctx.stroke();
       }
 
-      ctx.fillStyle = 'rgba(255,255,255,0.55)';
-      ctx.font = '11px "Segoe UI", sans-serif';
-      ctx.fillText(`${room.name}`, ox + 6, 24);
+      ctx.fillStyle = 'rgba(255,255,255,0.75)';
+      ctx.font = 'bold 11px "Segoe UI", sans-serif';
+      ctx.fillText(`P${ri + 1} ${room.name}`, ox + 6, gridTop - 14);
+
+      if (ri < this.run.rooms.length - 1) {
+        const mx = ox + this.roomWidth + GAP / 2;
+        ctx.fillStyle = 'rgba(255,255,255,0.45)';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.fillText('→', mx - 6, gridTop + gridH / 2);
+      }
     });
 
-    // gate label
+    // Gate portal (left)
+    const gateX = -70;
+    ctx.fillStyle = '#1b4332';
+    ctx.fillRect(gateX, gridTop - roomPad, 60, gridH + roomPad * 2);
+    ctx.strokeStyle = '#81c784';
+    ctx.lineWidth = 2.5;
+    ctx.strokeRect(gateX, gridTop - roomPad, 60, gridH + roomPad * 2);
     ctx.fillStyle = '#81c784';
     ctx.font = 'bold 12px sans-serif';
-    ctx.fillText('CỔNG', -50, 20);
-
-    // treasure
-    const tox = roomOriginX(this.run.rooms.length - 1, this.roomWidth, GAP) + this.roomWidth + 10;
-    ctx.fillStyle = '#ffd54f';
-    ctx.fillRect(tox, 60, 40, 40);
-    ctx.fillStyle = '#fff';
+    ctx.fillText('CỔNG', gateX + 10, gridTop - 16);
     ctx.font = '10px sans-serif';
-    ctx.fillText('KHO', tox + 8, 55);
-    ctx.fillStyle = '#ff8a80';
-    ctx.fillRect(tox, 108, 40, 6);
-    ctx.fillStyle = '#69f0ae';
-    ctx.fillRect(tox, 108, 40 * (this.treasureHp / this.treasureMax), 6);
+    ctx.fillStyle = 'rgba(129,199,132,0.9)';
+    ctx.fillText('Hero vào', gateX + 6, gridTop + gridH / 2);
+
+    // Treasure — giữa chiều cao phòng
+    const tox = roomOriginX(this.run.rooms.length - 1, this.roomWidth, GAP) + this.roomWidth + 16;
+    const draining = this.heroes.some((hh) => hh.alive && hh.draining);
+    const chestY = gridTop + gridH / 2 - 28;
+    ctx.fillStyle = draining ? '#ff8f00' : '#9a6b2a';
+    ctx.fillRect(tox, chestY, 56, 56);
+    ctx.strokeStyle = '#ffd54f';
+    ctx.lineWidth = 2.5;
+    ctx.strokeRect(tox, chestY, 56, 56);
+    ctx.fillStyle = '#ffd54f';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.fillText('KHO', tox + 14, chestY - 8);
+    if (draining) {
+      ctx.fillStyle = '#ff5252';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.fillText('ĐANG RÚT!', tox - 4, chestY + 72);
+    }
+    ctx.fillStyle = '#4a3a2a';
+    ctx.fillRect(tox, chestY + 60, 56, 8);
+    ctx.fillStyle = this.treasureHp / this.treasureMax < 0.35 ? '#ff5252' : '#69f0ae';
+    ctx.fillRect(tox, chestY + 60, 56 * (this.treasureHp / this.treasureMax), 8);
+
+    // Drain beams from draining heroes to treasure
+    for (const h of this.heroes) {
+      if (!h.alive || !h.draining) continue;
+      ctx.strokeStyle = 'rgba(255,213,79,0.55)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(h.x, h.y);
+      ctx.lineTo(tox + 28, chestY + 28);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
 
     // zones
     for (const z of this.zones) {
-      ctx.fillStyle = 'rgba(200,184,154,0.25)';
+      ctx.fillStyle = 'rgba(200,184,154,0.28)';
       ctx.beginPath();
       ctx.arc(z.x, z.y, z.r, 0, Math.PI * 2);
       ctx.fill();
+      ctx.strokeStyle = 'rgba(200,184,154,0.5)';
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      ctx.font = '9px sans-serif';
+      ctx.fillText('chậm', z.x - 12, z.y + 3);
     }
 
-    // monsters
-    for (const m of this.monsters) {
-      if (!m.alive) continue;
-      ctx.fillStyle = m.color;
-      if (m.isTrap) {
-        ctx.fillRect(m.x - 10, m.y - 10, 20, 20);
-      } else {
-        ctx.beginPath();
-        ctx.arc(m.x, m.y, 14 + m.rarity, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      // hp bar
-      const ratio = m.hp / m.maxHp;
-      ctx.fillStyle = '#333';
-      ctx.fillRect(m.x - 16, m.y - 24, 32, 4);
-      ctx.fillStyle = '#66bb6a';
-      ctx.fillRect(m.x - 16, m.y - 24, 32 * ratio, 4);
-    }
-
-    // heroes
-    for (const h of this.heroes) {
-      if (!h.alive) continue;
-      ctx.globalAlpha = h.stealth && !h.revealed ? 0.35 : 1;
-      ctx.fillStyle = h.color;
+    // attack beams
+    for (const v of this.vfx) {
+      if (v.type !== 'beam') continue;
+      ctx.globalAlpha = Math.min(1, v.ttl * 4);
+      ctx.strokeStyle = v.color;
+      ctx.lineWidth = 2.5;
       ctx.beginPath();
-      ctx.moveTo(h.x, h.y - 14);
-      ctx.lineTo(h.x + 12, h.y + 12);
-      ctx.lineTo(h.x - 12, h.y + 12);
-      ctx.closePath();
+      ctx.moveTo(v.x1, v.y1);
+      ctx.lineTo(v.x2, v.y2);
+      ctx.stroke();
+      ctx.fillStyle = v.color;
+      ctx.beginPath();
+      ctx.arc(v.x2, v.y2, 4, 0, Math.PI * 2);
       ctx.fill();
       ctx.globalAlpha = 1;
-      const ratio = h.hp / h.maxHp;
-      ctx.fillStyle = '#333';
-      ctx.fillRect(h.x - 16, h.y - 26, 32, 4);
-      ctx.fillStyle = '#ef5350';
-      ctx.fillRect(h.x - 16, h.y - 26, 32 * ratio, 4);
-      if (h.silenced) {
-        ctx.fillStyle = '#b39ddb';
-        ctx.font = '9px sans-serif';
-        ctx.fillText('SIL', h.x - 8, h.y + 24);
-      }
     }
+
+    // fight range rings + target lines for fighting heroes
+    for (const h of this.heroes) {
+      if (!h.alive || h.intent !== 'fighting' || !h.fightTarget) continue;
+      ctx.strokeStyle = 'rgba(239,83,80,0.25)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(h.x, h.y, h.range, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(239,83,80,0.45)';
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(h.x, h.y);
+      ctx.lineTo(h.fightTarget.x, h.fightTarget.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // monsters — sprites
+    for (const m of this.monsters) {
+      if (!m.alive) continue;
+      const spr = getMonsterSprite(m.templateId, m.color, m.rarity);
+      const bob = m.isTrap ? 0 : Math.sin(this.time * 4 + m.bobPhase) * 2.2;
+      const size = m.isTrap ? CELL * 0.88 : CELL * 0.95 + m.rarity * 1.5;
+      drawSpriteAt(ctx, spr, m.x, m.y, {
+        size,
+        bob,
+        flash: m.flash || 0,
+        squash: m.flash > 0 ? 1.08 : 1,
+      });
+
+      const ratio = Math.max(0, m.hp / m.maxHp);
+      const barY = m.y - size / 2 - 8 + bob;
+      ctx.fillStyle = '#222';
+      ctx.fillRect(m.x - 16, barY, 32, 4);
+      ctx.fillStyle = '#66bb6a';
+      ctx.fillRect(m.x - 16, barY, 32 * ratio, 4);
+
+      ctx.fillStyle = 'rgba(255,255,255,0.92)';
+      ctx.font = 'bold 9px "Segoe UI", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(shortLabel(m.name), m.x, m.y + size / 2 + 10 + bob);
+      if (m.isTrap) {
+        ctx.fillStyle = '#ffcc80';
+        ctx.font = 'bold 8px sans-serif';
+        ctx.fillText('BẪY', m.x, m.y + size / 2 + 20 + bob);
+      }
+      ctx.textAlign = 'left';
+    }
+
+    // heroes — sprites
+    for (const h of this.heroes) {
+      if (!h.alive) continue;
+      const spr = getHeroSprite(h.templateId, h.class, h.color);
+      const bob = Math.sin(this.time * 5 + h.bobPhase) * 2.5;
+      const alpha = h.stealth && !h.revealed ? 0.45 : 1;
+      drawSpriteAt(ctx, spr, h.x, h.y, {
+        size: CELL * 1.08,
+        facing: h.facing || 1,
+        bob,
+        flash: h.flash || 0,
+        alpha,
+        squash: h.intent === 'fighting' ? 1.06 : 1,
+      });
+
+      const ratio = Math.max(0, h.hp / h.maxHp);
+      ctx.fillStyle = '#222';
+      ctx.fillRect(h.x - 18, h.y - 30 + bob, 36, 5);
+      ctx.fillStyle = ratio <= COMBAT.PANIC_HP_RATIO ? '#ffeb3b' : '#ef5350';
+      ctx.fillRect(h.x - 18, h.y - 30 + bob, 36 * ratio, 5);
+
+      const badge = intentLabel(h.intent || 'moving');
+      ctx.fillStyle = badge.color;
+      ctx.font = 'bold 9px "Segoe UI", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(badge.text, h.x, h.y - 34 + bob);
+
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      ctx.font = 'bold 10px "Segoe UI", sans-serif';
+      ctx.fillText(h.name, h.x, h.y + 28 + bob);
+      ctx.fillStyle = 'rgba(255,255,255,0.65)';
+      ctx.font = '8px "Segoe UI", sans-serif';
+      ctx.fillText(HERO_CLASS_LABELS[h.class] || h.class, h.x, h.y + 38 + bob);
+
+      const tags = [];
+      if (h.silenced) tags.push('Câm');
+      if (h.stealth && !h.revealed) tags.push('Ẩn');
+      if (h.panicking) tags.push('Sợ');
+      if (tags.length) {
+        ctx.fillStyle = '#b39ddb';
+        ctx.font = 'bold 8px sans-serif';
+        ctx.fillText(tags.join('·'), h.x, h.y + 48 + bob);
+      }
+      ctx.textAlign = 'left';
+    }
+
+    // particles (world space)
+    this.particles.draw(ctx);
 
     // floats
     for (const f of this.floatTexts) {
@@ -767,5 +1133,42 @@ export class CombatEngine {
     }
 
     ctx.restore();
+
+    // Screen-space legend + minimap
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.fillRect(6, 6, Math.min(300, w - 12), 34);
+    ctx.fillStyle = '#fff';
+    ctx.font = '10px "Segoe UI", sans-serif';
+    ctx.fillText('Hero / Quái / Bẫy  ·  Cổng → Phòng → Kho', 12, 20);
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.fillText('Chặn Hero trước khi chúng rút máu Kho', 12, 34);
+
+    // minimap
+    const mmW = Math.min(160, w - 16);
+    const mmH = 18;
+    const mmX = w - mmW - 8;
+    const mmY = h - mmH - 8;
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(mmX - 4, mmY - 4, mmW + 8, mmH + 8);
+    const roomWmm = mmW / this.run.rooms.length;
+    this.run.rooms.forEach((_, ri) => {
+      ctx.fillStyle = ri % 2 ? '#3a3228' : '#2a3344';
+      ctx.fillRect(mmX + ri * roomWmm, mmY, roomWmm - 1, mmH);
+    });
+    const viewWW = this._viewWorldW();
+    const camRatio = this.cameraX / Math.max(1, this.totalWidth);
+    const winRatio = viewWW / Math.max(1, this.totalWidth);
+    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+    ctx.strokeRect(mmX + camRatio * mmW, mmY, Math.max(8, winRatio * mmW), mmH);
+    for (const hh of this.heroes) {
+      if (!hh.alive) continue;
+      const px = mmX + (hh.x / this.totalWidth) * mmW;
+      ctx.fillStyle = hh.color;
+      ctx.fillRect(px - 2, mmY + 4, 4, 10);
+    }
+    ctx.fillStyle = '#ffd54f';
+    ctx.fillRect(mmX + mmW - 6, mmY + 3, 5, 12);
+    ctx.fillStyle = '#81c784';
+    ctx.fillRect(mmX, mmY + 3, 5, 12);
   }
 }

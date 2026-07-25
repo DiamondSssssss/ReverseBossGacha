@@ -30,6 +30,7 @@ export function pullOnce(state) {
   const bucket = pickBucket(force);
   const monster = pickMonster(bucket);
   const pityHit = force;
+  const prevCount = state.inventory[monster.id] || 0;
 
   if (monster.rarity === 5) {
     state.pityCounter = 0;
@@ -45,7 +46,7 @@ export function pullOnce(state) {
   state.stats.pulls = (state.stats.pulls || 0) + 1;
   saveState(state);
 
-  return { monster, pityHit, bucket };
+  return { monster, pityHit, bucket, isNew: prevCount === 0 };
 }
 
 /**

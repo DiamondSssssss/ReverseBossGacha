@@ -3,18 +3,76 @@
 .combat-wrap {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   height: 100%;
   min-height: 0;
   overflow: hidden;
 }
 
-.combat-wrap > .row {
+.combat-head {
   flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
 }
 
-.combat-wrap h2 {
-  font-size: 1.1rem;
+.combat-head-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.speed-row {
+  display: flex;
+  gap: 3px;
+}
+
+.speed-btn {
+  min-height: 28px !important;
+  min-width: 36px;
+  padding: 2px 8px !important;
+  font-size: 0.72rem;
+  font-weight: 800;
+  box-shadow: none !important;
+  border-radius: 0;
+  background: var(--bone);
+}
+
+.speed-btn.active {
+  background: var(--ink);
+  color: var(--bone);
+  border-color: var(--ink);
+}
+
+.combat-head h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.combat-legend {
+  margin: 2px 0 0;
+  font-size: 0.62rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.combat-intent {
+  flex-shrink: 0;
+  border: 2px solid var(--ink);
+  background: var(--bone);
+  padding: 4px 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-stamp);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.combat-intent .muted {
+  font-weight: 500;
 }
 
 #combat-canvas {
@@ -30,10 +88,6 @@
   box-shadow: var(--shadow-stamp);
 }
 
-body.play-fit #combat-canvas {
-  /* canvas height driven by flex parent via JS resize using parent clientHeight */
-}
-
 .combat-hud {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -44,16 +98,21 @@ body.play-fit #combat-canvas {
 .combat-hud .stat {
   border: 2px solid var(--ink);
   background: var(--bone);
-  padding: 6px 8px;
-  font-size: 0.72rem;
+  padding: 4px 8px;
+  font-size: 0.68rem;
   font-weight: 600;
   box-shadow: var(--shadow-stamp);
+}
+
+.combat-hud .stat.danger {
+  background: #fce8e6;
+  border-color: var(--seal);
 }
 
 .combat-hud .stat b {
   display: block;
   font-family: var(--font-display);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   margin-top: 1px;
 }
 
@@ -65,12 +124,12 @@ body.play-fit #combat-canvas {
 }
 
 .spell-row button {
-  font-size: 0.75rem;
-  line-height: 1.2;
+  font-size: 0.72rem;
+  line-height: 1.15;
   font-weight: 700;
   text-align: left;
-  min-height: 44px;
-  padding: 6px 8px;
+  min-height: 40px;
+  padding: 5px 8px;
 }
 
 .spell-row button small {
@@ -78,7 +137,7 @@ body.play-fit #combat-canvas {
   color: var(--muted);
   font-weight: 500;
   margin-top: 1px;
-  font-size: 0.62rem;
+  font-size: 0.58rem;
 }
 
 .combat-controls {
@@ -89,8 +148,8 @@ body.play-fit #combat-canvas {
 
 .combat-controls button {
   flex: 1;
-  min-height: 38px;
-  padding: 0.4rem 0.5rem;
+  min-height: 36px;
+  padding: 0.35rem 0.5rem;
 }
 
 .reward-stage {
