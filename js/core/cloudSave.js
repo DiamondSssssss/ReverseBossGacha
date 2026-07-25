@@ -1,46 +1,6 @@
-import { getSupabase, getUser, isLoggedIn } from './auth.js';
-import { isCloudConfigured } from '../config.js';
-
-/**
- * @param {object} state
- * @returns {Promise<{ ok: boolean, error?: string }>}
- */
-export async function pushCloudSave(state) {
-  if (!isCloudConfigured() || !isLoggedIn()) return { ok: false, error: 'not_logged_in' };
-  const sb = getSupabase();
-  const user = getUser();
-  const payload = {
-    user_id: user.id,
-    save_data: sanitize(state),
-    updated_at: new Date().toISOString(),
-  };
-  const { error } = await sb.from('player_saves').upsert(payload, { onConflict: 'user_id' });
-  if (error) return { ok: false, error: error.message };
-  return { ok: true };
-}
-
-/**
- * @returns {Promise<{ ok: boolean, data?: object, updatedAt?: string, error?: string, empty?: boolean }>}
- */
-export async function pullCloudSave() {
-  if (!isCloudConfigured() || !isLoggedIn()) {
-    return { ok: false, error: 'not_logged_in' };
-  }
-  const sb = getSupabase();
-  const user = getUser();
-  const { data, error } = await sb
-    .from('player_saves')
-    .select('save_data, updated_at')
-    .eq('user_id', user.id)
-    .maybeSingle();
-
-  if (error) return { ok: false, error: error.message };
-  if (!data) return { ok: true, empty: true };
-  return { ok: true, data: data.save_data, updatedAt: data.updated_at };
-}
+import { api, isLoggedIn } from './auth.js';
 
 function sanitize(state) {
-  // Không gửi field runtime
   const {
     souls,
     gold,
@@ -74,7 +34,30 @@ function sanitize(state) {
   };
 }
 
-/** Chọn save “tiến xa hơn” khi conflict local vs cloud */
+export async function pushCloudSave(state) {
+  if (!isLoggedIn()) return { ok: false, error: 'not_logged_in' };
+  try {
+    await api('/api/save', {
+      method: 'PUT',
+      body: JSON.stringify({ data: sanitize(state) }),
+    });
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+export async function pullCloudSave() {
+  if (!isLoggedIn()) return { ok: false, error: 'not_logged_in' };
+  try {
+    const res = await api('/api/save');
+    if (res.empty) return { ok: true, empty: true };
+    return { ok: true, data: res.data, updatedAt: res.updatedAt };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
 export function pickBetterSave(local, cloud) {
   if (!cloud) return local;
   if (!local) return cloud;

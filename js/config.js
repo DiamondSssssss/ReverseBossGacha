@@ -1,17 +1,17 @@
 /**
- * Cấu hình cloud save (Supabase).
- *
- * Cách bật tài khoản + lưu đám mây:
- * 1. Tạo project miễn phí tại https://supabase.com
- * 2. SQL Editor → chạy file supabase/schema.sql
- * 3. Project Settings → API → copy URL và anon key vào bên dưới
- * 4. Authentication → Providers → Email: bật (tắt "Confirm email" khi test cho nhanh)
- *
- * Để trống = chỉ chơi Guest (localStorage trên từng máy).
+ * API backend (username / password / tên hiển thị — giống GameBanCa).
+ * Trên production cùng domain: để trống → gọi /api/...
+ * Dev local không qua nginx: http://127.0.0.1:3007
  */
-export const SUPABASE_URL = '';
-export const SUPABASE_ANON_KEY = '';
+export const API_BASE = '';
 
+export function apiUrl(path) {
+  const base = API_BASE.replace(/\/$/, '');
+  const p = path.startsWith('/') ? path : `/${path}`;
+  return `${base}${p}`;
+}
+
+/** Cloud luôn “bật” khi có backend; Guest vẫn chơi được không login */
 export function isCloudConfigured() {
-  return Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+  return true;
 }

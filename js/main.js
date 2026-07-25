@@ -7,7 +7,6 @@ import {
 import { createRunState } from './core/dungeon.js';
 import { evaluateAchievements } from './core/achievements.js';
 import { initAuth, onAuthChange } from './core/auth.js';
-import { isCloudConfigured } from './config.js';
 import { renderHub } from './ui/hub.js';
 import { renderGacha } from './ui/gachaUI.js';
 import { renderCollection } from './ui/collection.js';
@@ -227,11 +226,5 @@ go('hub');
   await initAuth();
   refreshAccount();
   onAuthChange(() => refreshAccount());
-
-  if (isCloudConfigured()) {
-    // Session sẵn có sẽ sync khi user mở menu / lần đăng nhập.
-    // Không auto-overwrite lúc boot để tránh mất guest progress bất ngờ.
-  }
-
   maybeStartTutorial();
 })();

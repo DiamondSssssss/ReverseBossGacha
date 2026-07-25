@@ -71,7 +71,7 @@ export function renderHub(root, ctx) {
             <li><strong>Gem</strong> — mở Ấn chương (thành tựu)</li>
           </ul>
           <p class="muted" style="margin:8px 0 0;font-size:0.78rem">
-            Guest = lưu trên máy này. Bấm <strong>Đăng nhập</strong> (góc trên) để đồng bộ cloud giữa các thiết bị.
+            Guest = lưu trên máy này. Bấm <strong>Đăng nhập</strong> (username + mật khẩu) để đồng bộ giữa các thiết bị.
           </p>
           ${
             state.souls === 0 && state.gold === 0 && state.gems === 0

@@ -1,128 +1,81 @@
-# Deploy ReverseBossGacha (giống GameBanCa — chỉ frontend tĩnh)
+# Deploy ReverseBossGacha (giống GameBanCa)
 
 Domain: **https://bossgacha.storyoftri.xyz**  
 Server: `vutri@115.73.218.193`  
-Nhánh deploy: `deploy/develop`  
-Docker Hub image: `bossgacha-frontend`  
-Port trên VPS: frontend `25568` (không đụng BongMa `25566` / GameBanCa `25567`)
+Nhánh: `deploy/develop`  
+Images: `bossgacha-backend`, `bossgacha-frontend`  
+Ports VPS: backend **3007**, frontend **25568**
 
-Game này **không có backend Docker** (Guest = localStorage; account cloud = Supabase bên ngoài).
+Auth: **username / password / tên hiển thị** (SQLite + JWT) — giống GameBanCa, không dùng email Supabase.
 
 ---
 
-## 1) GitHub Secrets (repo ReverseBossGacha)
-
-Settings → Secrets and variables → Actions → New repository secret:
+## 1) GitHub Secrets
 
 | Secret | Giá trị |
 |--------|---------|
-| `DOCKERHUB_USERNAME` | User Docker Hub (cùng GameBanCa) |
-| `DOCKERHUB_PASSWORD` | Access token / password Docker Hub |
-| `SSH_PRIVATE_KEY` | Private key SSH vào VPS (`vutri`) |
-| `SSH_PASS` | Mật khẩu sudo của `vutri` trên VPS |
-
-Secrets theo **từng repo** — phải thêm lại vào repo này dù đã có ở GameBanCa.
+| `DOCKERHUB_USERNAME` | Docker Hub user |
+| `DOCKERHUB_PASSWORD` | Docker Hub token |
+| `SSH_PRIVATE_KEY` | SSH key vào VPS |
+| `SSH_PASS` | sudo password `vutri` |
 
 ---
 
 ## 2) DNS
 
-Bản ghi **A**:
-
-- Host: `bossgacha`
-- Trỏ về: `115.73.218.193`
-
-Đợi DNS lên rồi mới Certbot.
+A record: `bossgacha` → `115.73.218.193`
 
 ---
 
-## 3) Chuẩn bị trên VPS (SSH một lần)
+## 3) VPS một lần
 
 ```bash
 ssh vutri@115.73.218.193
-mkdir -p ~/projects/ReverseBossGacha
+mkdir -p ~/projects/ReverseBossGacha/data
 ```
 
-Copy nginx bootstrap từ máy local:
+`.env` (CI cũng tự tạo nếu thiếu):
 
-```powershell
-cd "d:\Hoc hanh\ReverseBossGacha"
-scp nginx/bossgacha.storyoftri.xyz.http-bootstrap.conf vutri@115.73.218.193:~/
+```env
+JWT_SECRET=chuoi-bi-mat-dai
+PORT=3001
+NODE_ENV=production
 ```
 
-Trên VPS:
+Nginx: copy `nginx/bossgacha.storyoftri.xyz.http-bootstrap.conf` → sites-available, Certbot `-d bossgacha.storyoftri.xyz`, rồi có thể dùng file HTTPS đầy đủ (đã proxy `/api/` → `:3007`).
 
-```bash
-sudo cp ~/bossgacha.storyoftri.xyz.http-bootstrap.conf /etc/nginx/sites-available/bossgacha.storyoftri.xyz
-sudo ln -sf /etc/nginx/sites-available/bossgacha.storyoftri.xyz /etc/nginx/sites-enabled/
-sudo nginx -t && sudo systemctl reload nginx
-sudo certbot --nginx -d bossgacha.storyoftri.xyz
-```
-
-Sau Certbot, có thể thay bằng file HTTPS đầy đủ:
-
-```bash
-# scp nginx/bossgacha.storyoftri.xyz.conf rồi:
-sudo cp ~/bossgacha.storyoftri.xyz.conf /etc/nginx/sites-available/bossgacha.storyoftri.xyz
-sudo nginx -t && sudo systemctl reload nginx
-```
+**Nếu site đã có SSL từ trước:** cập nhật lại file nginx để thêm `location /api/` trỏ `127.0.0.1:3007`, rồi `sudo nginx -t && sudo systemctl reload nginx`.
 
 ---
 
-## 4) Tạo repo GitHub + đẩy nhánh deploy
+## 4) Push deploy
 
 ```powershell
 cd "d:\Hoc hanh\ReverseBossGacha"
-git init
 git add .
-git commit -m "Initial Reverse Boss Gacha + Docker deploy"
-# Tạo repo trống trên GitHub rồi:
-git remote add origin https://github.com/<USER>/ReverseBossGacha.git
-git branch -M main
-git push -u origin main
-git checkout -b deploy/develop
-git push -u origin deploy/develop
+git commit -m "Add username auth backend + deploy like GameBanCa"
+git push origin deploy/develop
 ```
-
-Hoặc bấm **Actions → Deploy ReverseBossGacha → Run workflow**.
 
 ---
 
-## 5) Kiểm tra sau deploy
+## 5) Kiểm tra
 
 ```bash
-ssh vutri@115.73.218.193
-cd ~/projects/ReverseBossGacha
-export DOCKERHUB_USER=<user-dockerhub>
-sudo -E docker compose ps
+curl -s http://127.0.0.1:3007/api/health
 curl -sI http://127.0.0.1:25568/
 ```
 
-Trình duyệt: https://bossgacha.storyoftri.xyz
+Trên web: Đăng ký username + mật khẩu + tên hiển thị → chơi → Đăng nhập máy khác thấy cùng tiến trình.
 
 ---
 
-## Luồng CI/CD
-
-1. Push `deploy/develop`
-2. GitHub build → push `bossgacha-frontend:latest` lên Docker Hub
-3. SSH VPS → `docker compose pull && up -d`
-4. Nginx host proxy `bossgacha.storyoftri.xyz` → `127.0.0.1:25568`
-
----
-
-## So với GameBanCa
+## So sánh GameBanCa
 
 | | GameBanCa | ReverseBossGacha |
 |--|-----------|------------------|
-| Domain | gamebanca.storyoftri.xyz | bossgacha.storyoftri.xyz |
+| Domain | gamebanca… | bossgacha… |
+| Backend port | 3006 | **3007** |
 | Frontend port | 25567 | **25568** |
-| Backend | có (3006) | **không** (static + Supabase) |
-| Images | banca-backend + banca-frontend | chỉ **bossgacha-frontend** |
-
----
-
-## Supabase (đăng nhập cloud) — tùy chọn
-
-Sau khi site lên HTTPS, điền `js/config.js` (URL + anon key), chạy `supabase/schema.sql`, rồi commit + push lại `deploy/develop`.  
-Trong Supabase Auth: thêm URL site vào Redirect / Site URL nếu cần.
+| Auth | user/pass/displayName | **giống** |
+| DB | SQLite volume | SQLite `~/projects/ReverseBossGacha/data` |

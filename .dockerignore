@@ -6,6 +6,10 @@ DEPLOY.md
 README.md
 nginx
 supabase
+server
 **/.DS_Store
 .env
 .env.*
+data
+*.db
+**/node_modules

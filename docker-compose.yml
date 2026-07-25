@@ -1,6 +1,18 @@
 services:
+  bossgacha-server:
+    image: ${DOCKERHUB_USER}/bossgacha-backend:latest
+    ports:
+      - "3007:3001"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+    restart: always
+
   bossgacha-client:
     image: ${DOCKERHUB_USER}/bossgacha-frontend:latest
     ports:
       - "25568:80"
+    depends_on:
+      - bossgacha-server
     restart: always
