@@ -163,14 +163,14 @@ function go(name) {
     name === 'combat' || name === 'reward' || name === 'setup' ? 'none' : '';
 
   const playFit = name === 'setup' || name === 'combat' || name === 'scout' || name === 'reward';
+  document.documentElement.classList.toggle('play-fit', playFit);
   document.body.classList.toggle('play-fit', playFit);
 
+  tipSlot.innerHTML = '';
   if (!playFit) {
     showTipBanner(tipSlot, name, state, {
       onDismiss: () => saveState(state),
     });
-  } else {
-    tipSlot.innerHTML = '';
   }
 
   refreshChrome();

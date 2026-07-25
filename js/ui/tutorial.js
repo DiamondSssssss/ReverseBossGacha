@@ -32,10 +32,7 @@ export const SCREEN_TIPS = {
   hub: 'Linh Hồn/Vàng = thắng ải. Gem = Ấn chương. Mới vào = 0 tiền — vào ải đầu để kiếm vốn.',
   gacha: 'Cần Linh Hồn để quay (100 LH/lần). Chưa có? Về Sảnh → Vào ải thắng trận.',
   collection: 'Kho: xem chỉ số & passive. Đọc mô tả trước khi xếp trận!',
-  scout: 'Trinh sát: nhớ class Hero rồi chọn quái khắc chế. Thắng ải = Linh Hồn + Vàng.',
-  setup: 'Chọn quái ở khay dưới → chạm ô trống để thả. Chạm lại để gỡ. Không vượt Cost Cap.',
-  combat: 'Giữ kho báu! Thắng cuộc mới nhận Linh Hồn & Vàng.',
-  reward: 'Đây là cách kiếm nguyên liệu chính: thắng ải → LH + Vàng.',
+  // setup / combat / scout / reward: không tip — tránh chiếm chỗ khi play-fit
   achievements: 'Gem chủ yếu lấy từ Ấn chương. Mở khóa = nhận thưởng.',
 };
 

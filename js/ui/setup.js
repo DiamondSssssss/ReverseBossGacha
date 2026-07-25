@@ -80,7 +80,6 @@ export function renderSetup(root, ctx) {
   function paint() {
     const room = run.rooms[roomIndex];
     const used = roomUsedCost(room);
-    const costPct = Math.min(100, (used / room.costCap) * 100);
 
     const tabs = run.rooms
       .map((r, i) => {
@@ -122,30 +121,24 @@ export function renderSetup(root, ctx) {
     root.innerHTML = `
       <div class="setup-layout">
         <div class="setup-top">
-          <div>
-            <p class="section-label">Setup</p>
-            <h2>Xếp trận</h2>
-          </div>
+          <h2>Xếp trận</h2>
           <button type="button" class="ghost" id="btn-scout">← Trinh sát</button>
         </div>
         <div class="room-tabs">${tabs}</div>
+        <div class="setup-tray-bar">
+          <p class="hint">Chọn quái → chạm ô · Cost ${used}/${room.costCap}</p>
+          <div class="monster-tray">${tray || '<span class="muted">Hết quái</span>'}</div>
+        </div>
         <div class="room-board">
           <div class="board-meta">
-            <div class="row spread">
-              <strong>${room.name}</strong>
-              <span class="muted" style="font-size:0.72rem">${TERRAIN_LABELS[room.terrain]} · ${used}/${room.costCap}</span>
-            </div>
-            <div class="cost-bar"><span class="${costPct > 90 ? 'hot' : ''}" style="width:${costPct}%"></span></div>
+            <strong>${room.name}</strong>
+            <span class="muted">${TERRAIN_LABELS[room.terrain]} · ${used}/${room.costCap}</span>
           </div>
           <div class="grid-board" style="grid-template-columns:repeat(${room.cols},minmax(0,1fr));grid-template-rows:repeat(${room.rows},minmax(0,1fr))">${cells.join('')}</div>
         </div>
-        <div class="setup-bottom">
-          <p class="section-label">Kho run · chọn quái rồi chạm ô</p>
-          <div class="monster-tray">${tray || '<span class="muted">Hết quái — quay gacha</span>'}</div>
-          <div class="setup-footer">
-            <button type="button" id="btn-clear">Xóa phòng</button>
-            <button type="button" class="primary" id="btn-start">START</button>
-          </div>
+        <div class="setup-footer">
+          <button type="button" id="btn-clear">Xóa phòng</button>
+          <button type="button" class="primary" id="btn-start">START</button>
         </div>
       </div>
     `;
@@ -177,7 +170,7 @@ export function renderSetup(root, ctx) {
           return;
         }
         if (!selectedId) {
-          toast('Chọn quái ở khay dưới trước');
+          toast('Chọn quái ở khay trước');
           return;
         }
         const res = placeMonster(run, roomIndex, selectedId, col, row, inventory);
