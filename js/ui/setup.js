@@ -30,7 +30,6 @@ import { playGhostWalk } from './setupPreview.js';
 import { saveState } from '../core/storage.js';
 import {
   hideMonsterTip,
-  monsterTipLine,
   monsterTipHtml,
 } from './monsterTip.js';
 import {
@@ -681,10 +680,7 @@ export function renderSetup(root, ctx) {
               <button type="button" class="tool-btn ${showPath ? 'on' : ''}" id="btn-toggle-path" title="Hiện path Hero">Path</button>
               <button type="button" class="tool-btn" id="btn-ghost-walk" title="Xem Hero đi thử">Thử đường</button>
             </div>
-            <p class="board-tip muted" id="board-tip">${selected ? `Thả ${selected.name} · kéo từ khay hoặc chạm ô` : 'Hover quái / khay để xem chỉ số'}</p>
-          </div>
-          <div class="unit-stat-panel" id="unit-stat-panel" hidden>
-            <p class="muted" style="margin:0;font-size:0.72rem">Hover quái trên sân hoặc khay để xem chỉ số.</p>
+            <p class="board-tip muted" id="board-tip">${selected ? `Thả ${selected.name} · kéo từ khay hoặc chạm ô` : 'Chọn / kéo quái · hover ô để xem địa hình'}</p>
           </div>
           <div class="board-stage single-map">
               <div class="grid-board map-grid" style="--cols:${map.cols};--rows:${map.rows};grid-template-columns:repeat(${map.cols},minmax(0,1fr));grid-template-rows:repeat(${map.rows},minmax(0,1fr));aspect-ratio:${map.cols}/${map.rows}">${cells.join('')}</div>
@@ -741,28 +737,9 @@ export function renderSetup(root, ctx) {
     }, 50);
 
     const tipEl = root.querySelector('#board-tip');
-    const statPanel = root.querySelector('#unit-stat-panel');
     const defaultBoardTip = selected
       ? `Thả ${selected.name} · kéo từ khay hoặc chạm ô`
-      : 'Hover quái / khay để xem chỉ số';
-
-    function showUnitInfo(el, id, terrainNote) {
-      if (!id) return;
-      const line = monsterTipLine(id, state);
-      if (tipEl) tipEl.textContent = terrainNote ? `${line} · ${terrainNote}` : line;
-      if (statPanel) {
-        statPanel.hidden = false;
-        statPanel.innerHTML = monsterTipHtml(id, state, terrainNote ? { note: terrainNote } : {});
-      }
-    }
-
-    function clearUnitInfo() {
-      if (tipEl) tipEl.textContent = defaultBoardTip;
-      if (statPanel) {
-        statPanel.hidden = true;
-        statPanel.innerHTML = '';
-      }
-    }
+      : 'Chọn / kéo quái · hover ô để xem địa hình';
 
     // Tray select + drag
     root.querySelectorAll('.tray-item').forEach((el) => {
@@ -776,11 +753,6 @@ export function renderSetup(root, ctx) {
           );
         });
       };
-      el.onpointerenter = () => {
-        const id = el.getAttribute('data-mid');
-        showUnitInfo(el, id);
-      };
-      el.onpointerleave = () => clearUnitInfo();
       el.ondragstart = (e) => {
         selectedId = el.getAttribute('data-mid');
         run.selectedMonsterId = selectedId;
@@ -799,22 +771,14 @@ export function renderSetup(root, ctx) {
 
       el.onpointerenter = () => {
         el.classList.add('hover-preview');
-        const mid = el.getAttribute('data-mid');
-        if (mid) {
-          const title = el.getAttribute('title') || '';
-          const terrainNote = title.split(' · ').slice(1).join(' · ');
-          showUnitInfo(el, mid, terrainNote || undefined);
-        } else if (tipEl) {
-          tipEl.textContent = el.getAttribute('title') || defaultBoardTip;
-        }
+        if (tipEl) tipEl.textContent = el.getAttribute('title') || defaultBoardTip;
         if (showPath && pathHint.has(`${col},${row}`)) {
           el.classList.add('path-hot');
         }
       };
       el.onpointerleave = () => {
         el.classList.remove('hover-preview', 'path-hot');
-        if (el.getAttribute('data-mid')) clearUnitInfo();
-        else if (tipEl) tipEl.textContent = defaultBoardTip;
+        if (tipEl) tipEl.textContent = defaultBoardTip;
       };
 
       if (el.classList.contains('wall-cell') || el.disabled) return;
