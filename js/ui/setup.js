@@ -28,6 +28,11 @@ import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js';
 import { attachSetupBoardFx } from './setupBoardFx.js';
 import { playGhostWalk } from './setupPreview.js';
 import { saveState } from '../core/storage.js';
+import {
+  bindMonsterTips,
+  hideMonsterTip,
+  hideMonsterTipOnScroll,
+} from './monsterTip.js';
 
 function shortName(name) {
   if (!name) return '?';
@@ -215,7 +220,7 @@ export function renderScout(root, ctx) {
         const m = MONSTER_BY_ID[id];
         if (!m) return '';
         return `
-          <button type="button" class="loadout-chip" data-remove="${id}" title="Bớt 1 · ${m.name}">
+          <button type="button" class="loadout-chip" data-remove="${id}" data-mid="${id}" title="Bớt 1 · ${m.name}">
             <img src="${monsterSpriteUrl(id, m.color, m.rarity)}" alt="" width="36" height="36" />
             <span class="loadout-chip-meta">
               <strong>${shortName(m.name)}</strong>
@@ -234,7 +239,7 @@ export function renderScout(root, ctx) {
         const blockedNew = inLoad <= 0 && typesFull;
         const full = left <= 0 || blockedNew;
         return `
-          <button type="button" class="loadout-pick ${full ? 'is-full' : ''}" data-add="${m.id}" ${full ? 'disabled' : ''} title="${m.name}${blockedNew ? ' · Đủ 5 loại' : ''}">
+          <button type="button" class="loadout-pick ${full ? 'is-full' : ''}" data-add="${m.id}" data-mid="${m.id}" ${full ? 'aria-disabled="true"' : ''} title="${m.name}${blockedNew ? ' · Đủ 5 loại' : ''}">
             <img src="${monsterSpriteUrl(m.id, m.color, m.rarity)}" alt="" width="44" height="44" />
             <span class="stars" style="color:${RARITY_COLORS[m.rarity]}">${'★'.repeat(m.rarity)}</span>
             <strong>${shortName(m.name)}</strong>
@@ -293,6 +298,9 @@ export function renderScout(root, ctx) {
       btn.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
+        if (btn.classList.contains('is-full') || btn.getAttribute('aria-disabled') === 'true') {
+          return;
+        }
         const id = btn.getAttribute('data-add');
         const res = tryAddToLoadout(run.loadout, vault, id, map.costCap);
         if (!res.ok) {
@@ -337,9 +345,12 @@ export function renderScout(root, ctx) {
       run.loadout = {};
       refreshLoadout();
     };
+
+    bindMonsterTips(panel, '[data-mid]', (el) => el.getAttribute('data-mid'), state);
   }
 
   function refreshLoadout() {
+    hideMonsterTip(true);
     const page = root.querySelector('.scout-page');
     const keepScroll = page ? page.scrollTop : 0;
     const { html, units } = loadoutPanelHtml();
@@ -399,8 +410,11 @@ export function renderScout(root, ctx) {
   `;
 
   bindLoadout();
+  hideMonsterTipOnScroll(root.querySelector('.scout-page'));
+  root._cleanup = () => hideMonsterTip(true);
 
   root.querySelector('#btn-to-setup').onclick = () => {
+    hideMonsterTip(true);
     const clean = sanitizeLoadout(run.loadout, vault, map.costCap);
     if (!loadoutUnitCount(clean)) {
       toast('Chọn ít nhất 1 quái vào loadout');
@@ -413,11 +427,14 @@ export function renderScout(root, ctx) {
     go('setup');
   };
 
-  root.querySelector('#btn-back-hub').onclick = () => go('hub');
+  root.querySelector('#btn-back-hub').onclick = () => {
+    hideMonsterTip(true);
+    go('hub');
+  };
 }
 
 export function renderSetup(root, ctx) {
-  const { run, go, toast, inventory } = ctx;
+  const { run, go, toast, inventory, state } = ctx;
   if (!run) {
     root.innerHTML = `<p class="muted">Chưa có run.</p>`;
     return;
@@ -464,6 +481,7 @@ export function renderSetup(root, ctx) {
   }
 
   function paint() {
+    hideMonsterTip(true);
     stopFx();
     pathCache = hintPath(map);
     const used = mapUsedCost(map);
@@ -522,7 +540,7 @@ export function renderSetup(root, ctx) {
                 : 'just-removed'
               : '';
           cells.push(`
-            <button type="button" class="grid-cell filled terrain-${terrain} ${buffClass} ${pathCls} ${trap ? 'is-trap' : ''} ${just}" data-col="${col}" data-row="${row}" data-filled="1" draggable="true" style="--m:${m?.color || '#cfc5b2'}" title="${m?.name || ''} · ${tip}" aria-label="${m?.name || 'quái'}">
+            <button type="button" class="grid-cell filled terrain-${terrain} ${buffClass} ${pathCls} ${trap ? 'is-trap' : ''} ${just}" data-col="${col}" data-row="${row}" data-filled="1" data-mid="${p.monsterId}" draggable="true" style="--m:${m?.color || '#cfc5b2'}" title="${m?.name || ''} · ${tip}" aria-label="${m?.name || 'quái'}">
               <span class="cell-glow"></span>
               ${pathOrd}
               <img class="cell-sprite" src="${src}" alt="" width="36" height="36" draggable="false" />
@@ -564,7 +582,7 @@ export function renderSetup(root, ctx) {
         const trap = m.tags?.includes('trap');
         const src = monsterSpriteUrl(id, m.color, m.rarity);
         return `
-          <button type="button" class="tray-item ${selectedId === id ? 'selected' : ''}" data-mid="${id}" draggable="true">
+          <button type="button" class="tray-item ${selectedId === id ? 'selected' : ''}" data-mid="${id}" draggable="true" title="${m.name}">
             <img class="tray-sprite" src="${src}" alt="" width="40" height="40" draggable="false" />
             <div style="color:${RARITY_COLORS[m.rarity]}">${'★'.repeat(m.rarity)}</div>
             <div>${shortName(m.name)}</div>
@@ -612,7 +630,7 @@ export function renderSetup(root, ctx) {
               <button type="button" class="tool-btn ${showPath ? 'on' : ''}" id="btn-toggle-path" title="Hiện path Hero">Path</button>
               <button type="button" class="tool-btn" id="btn-ghost-walk" title="Xem Hero đi thử">Thử đường</button>
             </div>
-            <p class="board-tip muted" id="board-tip">${selected ? `Thả ${selected.name} · kéo từ khay hoặc chạm ô` : 'Chọn / kéo quái · hover ô để xem địa hình'}</p>
+            <p class="board-tip muted" id="board-tip">${selected ? `Thả ${selected.name} · kéo từ khay hoặc chạm ô` : 'Chọn / kéo quái · hover để xem chỉ số'}</p>
           </div>
           <div class="board-stage single-map">
               <div class="grid-board map-grid" style="--cols:${map.cols};--rows:${map.rows};grid-template-columns:repeat(${map.cols},minmax(0,1fr));grid-template-rows:repeat(${map.rows},minmax(0,1fr));aspect-ratio:${map.cols}/${map.rows}">${cells.join('')}</div>
@@ -778,6 +796,7 @@ export function renderSetup(root, ctx) {
 
       if (el.getAttribute('data-filled') === '1') {
         el.ondragstart = (e) => {
+          hideMonsterTip(true);
           e.dataTransfer.setData('text/from-cell', `${col},${row}`);
           e.dataTransfer.effectAllowed = 'move';
           el.classList.add('dragging');
@@ -789,6 +808,20 @@ export function renderSetup(root, ctx) {
         };
       }
     });
+
+    bindMonsterTips(
+      root,
+      '.tray-item[data-mid], .grid-cell.filled[data-mid]',
+      (el) => el.getAttribute('data-mid'),
+      state,
+      (el) => {
+        if (!el.classList.contains('filled')) return undefined;
+        const title = el.getAttribute('title') || '';
+        const parts = title.split(' · ');
+        const note = parts.slice(1).join(' · ');
+        return note ? { note } : undefined;
+      }
+    );
 
     root.querySelector('#btn-toggle-path').onclick = () => {
       showPath = !showPath;
@@ -807,6 +840,7 @@ export function renderSetup(root, ctx) {
     };
 
     root.querySelector('#btn-scout').onclick = () => {
+      hideMonsterTip(true);
       stopFx();
       go('scout');
     };
@@ -824,10 +858,17 @@ export function renderSetup(root, ctx) {
       }
       // Phần còn trong khay → tay bài thả trong trận
       run.deployHand = { ...inventory };
+      hideMonsterTip(true);
       stopFx();
       go('combat');
     };
   }
 
   paint();
+  hideMonsterTipOnScroll(root);
+
+  root._cleanup = () => {
+    hideMonsterTip(true);
+    stopFx();
+  };
 }

@@ -17,6 +17,7 @@ import { renderAchievements, announceUnlocks } from './ui/achievementsUI.js';
 import { renderLeaderboard } from './ui/leaderboardUI.js';
 import { startGuidedTour, showTipBanner } from './ui/tutorial.js';
 import { renderAccountBar } from './ui/authUI.js';
+import { hideMonsterTip } from './ui/monsterTip.js';
 
 const state = loadState();
 let run = null;
@@ -211,6 +212,14 @@ function go(name) {
     stopCombatIfAny();
     cleanupScreen('combat');
   }
+  if (currentScreen === 'setup' && name !== 'setup') {
+    cleanupScreen('setup');
+  }
+  if (currentScreen === 'scout' && name !== 'scout') {
+    cleanupScreen('scout');
+  }
+
+  hideMonsterTip(true);
 
   currentScreen = name;
   Object.entries(screens).forEach(([key, el]) => {

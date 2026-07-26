@@ -5,6 +5,7 @@ import { CombatEngine } from '../core/combatEngine.js';
 import { saveState } from '../core/storage.js';
 import { evaluateAchievements, isGameCleared } from '../core/achievements.js';
 import { monsterSpriteUrl } from '../render/sprites.js';
+import { bindMonsterTips, hideMonsterTip } from './monsterTip.js';
 
 let engine = null;
 
@@ -134,6 +135,16 @@ export function renderCombat(root, ctx) {
         }
       };
     });
+    bindMonsterTips(
+      handEl,
+      '[data-deploy]',
+      (el) => el.getAttribute('data-deploy'),
+      state,
+      (el) =>
+        el.classList.contains('too-costly')
+          ? { note: 'Thiếu slot Cost — chờ quái chết' }
+          : undefined
+    );
   }
 
   function onEnd(result) {

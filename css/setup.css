@@ -1060,9 +1060,11 @@ body.play-fit #screen-scout.screen.active {
 }
 
 .loadout-pick.is-full,
-.loadout-pick:disabled {
+.loadout-pick:disabled,
+.loadout-pick[aria-disabled="true"] {
   opacity: 0.45;
   box-shadow: none;
+  cursor: default;
 }
 
 .tray-loadout-hint {
@@ -1293,6 +1295,87 @@ body.play-fit .screen.active > .combat-wrap {
   overflow: hidden;
   text-overflow: ellipsis;
   color: var(--ink-soft);
+}
+
+/* Floating monster stats tip */
+.monster-tip {
+  position: fixed;
+  z-index: 120;
+  width: min(260px, calc(100vw - 20px));
+  padding: 10px 12px;
+  background: var(--bone, #f7f1e6);
+  border: 2.5px solid var(--ink, #1a1612);
+  border-radius: 8px;
+  box-shadow: 5px 5px 0 rgba(26, 22, 18, 0.18);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+.monster-tip.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.mtip-name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.95rem;
+  line-height: 1.2;
+  margin-bottom: 2px;
+  border-left: 3px solid var(--r, var(--seal));
+  padding-left: 8px;
+}
+
+.mtip-rarity {
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin: 4px 0 8px;
+}
+
+.mtip-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px 6px;
+  font-size: 0.72rem;
+  margin-bottom: 8px;
+}
+
+.mtip-stats span {
+  background: rgba(26, 22, 18, 0.06);
+  border-radius: 4px;
+  padding: 3px 5px;
+  white-space: nowrap;
+}
+
+.mtip-stats b {
+  font-weight: 800;
+  margin-right: 2px;
+}
+
+.mtip-tags {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.mtip-desc {
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--ink-soft);
+}
+
+.mtip-note {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(26, 22, 18, 0.2);
+  font-size: 0.68rem;
+  color: var(--muted);
+  font-weight: 600;
 }
 
 .board-hero .board-stage.single-map {
