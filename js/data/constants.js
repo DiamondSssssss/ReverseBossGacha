@@ -139,13 +139,14 @@ export const MONSTER_UPGRADE = {
 
 /**
  * Cải tạo hầm bằng Gem — tăng Cost cap mọi ải.
- * Cap gốc map ~5–6; muốn rộng phải nâng hầm.
+ * Cap gốc map ~5–12; muốn rộng phải nâng hầm (sink Gem muộn game).
  */
 export const MAP_UPGRADE = {
   COST_BASE: 1,
   COST_GROWTH: 1.5,
   COST_CAP_BONUS: 2,
-  MAX_LEVEL: 6,
+  /** Trước 6 — mở rộng vì ải 50 + người chơi dư Gem */
+  MAX_LEVEL: 12,
 };
 
 /** @deprecated alias */

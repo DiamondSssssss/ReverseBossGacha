@@ -3,22 +3,22 @@ import {
   saveState,
   resetState,
   inventoryCopy,
-} from './core/storage.js?v=58';
-import { createRunState } from './core/dungeon.js?v=58';
-import { loadoutFingerprint } from './core/loadout.js?v=58';
-import { evaluateAchievements } from './core/achievements.js?v=58';
-import { initAuth, onAuthChange } from './core/auth.js?v=58';
-import { renderHub } from './ui/hub.js?v=58';
-import { renderGacha } from './ui/gachaUI.js?v=58';
-import { renderCollection } from './ui/collection.js?v=58';
-import { renderHeroes } from './ui/heroesUI.js?v=58';
-import { renderScout, renderSetup } from './ui/setup.js?v=58';
-import { renderCombat, renderReward, stopCombatIfAny, getCombatEngine } from './ui/combat.js?v=58';
-import { renderAchievements, announceUnlocks } from './ui/achievementsUI.js?v=58';
-import { renderLeaderboard } from './ui/leaderboardUI.js?v=58';
-import { startGuidedTour, showTipBanner } from './ui/tutorial.js?v=58';
-import { renderAccountBar } from './ui/authUI.js?v=58';
-import { hideMonsterTip } from './ui/monsterTip.js?v=58';
+} from './core/storage.js?v=59';
+import { createRunState } from './core/dungeon.js?v=59';
+import { loadoutFingerprint } from './core/loadout.js?v=59';
+import { evaluateAchievements } from './core/achievements.js?v=59';
+import { initAuth, onAuthChange } from './core/auth.js?v=59';
+import { renderHub } from './ui/hub.js?v=59';
+import { renderGacha } from './ui/gachaUI.js?v=59';
+import { renderCollection } from './ui/collection.js?v=59';
+import { renderHeroes } from './ui/heroesUI.js?v=59';
+import { renderScout, renderSetup } from './ui/setup.js?v=59';
+import { renderCombat, renderReward, stopCombatIfAny, getCombatEngine } from './ui/combat.js?v=59';
+import { renderAchievements, announceUnlocks } from './ui/achievementsUI.js?v=59';
+import { renderLeaderboard } from './ui/leaderboardUI.js?v=59';
+import { startGuidedTour, showTipBanner } from './ui/tutorial.js?v=59';
+import { renderAccountBar } from './ui/authUI.js?v=59';
+import { hideMonsterTip } from './ui/monsterTip.js?v=59';
 
 const state = loadState();
 let run = null;

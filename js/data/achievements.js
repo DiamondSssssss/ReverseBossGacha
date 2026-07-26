@@ -1,6 +1,6 @@
 /** Achievement definitions — clear goals toward "clearing" the game */
 
-import { MAP_UPGRADE } from './constants.js?v=58';
+import { MAP_UPGRADE } from './constants.js?v=59';
 
 export const ACHIEVEMENTS = [
   // —— Onboarding / first steps ——

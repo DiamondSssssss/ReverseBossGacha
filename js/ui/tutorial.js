@@ -3,8 +3,8 @@
  * Người chơi bấm / thả / chọn đúng chỗ mới sang bước tiếp.
  */
 
-import { totalPlacements } from '../core/dungeon.js?v=58';
-import { loadoutUnitCount } from '../core/loadout.js?v=58';
+import { totalPlacements } from '../core/dungeon.js?v=59';
+import { loadoutUnitCount } from '../core/loadout.js?v=59';
 
 /** @typedef {'click' | 'condition' | 'next' | 'either'} AdvanceMode */
 

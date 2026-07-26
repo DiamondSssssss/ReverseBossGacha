@@ -1,7 +1,7 @@
-import { ACHIEVEMENTS } from '../data/achievements.js?v=58';
-import { MONSTERS } from '../data/monsters.js?v=58';
-import { MAX_STAGE } from '../data/constants.js?v=58';
-import { saveState } from './storage.js?v=58';
+import { ACHIEVEMENTS } from '../data/achievements.js?v=59';
+import { MONSTERS } from '../data/monsters.js?v=59';
+import { MAX_STAGE } from '../data/constants.js?v=59';
+import { saveState } from './storage.js?v=59';
 
 function checkCtx() {
   return {
