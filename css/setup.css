@@ -1297,34 +1297,37 @@ body.play-fit .screen.active > .combat-wrap {
   color: var(--ink-soft);
 }
 
-/* Floating monster stats tip */
+/* Floating monster stats tip — always on top of play UI */
 .monster-tip {
-  position: fixed;
-  z-index: 120;
-  width: min(260px, calc(100vw - 20px));
+  position: fixed !important;
+  z-index: 9999 !important;
+  width: min(280px, calc(100vw - 16px));
   padding: 10px 12px;
-  background: var(--bone, #f7f1e6);
-  border: 2.5px solid var(--ink, #1a1612);
+  background: #f7f1e6;
+  border: 2.5px solid #1a1612;
   border-radius: 8px;
-  box-shadow: 5px 5px 0 rgba(26, 22, 18, 0.18);
+  box-shadow: 5px 5px 0 rgba(26, 22, 18, 0.22);
   pointer-events: none;
   opacity: 0;
   transform: translateY(4px);
   transition: opacity 0.12s ease, transform 0.12s ease;
+  color: #1a1612;
+  font-family: var(--font-body, 'DM Sans', sans-serif);
+  box-sizing: border-box;
 }
 
 .monster-tip.show {
-  opacity: 1;
+  opacity: 1 !important;
   transform: translateY(0);
 }
 
 .mtip-name {
-  font-family: var(--font-display);
+  font-family: var(--font-display, Fraunces, serif);
   font-weight: 800;
   font-size: 0.95rem;
   line-height: 1.2;
   margin-bottom: 2px;
-  border-left: 3px solid var(--r, var(--seal));
+  border-left: 3px solid var(--r, #c43c28);
   padding-left: 8px;
 }
 
@@ -1359,14 +1362,14 @@ body.play-fit .screen.active > .combat-wrap {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--muted);
+  color: #7a7164;
   margin-bottom: 6px;
 }
 
 .mtip-desc {
   font-size: 0.75rem;
   line-height: 1.35;
-  color: var(--ink-soft);
+  color: #3d3830;
 }
 
 .mtip-note {
@@ -1374,8 +1377,24 @@ body.play-fit .screen.active > .combat-wrap {
   padding-top: 6px;
   border-top: 1px dashed rgba(26, 22, 18, 0.2);
   font-size: 0.68rem;
-  color: var(--muted);
+  color: #7a7164;
   font-weight: 600;
+}
+
+.unit-stat-panel {
+  margin: 0 0 8px;
+  padding: 10px 12px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: rgba(247, 241, 230, 0.95);
+}
+
+.unit-stat-panel .mtip-name {
+  font-size: 1rem;
+}
+
+.unit-stat-panel[hidden] {
+  display: none !important;
 }
 
 .board-hero .board-stage.single-map {

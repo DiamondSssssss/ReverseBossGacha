@@ -42,16 +42,24 @@ export function monsterTipHtml(monsterOrId, state, extra = {}) {
   `;
 }
 
+/** Một dòng gọn cho board-tip / status. */
+export function monsterTipLine(monsterOrId, state) {
+  const m = typeof monsterOrId === 'string' ? MONSTER_BY_ID[monsterOrId] : monsterOrId;
+  if (!m) return '';
+  const upLv = state ? getMonsterUpgradeLevel(state, m.id) : 0;
+  const st = displayMonsterStats(m, upLv);
+  return `${m.name} · C${m.cost}${upLv ? ` · Lv↑${upLv}` : ''} · HP ${st.hp} · ATK ${st.atk} · SPD ${st.speed} · RNG ${st.range}`;
+}
+
 let tipEl = null;
 let tipHideTimer = 0;
-let tipAnchor = null;
 
 function ensureTipEl() {
   if (tipEl && document.body.contains(tipEl)) return tipEl;
   tipEl = document.createElement('div');
   tipEl.className = 'monster-tip';
   tipEl.setAttribute('role', 'tooltip');
-  tipEl.hidden = true;
+  tipEl.style.display = 'none';
   document.body.appendChild(tipEl);
   return tipEl;
 }
@@ -59,26 +67,32 @@ function ensureTipEl() {
 function positionTip(anchor) {
   const el = ensureTipEl();
   const rect = anchor.getBoundingClientRect();
-  const pad = 10;
+  const pad = 8;
   const vw = window.innerWidth;
   const vh = window.innerHeight;
 
+  el.style.display = 'block';
   el.style.visibility = 'hidden';
-  el.hidden = false;
-  const tw = el.offsetWidth || 220;
-  const th = el.offsetHeight || 120;
+  el.style.left = '0px';
+  el.style.top = '0px';
+
+  const tw = Math.max(el.offsetWidth, 200);
+  const th = Math.max(el.offsetHeight, 80);
 
   let left = rect.left + rect.width / 2 - tw / 2;
-  let top = rect.top - th - pad;
+  let top = rect.bottom + pad;
 
-  if (top < pad) top = rect.bottom + pad;
+  // Ưu tiên dưới con trỏ; nếu tràn đáy thì đưa lên trên
+  if (top + th > vh - pad) {
+    top = rect.top - th - pad;
+  }
+  if (top < pad) top = pad;
   if (left < pad) left = pad;
-  if (left + tw > vw - pad) left = vw - pad - tw;
-  if (top + th > vh - pad) top = Math.max(pad, vh - pad - th);
+  if (left + tw > vw - pad) left = Math.max(pad, vw - pad - tw);
 
   el.style.left = `${Math.round(left)}px`;
   el.style.top = `${Math.round(top)}px`;
-  el.style.visibility = '';
+  el.style.visibility = 'visible';
 }
 
 export function showMonsterTip(anchor, monsterOrId, state, extra) {
@@ -87,22 +101,23 @@ export function showMonsterTip(anchor, monsterOrId, state, extra) {
   clearTimeout(tipHideTimer);
   const el = ensureTipEl();
   el.innerHTML = html;
-  tipAnchor = anchor;
   positionTip(anchor);
+  // force reflow rồi mới bật class để transition chạy
+  void el.offsetWidth;
   el.classList.add('show');
 }
 
 export function hideMonsterTip(immediate = false) {
-  tipAnchor = null;
   clearTimeout(tipHideTimer);
   const run = () => {
     if (!tipEl) return;
     tipEl.classList.remove('show');
-    tipEl.hidden = true;
+    tipEl.style.display = 'none';
+    tipEl.style.visibility = '';
     tipEl.innerHTML = '';
   };
   if (immediate) run();
-  else tipHideTimer = setTimeout(run, 80);
+  else tipHideTimer = setTimeout(run, 60);
 }
 
 /**
@@ -116,7 +131,9 @@ export function hideMonsterTip(immediate = false) {
 export function bindMonsterTips(root, selector, getId, state, getExtra) {
   if (!root) return;
   root.querySelectorAll(selector).forEach((el) => {
-    const show = () => {
+    const show = (e) => {
+      // Tránh mouse synthetic sau touch
+      if (e.pointerType === 'touch') return;
       const id = getId(el);
       if (!id) return;
       showMonsterTip(el, id, state, getExtra?.(el));
@@ -125,7 +142,11 @@ export function bindMonsterTips(root, selector, getId, state, getExtra) {
 
     el.addEventListener('pointerenter', show);
     el.addEventListener('pointerleave', hide);
-    el.addEventListener('focus', show);
+    el.addEventListener('focus', () => {
+      const id = getId(el);
+      if (!id) return;
+      showMonsterTip(el, id, state, getExtra?.(el));
+    });
     el.addEventListener('blur', hide);
     el.addEventListener('dragstart', () => hideMonsterTip(true));
   });
@@ -134,7 +155,5 @@ export function bindMonsterTips(root, selector, getId, state, getExtra) {
 export function hideMonsterTipOnScroll(root) {
   if (!root) return;
   const hide = () => hideMonsterTip(true);
-  root.addEventListener('scroll', hide, { passive: true });
-  window.addEventListener('scroll', hide, { passive: true });
-  window.addEventListener('resize', hide);
+  root.addEventListener('scroll', hide, { passive: true, capture: true });
 }
