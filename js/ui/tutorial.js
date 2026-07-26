@@ -168,6 +168,7 @@ export const SCREEN_TIPS = {
   hub: 'LH = Gacha · Vàng = nâng quái · Gem = nâng hầm. Bấm “Xem hướng dẫn” để học tận tay.',
   gacha: '100 LH/lần. Mỗi loại tối đa ×3; quay dư → hoàn Linh Hồn.',
   collection: 'Kho: nâng quái bằng Vàng (+HP/ATK). Cap sở hữu ×3/loại.',
+  leaderboard: 'BXH xếp theo ải đã vượt + số loại quái unique. Bấm tên để xem hồ sơ & bộ sưu tập.',
   achievements: 'Ấn chương thưởng Gem. Gem dùng cải tạo hầm.',
 };
 

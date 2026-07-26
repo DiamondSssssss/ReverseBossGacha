@@ -14,6 +14,7 @@ import { renderCollection } from './ui/collection.js';
 import { renderScout, renderSetup } from './ui/setup.js';
 import { renderCombat, renderReward, stopCombatIfAny, getCombatEngine } from './ui/combat.js';
 import { renderAchievements, announceUnlocks } from './ui/achievementsUI.js';
+import { renderLeaderboard } from './ui/leaderboardUI.js';
 import { startGuidedTour, showTipBanner } from './ui/tutorial.js';
 import { renderAccountBar } from './ui/authUI.js';
 
@@ -27,6 +28,7 @@ const screens = {
   hub: document.getElementById('screen-hub'),
   gacha: document.getElementById('screen-gacha'),
   collection: document.getElementById('screen-collection'),
+  leaderboard: document.getElementById('screen-leaderboard'),
   achievements: document.getElementById('screen-achievements'),
   scout: document.getElementById('screen-scout'),
   setup: document.getElementById('screen-setup'),
@@ -260,6 +262,9 @@ function renderScreen(name) {
       break;
     case 'collection':
       renderCollection(root, bag);
+      break;
+    case 'leaderboard':
+      renderLeaderboard(root, { ...bag, modalEl });
       break;
     case 'achievements':
       renderAchievements(root, bag);

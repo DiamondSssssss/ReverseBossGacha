@@ -71,6 +71,7 @@ export function renderHub(root, ctx) {
           <button type="button" class="primary big" id="btn-play">Mở cổng ải</button>
           <div class="hub-secondary">
             <button type="button" id="btn-gacha">Quay Gacha</button>
+            <button type="button" id="btn-lb">BXH</button>
             <button type="button" id="btn-ach">Ấn chương</button>
           </div>
         </div>
@@ -138,6 +139,7 @@ export function renderHub(root, ctx) {
     go('scout');
   };
   root.querySelector('#btn-gacha').onclick = () => go('gacha');
+  root.querySelector('#btn-lb').onclick = () => go('leaderboard');
   root.querySelector('#btn-collection').onclick = () => go('collection');
   root.querySelector('#btn-ach').onclick = () => go('achievements');
   root.querySelector('#btn-help').onclick = () => {

@@ -7,6 +7,8 @@ import {
   verifyPassword,
   getSave,
   upsertSave,
+  listLeaderboard,
+  getPublicProfile,
 } from './db.js';
 import { signToken, authMiddleware } from './auth.js';
 
@@ -74,6 +76,18 @@ app.put('/api/save', authMiddleware, (req, res) => {
   }
   const save = upsertSave(req.user.id, body);
   res.json({ ok: true, updatedAt: save.updatedAt });
+});
+
+app.get('/api/leaderboard', (req, res) => {
+  const limit = Number(req.query.limit) || 50;
+  const entries = listLeaderboard(limit);
+  res.json({ entries });
+});
+
+app.get('/api/players/:username', (req, res) => {
+  const profile = getPublicProfile(req.params.username);
+  if (!profile) return res.status(404).json({ error: 'Không tìm thấy người chơi' });
+  res.json({ profile });
 });
 
 app.listen(PORT, () => {
