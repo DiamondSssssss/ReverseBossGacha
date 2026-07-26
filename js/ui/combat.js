@@ -1,5 +1,5 @@
 import { SPELLS, REWARDS, RARITY_COLORS } from '../data/constants.js?v=41';
-import { MONSTER_BY_ID } from '../data/monsters.js';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=54';
 import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js';
 import { CombatEngine } from '../core/combatEngine.js';
 import { saveState } from '../core/storage.js';

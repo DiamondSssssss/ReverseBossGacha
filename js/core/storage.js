@@ -6,7 +6,7 @@ import {
   DUPLICATE_SOUL_REFUND,
 } from '../data/constants.js';
 import { DEFAULT_BOSS_ID, syncUnlockedBosses } from '../data/dungeonBosses.js';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=53';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=54';
 import { isLoggedIn } from './auth.js';
 import { pushCloudSave } from './cloudSave.js';
 

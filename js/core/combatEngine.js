@@ -1,6 +1,6 @@
 import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=53';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=53';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=54';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=54';
 import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js';
 import { mapUsedCost } from './dungeon.js';
 import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js';

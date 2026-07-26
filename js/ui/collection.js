@@ -1,18 +1,18 @@
-import { MONSTERS } from '../data/monsters.js?v=53';
+import { MONSTERS } from '../data/monsters.js?v=54';
 import {
   RARITY_COLORS,
   RARITY_LABELS,
   INVENTORY_CAP,
   MONSTER_UPGRADE,
-} from '../data/constants.js?v=53';
-import { monsterDisplayUrl } from '../render/sprites.js?v=53';
+} from '../data/constants.js?v=54';
+import { monsterDisplayUrl } from '../render/sprites.js?v=54';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,
   tryUpgradeMonster,
   upgradeMonsterCost,
-} from '../core/monsterUpgrade.js?v=53';
-import { evaluateAchievements } from '../core/achievements.js?v=53';
+} from '../core/monsterUpgrade.js?v=54';
+import { evaluateAchievements } from '../core/achievements.js?v=54';
 
 const filters = {
   q: '',
@@ -105,7 +105,8 @@ function renderCards(state) {
       const st = displayMonsterStats(m, upLv);
       const maxed = upLv >= MONSTER_UPGRADE.MAX_LEVEL;
       const upCost = upgradeMonsterCost(m.id, upLv);
-      const canAfford = state.gold >= upCost;
+      const costOk = upCost != null && Number.isFinite(upCost);
+      const canAfford = costOk && state.gold >= upCost;
       return `
       <article class="monster-card" data-mid="${m.id}">
         <img class="card-sprite" src="${src}" alt="" width="64" height="64" />
@@ -118,7 +119,7 @@ function renderCards(state) {
           <div class="count">Sở hữu ×${count}/${INVENTORY_CAP}</div>
           <div class="upgrade-row">
             <button type="button" class="btn-upgrade-mon" data-upgrade="${m.id}" ${maxed || !canAfford ? 'disabled' : ''}>
-              ${maxed ? 'MAX' : `Nâng Lv ${upLv + 1} · ${upCost} vàng`}
+              ${maxed ? 'MAX' : costOk ? `Nâng Lv ${upLv + 1} · ${upCost} vàng` : 'Không nâng được'}
             </button>
           </div>
         </div>

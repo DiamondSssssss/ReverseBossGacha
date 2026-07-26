@@ -4,8 +4,8 @@ import {
   RARITY_COLORS,
   HERO_CLASS_LABELS,
 } from '../data/constants.js';
-import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=53';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=53';
+import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=54';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=54';
 import { findPath, buildBlockedFromMap } from '../core/pathfinding.js';
 import {
   mapUsedCost,

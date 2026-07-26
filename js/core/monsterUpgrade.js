@@ -1,6 +1,6 @@
-import { MONSTER_UPGRADE } from '../data/constants.js';
-import { MONSTER_BY_ID } from '../data/monsters.js';
-import { saveState } from './storage.js';
+import { MONSTER_UPGRADE } from '../data/constants.js?v=54';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=54';
+import { saveState } from './storage.js?v=54';
 
 export function getMonsterUpgradeLevel(state, monsterId) {
   return Math.max(0, Number(state.monsterUpgrades?.[monsterId]) || 0);
@@ -13,13 +13,13 @@ export function monsterStatMul(level) {
 
 export function upgradeMonsterCost(monsterId, currentLevel) {
   const m = MONSTER_BY_ID[monsterId];
-  if (!m) return Infinity;
-  const rarityMul = MONSTER_UPGRADE.RARITY_MULT[m.rarity] || 1;
-  return Math.round(
-    MONSTER_UPGRADE.COST_BASE *
-      Math.pow(MONSTER_UPGRADE.COST_GROWTH, currentLevel) *
-      rarityMul
+  if (!m) return null;
+  const rarityMul = MONSTER_UPGRADE.RARITY_MULT[m.rarity] ?? 1;
+  const lv = Math.max(0, Number(currentLevel) || 0);
+  const cost = Math.round(
+    MONSTER_UPGRADE.COST_BASE * Math.pow(MONSTER_UPGRADE.COST_GROWTH, lv) * rarityMul
   );
+  return Number.isFinite(cost) ? cost : null;
 }
 
 /**
@@ -36,6 +36,9 @@ export function tryUpgradeMonster(state, monsterId) {
     return { ok: false, reason: 'Đã max cấp quái' };
   }
   const cost = upgradeMonsterCost(monsterId, lvl);
+  if (cost == null || !Number.isFinite(cost)) {
+    return { ok: false, reason: 'Không tính được giá nâng' };
+  }
   if (state.gold < cost) {
     return { ok: false, reason: 'Không đủ Vàng' };
   }
