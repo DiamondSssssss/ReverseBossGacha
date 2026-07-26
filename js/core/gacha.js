@@ -1,6 +1,6 @@
-import { GACHA } from '../data/constants.js?v=56';
-import { monstersByRarityBucket } from '../data/monsters.js?v=56';
-import { addToInventory, saveState } from './storage.js?v=56';
+import { GACHA } from '../data/constants.js?v=57';
+import { monstersByRarityBucket } from '../data/monsters.js?v=57';
+import { addToInventory, saveState } from './storage.js?v=57';
 
 function rand() {
   return Math.random();
@@ -81,6 +81,8 @@ export function pullOnce(state) {
     monster,
     pityHit,
     mythicPityHit,
+    /** Mythic rơi thường (không phải soft pity) — vẫn reset cả 2 thanh pity */
+    naturalMythic: monster.rarity >= 6 && !forceMythic,
     bucket,
     isNew: prevCount === 0 && add.added > 0,
     refunded: add.overflow > 0,

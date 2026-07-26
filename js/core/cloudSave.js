@@ -1,4 +1,4 @@
-import { api, isLoggedIn } from './auth.js?v=56';
+import { api, isLoggedIn } from './auth.js?v=57';
 
 function sanitize(state) {
   const {
@@ -72,13 +72,28 @@ export async function pullCloudSave() {
   }
 }
 
+/**
+ * Chọn save “mới hơn / tiến hơn”.
+ * Không dùng souls làm trọng số chính — sau gacha souls ↓ trong khi pity ↑,
+ * save cloud cũ (nhiều LH, pity thấp) từng thắng và xóa pity mythic.
+ */
 export function pickBetterSave(local, cloud) {
   if (!cloud) return local;
   if (!local) return cloud;
+
+  const lt = Number(local.updatedAt) || 0;
+  const ct = Number(cloud.updatedAt) || 0;
+  // Lệch ≥ 2s → tin updatedAt (local vừa quay thường mới hơn cloud chưa kịp sync)
+  if (Math.abs(lt - ct) > 2000) {
+    return lt > ct ? local : cloud;
+  }
+
   const score = (s) =>
     (s.dungeonLevel || 1) * 10000 +
     (s.stats?.wins || 0) * 100 +
-    (s.souls || 0) +
-    (s.stats?.pulls || 0);
-  return score(cloud) >= score(local) ? cloud : local;
+    (s.stats?.pulls || 0) * 50 +
+    (Number(s.mythicPityCounter) || 0) * 25 +
+    (Number(s.pityCounter) || 0) * 10 +
+    (Number(s.souls) || 0) * 0.01;
+  return score(cloud) > score(local) ? cloud : local;
 }

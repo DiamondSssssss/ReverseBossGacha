@@ -4,11 +4,11 @@ import {
   SPELLS,
   INVENTORY_CAP,
   DUPLICATE_SOUL_REFUND,
-} from '../data/constants.js?v=56';
-import { DEFAULT_BOSS_ID, syncUnlockedBosses } from '../data/dungeonBosses.js?v=56';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=56';
-import { isLoggedIn } from './auth.js?v=56';
-import { pushCloudSave } from './cloudSave.js?v=56';
+} from '../data/constants.js?v=57';
+import { DEFAULT_BOSS_ID, syncUnlockedBosses } from '../data/dungeonBosses.js?v=57';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=57';
+import { isLoggedIn } from './auth.js?v=57';
+import { pushCloudSave } from './cloudSave.js?v=57';
 
 const LEGACY_KEYS = ['rbg_save_v1'];
 
@@ -82,6 +82,8 @@ export function loadState() {
       souls: Number(parsed.souls) || 0,
       gold: Number(parsed.gold) || 0,
       gems: Number(parsed.gems) || 0,
+      pityCounter: Math.max(0, Number(parsed.pityCounter) || 0),
+      mythicPityCounter: Math.max(0, Number(parsed.mythicPityCounter) || 0),
       inventory: parsed.inventory
         ? { ...parsed.inventory }
         : { ...STARTING.starterMonsters },
@@ -141,6 +143,9 @@ export function applySaveData(state, data) {
     souls: Number(data.souls) || 0,
     gold: Number(data.gold) || 0,
     gems: Number(data.gems) || 0,
+    pityCounter: Math.max(0, Number(data.pityCounter) || 0),
+    mythicPityCounter: Math.max(0, Number(data.mythicPityCounter) || 0),
+    updatedAt: data.updatedAt || Date.now(),
   });
   clampInventoryToCap(state);
   syncUnlockedBosses(state);

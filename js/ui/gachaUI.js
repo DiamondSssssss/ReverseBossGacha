@@ -1,7 +1,7 @@
-import { GACHA, RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=56';
-import { tryPull } from '../core/gacha.js?v=56';
-import { evaluateAchievements } from '../core/achievements.js?v=56';
-import { monsterSpriteUrl, getLockedMonsterSprite, getSpriteDataUrl } from '../render/sprites.js?v=56';
+import { GACHA, RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=57';
+import { tryPull } from '../core/gacha.js?v=57';
+import { evaluateAchievements } from '../core/achievements.js?v=57';
+import { monsterSpriteUrl, getLockedMonsterSprite, getSpriteDataUrl } from '../render/sprites.js?v=57';
 
 const CHARGE_MS = {
   1: 700,
@@ -169,7 +169,7 @@ export function renderGacha(root, ctx) {
             <img class="pull-sprite" src="${monsterSpriteUrl(m.id, m.color, m.rarity)}" alt="" width="52" height="52" />
             <div class="stars" style="color:${m.rarity >= 5 ? (m.rarity >= 6 ? '#ef5350' : '#e6b84a') : RARITY_COLORS[m.rarity]}">${stars}</div>
             <div style="font-weight:700;font-family:var(--font-display)">${m.name}</div>
-            <div class="muted" style="font-size:0.75rem">${RARITY_LABELS[m.rarity]}${r.mythicPityHit ? ' · Mythic Pity' : r.pityHit ? ' · Pity' : ''}${r.refunded ? ' · Trùng' : ''}${m.drawback ? ' · ⚠' : ''}</div>
+            <div class="muted" style="font-size:0.75rem">${RARITY_LABELS[m.rarity]}${r.mythicPityHit ? ' · Mythic Pity' : r.naturalMythic ? ' · Mythic (reset pity)' : r.pityHit ? ' · Pity' : ''}${r.refunded ? ' · Trùng' : ''}${m.drawback ? ' · ⚠' : ''}</div>
           </div>`;
       })
       .join('');
@@ -188,7 +188,7 @@ export function renderGacha(root, ctx) {
           </div>
           <div class="reveal-face front" style="--rc:${RARITY_COLORS[m.rarity]}">
             ${r.isNew ? '<span class="new-badge">MỚI</span>' : ''}
-            ${r.mythicPityHit ? '<span class="pity-badge mythic">MYTHIC PITY</span>' : r.pityHit ? '<span class="pity-badge">PITY</span>' : ''}
+            ${r.mythicPityHit ? '<span class="pity-badge mythic">MYTHIC PITY</span>' : r.naturalMythic ? '<span class="pity-badge mythic">MYTHIC</span>' : r.pityHit ? '<span class="pity-badge">PITY</span>' : ''}
             ${r.refunded ? `<span class="refund-badge">+${r.soulsRefunded} LH</span>` : ''}
             <div class="reveal-rays" aria-hidden="true"></div>
             <img class="reveal-sprite" src="${openUrl}" alt="" width="88" height="88" />

@@ -1,6 +1,6 @@
-import { ACHIEVEMENTS } from '../data/achievements.js?v=56';
-import { MONSTERS } from '../data/monsters.js?v=56';
-import { saveState } from './storage.js?v=56';
+import { ACHIEVEMENTS } from '../data/achievements.js?v=57';
+import { MONSTERS } from '../data/monsters.js?v=57';
+import { saveState } from './storage.js?v=57';
 
 function checkCtx() {
   return {
