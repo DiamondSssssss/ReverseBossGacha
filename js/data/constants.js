@@ -25,15 +25,17 @@ export const COST_BY_RARITY = {
 export const COMBAT = {
   TREASURE_HP: 120,
   PANIC_HP_RATIO: 0.28,
-  GRID_COLS: 6,
-  GRID_ROWS: 3,
-  CELL_SIZE: 48,
+  GRID_COLS: 14,
+  GRID_ROWS: 8,
+  CELL_SIZE: 44,
   TICK_CAP_MS: 50,
   HERO_SPAWN_INTERVAL: 3.5,
   /** Tốc độ gốc chậm để xem được; nút ×1/×2/×3 nhân lên */
   BASE_TIME_SCALE: 0.52,
   /** Camera trái tối thiểu — hiện Cổng + hero đang vào */
-  CAMERA_MIN_X: -88,
+  CAMERA_MIN_X: -40,
+  WATER_HERO_SLOW: 0.85,
+  DARK_RANGE_PENALTY: 0.5,
 };
 
 export const SPELLS = {
@@ -42,6 +44,7 @@ export const SPELLS = {
     name: 'Sương Chậm',
     desc: 'Làm chậm toàn bộ Hero 50% trong 4s',
     cooldown: 18,
+    kind: 'slow',
     duration: 4,
     slowFactor: 0.5,
   },
@@ -50,15 +53,106 @@ export const SPELLS = {
     name: 'Huyết Ấn',
     desc: 'Hồi 30% HP tối đa cho mọi quái',
     cooldown: 22,
+    kind: 'heal',
     healRatio: 0.3,
+  },
+  treasure_ward: {
+    id: 'treasure_ward',
+    name: 'Khiên Kho',
+    desc: 'Kho nhận khiên hấp thụ 45 sát thương trong 6s',
+    cooldown: 20,
+    kind: 'treasure_shield',
+    shieldHp: 45,
+    duration: 6,
+  },
+  knock_back: {
+    id: 'knock_back',
+    name: 'Đẩy Cổng',
+    desc: 'Đẩy mọi Hero lùi về phía Cổng ~2 ô',
+    cooldown: 16,
+    kind: 'knock',
+    cells: 2,
+  },
+  poison_mire: {
+    id: 'poison_mire',
+    name: 'Đầm Độc',
+    desc: 'Hero trúng độc: mất HP theo thời gian trong 5s',
+    cooldown: 19,
+    kind: 'poison',
+    duration: 5,
+    dps: 12,
+  },
+  war_drum: {
+    id: 'war_drum',
+    name: 'Trống Chiến',
+    desc: 'Quái +40% ATK trong 5s',
+    cooldown: 21,
+    kind: 'rage',
+    duration: 5,
+    atkMul: 1.4,
+  },
+  eye_flare: {
+    id: 'eye_flare',
+    name: 'Mắt Soi',
+    desc: 'Phá tàng hình mọi Hero + Silence 3s',
+    cooldown: 17,
+    kind: 'reveal_silence',
+    duration: 3,
+  },
+  quake_stun: {
+    id: 'quake_stun',
+    name: 'Địa Chấn',
+    desc: 'Choáng toàn bộ Hero 1.6s',
+    cooldown: 24,
+    kind: 'stun',
+    duration: 1.6,
   },
 };
 
-export const ROOM_UPGRADE = {
-  COST_BASE: 200,
+/** Sở hữu tối đa mỗi loại quái — dư hoàn Linh Hồn */
+export const INVENTORY_CAP = 3;
+
+/** Hoàn LH khi quay trùng / vượt cap (theo độ hiếm) */
+export const DUPLICATE_SOUL_REFUND = {
+  1: 25,
+  2: 40,
+  3: 55,
+  4: 90,
+  5: 160,
+};
+
+/** Nâng cấp quái bằng Vàng */
+export const MONSTER_UPGRADE = {
+  MAX_LEVEL: 5,
+  /** +12% HP/ATK mỗi cấp */
+  STAT_PER_LEVEL: 0.12,
+  COST_BASE: 40,
+  COST_GROWTH: 1.45,
+  RARITY_MULT: { 1: 1, 2: 1.25, 3: 1.6, 4: 2.2, 5: 3.2 },
+};
+
+/**
+ * Cải tạo hầm bằng Gem — tăng Cost cap mọi ải.
+ * Cap gốc map ~5–6; muốn rộng phải nâng hầm.
+ */
+export const MAP_UPGRADE = {
+  COST_BASE: 1,
   COST_GROWTH: 1.5,
   COST_CAP_BONUS: 2,
-  MAX_LEVEL: 5,
+  MAX_LEVEL: 6,
+};
+
+/** @deprecated alias */
+export const ROOM_UPGRADE = MAP_UPGRADE;
+
+export const TILE_LABELS = {
+  WALL: 'Tường',
+  WATER: 'Nước',
+  DARK: 'Tối',
+  LOW_CEILING: 'Trần thấp',
+  HIGH: 'Trần cao',
+  OBSTACLE: 'Chướng ngại',
+  HAZARD: 'Nguy hiểm',
 };
 
 export const REWARDS = {
@@ -66,12 +160,13 @@ export const REWARDS = {
   WIN_GOLD_BASE: 80,
   PER_HERO_SOULS: 25,
   PER_HERO_GOLD: 12,
-  LOSE_SOULS: 40,
+  LOSE_SOULS: 60,
 };
 
 export const STARTING = {
-  souls: 0,
-  gold: 0,
+  /** Đủ 1 lần quay Gacha sau tutorial — tránh tay trắng kẹt loop */
+  souls: 120,
+  gold: 50,
   gems: 0,
   /** Chỉ vài quái 1★ mở sẵn — còn lại phải quay / thắng ải */
   starterMonsters: {
@@ -91,10 +186,10 @@ export const TERRAIN_LABELS = {
 
 export const TERRAIN_HINTS = {
   NORMAL: 'Không buff đặc biệt',
-  WATER: 'Buff quái hệ nước / chậm',
-  LOW_CEILING: 'Buff quái trần thấp',
-  DARK: 'Buff quái bóng tối',
-  HIGH: 'Phòng rộng — quái trần thấp yếu đi',
+  WATER: 'Buff quái hệ nước; Hero chậm trên nước',
+  LOW_CEILING: 'Buff quái trần thấp (đặt đúng ô l)',
+  DARK: 'Buff quái bóng tối; Hero giảm tầm',
+  HIGH: 'Trần cao — quái trần thấp yếu đi',
 };
 
 export const HERO_CLASS_LABELS = {

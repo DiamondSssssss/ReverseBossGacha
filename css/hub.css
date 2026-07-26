@@ -232,3 +232,81 @@
   font-weight: 600;
   line-height: 1.35;
 }
+
+.boss-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.boss-card {
+  text-align: left;
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid var(--ink);
+  background: var(--bone);
+  box-shadow: var(--shadow-stamp);
+  cursor: pointer;
+  border-left: 5px solid var(--boss-accent, var(--seal));
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.boss-card:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: #f3ece0;
+}
+
+.boss-card.selected {
+  background: #f7efe3;
+  outline: 2px solid var(--seal);
+  outline-offset: -2px;
+}
+
+.boss-card.locked,
+.boss-card:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: grayscale(0.35);
+}
+
+.boss-card-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.boss-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--seal);
+}
+
+.boss-badge.lock {
+  color: var(--muted);
+}
+
+.boss-spells {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.boss-spell {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border: 1px solid var(--line);
+  background: rgba(26, 22, 18, 0.04);
+  color: var(--ink-soft);
+}
+
+.boss-lock-hint {
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: var(--muted);
+}

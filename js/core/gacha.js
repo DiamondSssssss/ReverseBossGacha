@@ -22,10 +22,9 @@ function pickMonster(bucket) {
 }
 
 /**
- * Single pull. Mutates state, returns { monster, pityHit, bucket }.
+ * Single pull. Mutates state, returns { monster, pityHit, bucket, isNew, refunded, soulsRefunded }.
  */
 export function pullOnce(state) {
-  // After 50 non-5★ pulls, the next (51st) is guaranteed Legendary
   const force = state.pityCounter >= GACHA.PITY_THRESHOLD;
   const bucket = pickBucket(force);
   const monster = pickMonster(bucket);
@@ -42,11 +41,19 @@ export function pullOnce(state) {
     state.stats.pityHits = (state.stats.pityHits || 0) + 1;
   }
 
-  addToInventory(state, monster.id, 1);
+  const add = addToInventory(state, monster.id, 1);
   state.stats.pulls = (state.stats.pulls || 0) + 1;
   saveState(state);
 
-  return { monster, pityHit, bucket, isNew: prevCount === 0 };
+  return {
+    monster,
+    pityHit,
+    bucket,
+    isNew: prevCount === 0 && add.added > 0,
+    refunded: add.overflow > 0,
+    soulsRefunded: add.soulsRefunded,
+    atCap: add.atCap,
+  };
 }
 
 /**

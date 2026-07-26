@@ -1,9 +1,42 @@
-import { SPELLS, REWARDS } from '../data/constants.js';
+import { SPELLS, REWARDS, RARITY_COLORS } from '../data/constants.js';
+import { MONSTER_BY_ID } from '../data/monsters.js';
+import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js';
 import { CombatEngine } from '../core/combatEngine.js';
 import { saveState } from '../core/storage.js';
 import { evaluateAchievements, isGameCleared } from '../core/achievements.js';
+import { monsterSpriteUrl } from '../render/sprites.js';
 
 let engine = null;
+
+function shortName(name) {
+  if (!name) return '?';
+  const parts = String(name).split(/\s+/);
+  return parts.slice(-2).join(' ');
+}
+
+function handHtml(hand, selectedId, freeCost) {
+  const entries = Object.entries(hand || {}).filter(([, n]) => n > 0);
+  if (!entries.length) {
+    return `<p class="deploy-empty muted">Tay bài trống — đã thả hết / không mang dư.</p>`;
+  }
+  return entries
+    .map(([id, n]) => {
+      const m = MONSTER_BY_ID[id];
+      if (!m) return '';
+      const tooCostly = m.cost > freeCost;
+      const selected = selectedId === id;
+      return `
+        <button type="button" class="deploy-card ${selected ? 'selected' : ''} ${tooCostly ? 'too-costly' : ''}"
+          data-deploy="${id}" title="${m.name} · C${m.cost}${tooCostly ? ' · Thiếu slot' : ''}">
+          <img src="${monsterSpriteUrl(id, m.color, m.rarity)}" alt="" width="36" height="36" />
+          <span class="deploy-meta">
+            <strong>${shortName(m.name)}</strong>
+            <span style="color:${RARITY_COLORS[m.rarity] || '#666'}">C${m.cost} · ×${n}</span>
+          </span>
+        </button>`;
+    })
+    .join('');
+}
 
 export function renderCombat(root, ctx) {
   const { run, state, go, toast, refreshChrome, announceAchievements } = ctx;
@@ -17,12 +50,16 @@ export function renderCombat(root, ctx) {
     engine = null;
   }
 
+  const boss = getBoss(state.selectedBossId);
+  const spells = bossSpells(boss.id);
+  const initialHand = { ...(run.deployHand || {}) };
+
   root.innerHTML = `
     <div class="combat-wrap">
       <div class="combat-head">
         <div>
-          <h2>Chiến đấu</h2>
-          <p class="combat-legend">▲ Hero · ● Quái · ■ Bẫy · Cổng → Kho</p>
+          <h2>Chiến đấu · ${boss.name}</h2>
+          <p class="combat-legend">Chọn quái dưới → chạm map để thả · Cost sân ≤ Cap</p>
         </div>
         <div class="combat-head-right">
           <div class="speed-row" id="speed-row" role="group" aria-label="Tốc độ">
@@ -37,17 +74,23 @@ export function renderCombat(root, ctx) {
       <div class="combat-intent" id="combat-intent">Đợi Hero vào từ Cổng…</div>
       <div class="combat-hud">
         <div class="stat" id="hud-treasure">Kho báu<b>—</b></div>
+        <div class="stat" id="hud-cost">Cost sân<b>—</b></div>
         <div class="stat" id="hud-wave">Hero còn<b>—</b></div>
       </div>
-      <div class="spell-row">
-        <button type="button" id="spell-slow">
-          ${SPELLS.slow_wave.name}
-          <small>${SPELLS.slow_wave.desc}</small>
-        </button>
-        <button type="button" id="spell-heal">
-          ${SPELLS.heal_monsters.name}
-          <small>${SPELLS.heal_monsters.desc}</small>
-        </button>
+      <div class="deploy-row">
+        <div class="deploy-label">Tay bài <span id="deploy-hint" class="muted"></span></div>
+        <div class="deploy-hand" id="deploy-hand">${handHtml(initialHand, null, 0)}</div>
+      </div>
+      <div class="spell-row" id="spell-row">
+        ${spells
+          .map(
+            (s) => `
+          <button type="button" class="spell-btn" data-spell="${s.id}">
+            ${s.name}
+            <small>${s.desc}</small>
+          </button>`
+          )
+          .join('')}
       </div>
       <div class="combat-controls">
         <button type="button" id="btn-pause">Tạm dừng</button>
@@ -58,13 +101,40 @@ export function renderCombat(root, ctx) {
 
   const canvas = root.querySelector('#combat-canvas');
   const hudT = root.querySelector('#hud-treasure');
+  const hudCost = root.querySelector('#hud-cost');
   const hudW = root.querySelector('#hud-wave');
   const status = root.querySelector('#combat-status');
   const intentEl = root.querySelector('#combat-intent');
-  const btnSlow = root.querySelector('#spell-slow');
-  const btnHeal = root.querySelector('#spell-heal');
+  const handEl = root.querySelector('#deploy-hand');
+  const hintEl = root.querySelector('#deploy-hint');
+  const spellBtns = [...root.querySelectorAll('.spell-btn')];
   const btnPause = root.querySelector('#btn-pause');
   const speedRow = root.querySelector('#speed-row');
+
+  let lastHandKey = '';
+
+  function refreshHand(snap) {
+    const key = `${JSON.stringify(snap.hand)}|${snap.selectedDeployId}|${snap.freeCost}|${snap.result || ''}`;
+    if (key === lastHandKey) return;
+    lastHandKey = key;
+    handEl.innerHTML = handHtml(snap.hand, snap.selectedDeployId, snap.freeCost);
+    hintEl.textContent = snap.selectedDeployId
+      ? '· chạm ô trên map'
+      : snap.freeCost > 0
+        ? `· slot trống ${snap.freeCost}`
+        : '· chờ quái chết để mở slot';
+    handEl.querySelectorAll('[data-deploy]').forEach((btn) => {
+      btn.onclick = () => {
+        if (!engine || engine.result) return;
+        const id = btn.getAttribute('data-deploy');
+        engine.setSelectedDeploy(id);
+        if (engine.selectedDeployId) {
+          const m = MONSTER_BY_ID[id];
+          toast(m ? `Thả: ${m.name} (C${m.cost})` : 'Đã chọn');
+        }
+      };
+    });
+  }
 
   function onEnd(result) {
     const killed = run.wave.length;
@@ -84,9 +154,16 @@ export function renderCombat(root, ctx) {
       const beforeClear = !isGameCleared(state);
       state.dungeonLevel += 1;
       const clearedJustNow = beforeClear && isGameCleared(state);
+      const beforeBosses = new Set(state.unlockedBosses || []);
+      syncUnlockedBosses(state);
+      const newBosses = (state.unlockedBosses || []).filter((id) => !beforeBosses.has(id));
       saveState(state);
       const unlocked = evaluateAchievements(state);
       announceAchievements?.(unlocked);
+      if (newBosses.length) {
+        const names = newBosses.map((id) => getBoss(id).name).join(', ');
+        toast?.(`Mở boss: ${names}`);
+      }
       refreshChrome();
       ctx.lastReward = {
         result: 'win',
@@ -109,8 +186,19 @@ export function renderCombat(root, ctx) {
   }
 
   engine = new CombatEngine(run, canvas, {
+    monsterUpgrades: state.monsterUpgrades || {},
+    bossId: boss.id,
+    hand: initialHand,
     onUpdate(snap) {
-      hudT.innerHTML = `Kho báu<b>${Math.ceil(snap.treasureHp)}/${snap.treasureMax}</b>`;
+      const shieldTxt =
+        snap.treasureShield > 0 ? ` · Khiên ${Math.ceil(snap.treasureShield)}` : '';
+      hudT.innerHTML = `Kho báu<b>${Math.ceil(snap.treasureHp)}/${snap.treasureMax}${shieldTxt}</b>`;
+      hudCost.innerHTML = `Cost sân<b>${snap.costUsed}/${snap.costCap}</b>`;
+      if (snap.freeCost > 0 && Object.values(snap.hand || {}).some((n) => n > 0)) {
+        hudCost.classList.add('can-deploy');
+      } else {
+        hudCost.classList.remove('can-deploy');
+      }
       hudW.innerHTML = `Hero còn<b>${snap.heroesAlive}/${snap.heroesTotal}</b>`;
       if (snap.draining) {
         hudT.classList.add('danger');
@@ -124,21 +212,26 @@ export function renderCombat(root, ctx) {
       } else {
         intentEl.textContent = 'Đợi Hero vào từ Cổng…';
       }
-      btnSlow.disabled = snap.spellCd.slow_wave > 0 || !!snap.result;
-      btnHeal.disabled = snap.spellCd.heal_monsters > 0 || !!snap.result;
-      if (snap.spellCd.slow_wave > 0) {
-        btnSlow.querySelector('small').textContent = `CD ${snap.spellCd.slow_wave.toFixed(1)}s`;
-      } else {
-        btnSlow.querySelector('small').textContent = SPELLS.slow_wave.desc;
+
+      refreshHand(snap);
+
+      for (const btn of spellBtns) {
+        const id = btn.getAttribute('data-spell');
+        const spell = SPELLS[id];
+        const cd = snap.spellCd[id] || 0;
+        btn.disabled = cd > 0 || !!snap.result;
+        const small = btn.querySelector('small');
+        if (small) {
+          small.textContent = cd > 0 ? `CD ${cd.toFixed(1)}s` : spell?.desc || '';
+        }
       }
-      if (snap.spellCd.heal_monsters > 0) {
-        btnHeal.querySelector('small').textContent = `CD ${snap.spellCd.heal_monsters.toFixed(1)}s`;
-      } else {
-        btnHeal.querySelector('small').textContent = SPELLS.heal_monsters.desc;
-      }
+
       if (snap.result) {
         /* keep end status */
-      } else if (snap.globalSlow) status.textContent = 'Sương Chậm!';
+      } else if (snap.selectedDeployId) status.textContent = 'Chạm map thả quái';
+      else if (snap.globalSlow) status.textContent = 'Sương Chậm!';
+      else if (snap.monsterRage) status.textContent = 'Trống Chiến!';
+      else if (snap.treasureShield > 0) status.textContent = 'Khiên Kho!';
       else if (snap.draining) status.textContent = 'Hero đang rút Kho!';
       else status.textContent = `×${snap.speedMul || 1}`;
     },
@@ -171,8 +264,30 @@ export function renderCombat(root, ctx) {
     announceAchievements?.(unlocked);
   }
 
-  btnSlow.onclick = () => cast('slow_wave');
-  btnHeal.onclick = () => cast('heal_monsters');
+  for (const btn of spellBtns) {
+    btn.onclick = () => cast(btn.getAttribute('data-spell'));
+  }
+
+  canvas.addEventListener('click', (e) => {
+    if (!engine || engine.result) return;
+    const id = engine.selectedDeployId;
+    if (!id) return;
+    const rect = canvas.getBoundingClientRect();
+    const cell = engine.screenToCell(e.clientX - rect.left, e.clientY - rect.top);
+    if (!cell) {
+      toast('Ngoài map');
+      return;
+    }
+    const res = engine.deployMonster(id, cell.col, cell.row);
+    if (!res.ok) {
+      toast(res.reason || 'Không thả được');
+      return;
+    }
+    if (!(engine.hand[id] > 0)) {
+      engine.selectedDeployId = null;
+    }
+    engine.hooks.onUpdate?.(engine.snapshot());
+  });
 
   speedRow.querySelectorAll('.speed-btn').forEach((btn) => {
     btn.onclick = () => {
@@ -191,11 +306,21 @@ export function renderCombat(root, ctx) {
     btnPause.textContent = paused ? 'Tiếp tục' : 'Tạm dừng';
   };
 
+  // Đồng bộ nếu tutorial / code khác gọi setPaused
+  const _setPaused = engine.setPaused.bind(engine);
+  engine.setPaused = (p) => {
+    paused = !!p;
+    _setPaused(paused);
+    btnPause.textContent = paused ? 'Tiếp tục' : 'Tạm dừng';
+  };
+
   root.querySelector('#btn-abort').onclick = () => {
     engine.stop();
     state.stats.losses += 1;
+    const consol = Math.floor(REWARDS.LOSE_SOULS / 2);
+    state.souls += consol;
     saveState(state);
-    toast('Đã bỏ chạy');
+    toast(consol ? `Đã bỏ chạy · +${consol} LH` : 'Đã bỏ chạy');
     go('hub');
   };
 
@@ -248,4 +373,8 @@ export function stopCombatIfAny() {
     engine.stop();
     engine = null;
   }
+}
+
+export function getCombatEngine() {
+  return engine;
 }

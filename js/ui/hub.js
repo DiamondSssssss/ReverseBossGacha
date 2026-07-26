@@ -1,6 +1,12 @@
-import { DUNGEON_TEMPLATE } from '../data/rooms.js';
-import { TERRAIN_LABELS, ROOM_UPGRADE } from '../data/constants.js';
-import { tryUpgradeRoom, upgradeRoomCost } from '../core/dungeon.js';
+import { MAP_UPGRADE, SPELLS } from '../data/constants.js';
+import {
+  DUNGEON_BOSSES,
+  getBoss,
+  isBossUnlocked,
+  unlockHint,
+  syncUnlockedBosses,
+} from '../data/dungeonBosses.js';
+import { tryUpgradeMap, upgradeMapCost } from '../core/dungeon.js';
 import { saveState } from '../core/storage.js';
 import { achievementProgress, isGameCleared, evaluateAchievements } from '../core/achievements.js';
 import { showTutorial } from './tutorial.js';
@@ -15,29 +21,42 @@ const GATE_SVG = `
   <path d="M70 100 h60 M70 120 h60 M70 160 h60 M70 180 h60" stroke="#1a1612" stroke-width="2" opacity="0.35"/>
 </svg>`;
 
+function bossCardHtml(boss, state) {
+  const unlocked = isBossUnlocked(boss, state);
+  const selected = state.selectedBossId === boss.id;
+  const spells = (boss.spells || [])
+    .map((id) => SPELLS[id])
+    .filter(Boolean)
+    .map((s) => `<span class="boss-spell">${s.name}</span>`)
+    .join('');
+  return `
+    <button type="button" class="boss-card ${selected ? 'selected' : ''} ${unlocked ? '' : 'locked'}"
+      data-boss="${boss.id}" ${unlocked ? '' : 'disabled'}
+      style="--boss-accent:${boss.color}">
+      <div class="boss-card-top">
+        <strong>${boss.name}</strong>
+        ${selected ? '<span class="boss-badge">Đang dùng</span>' : ''}
+        ${!unlocked ? '<span class="boss-badge lock">Khóa</span>' : ''}
+      </div>
+      <div class="meta">${boss.title} · ${boss.blurb}</div>
+      <div class="boss-spells">${spells}</div>
+      ${!unlocked ? `<div class="boss-lock-hint">${unlockHint(boss)}</div>` : ''}
+    </button>
+  `;
+}
+
 export function renderHub(root, ctx) {
   const { state, go, toast, refreshChrome, startRun, announceAchievements } = ctx;
+  syncUnlockedBosses(state);
   const prog = achievementProgress(state);
   const cleared = isGameCleared(state);
   const stageLabel = cleared ? 'Phá đảo' : `Ải ${Math.min(state.dungeonLevel, 20)}/20`;
+  const activeBoss = getBoss(state.selectedBossId);
 
-  const upgrades = DUNGEON_TEMPLATE.rooms
-    .map((room) => {
-      const lvl = state.roomUpgrades[room.id] || 0;
-      const cost = upgradeRoomCost(lvl);
-      const maxed = lvl >= ROOM_UPGRADE.MAX_LEVEL;
-      return `
-        <div class="upgrade-item">
-          <div>
-            <strong>${room.name}</strong>
-            <div class="meta">${TERRAIN_LABELS[room.terrain]} · Cap ${room.costCap + lvl * ROOM_UPGRADE.COST_CAP_BONUS} · Lv ${lvl}</div>
-          </div>
-          <button type="button" data-upgrade="${room.id}" ${maxed ? 'disabled' : ''}>
-            ${maxed ? 'MAX' : `${cost} vàng`}
-          </button>
-        </div>`;
-    })
-    .join('');
+  const lvl = state.mapUpgrade || 0;
+  const cost = upgradeMapCost(lvl);
+  const maxed = lvl >= MAP_UPGRADE.MAX_LEVEL;
+  const baseCapHint = 5 + lvl * MAP_UPGRADE.COST_CAP_BONUS;
 
   root.innerHTML = `
     <div class="hub-layout">
@@ -63,24 +82,45 @@ export function renderHub(root, ctx) {
       </div>
 
       <div class="hub-side">
+        <p class="section-label">Boss hầm · ${activeBoss.name}</p>
+        <div class="boss-picker" id="boss-picker">
+          ${DUNGEON_BOSSES.map((b) => bossCardHtml(b, state)).join('')}
+        </div>
+
         <div class="economy-guide">
-          <h3>Cách kiếm nguyên liệu</h3>
+          <h3>Cách kiếm / dùng nguyên liệu</h3>
           <ul>
-            <li><strong>Linh Hồn</strong> — thắng/thua ải → dùng quay Gacha</li>
-            <li><strong>Vàng</strong> — thắng ải → nâng cấp phòng</li>
-            <li><strong>Gem</strong> — mở Ấn chương (thành tựu)</li>
+            <li><strong>Linh Hồn</strong> — thắng/thua ải → quay Gacha (trùng tối đa ×3 → hoàn LH)</li>
+            <li><strong>Vàng</strong> — thắng ải → nâng cấp quái (Kho)</li>
+            <li><strong>Gem</strong> — Ấn chương → cải tạo hầm (tăng Cost)</li>
+            <li><strong>Tay bài</strong> — mang pool ~2× Cap; xếp ≤ Cap, thả thêm trong trận khi có slot</li>
           </ul>
           <p class="muted" style="margin:8px 0 0;font-size:0.78rem">
-            Guest = lưu trên máy này. Bấm <strong>Đăng nhập</strong> (username + mật khẩu) để đồng bộ giữa các thiết bị.
+            Cap map gốc ~5–6. Muốn xếp nhiều hơn phải nâng hầm bằng Gem.
+          </p>
+          <p class="muted" style="margin:4px 0 0;font-size:0.78rem">
+            Guest = lưu trên máy này. Bấm <strong>Đăng nhập</strong> để đồng bộ.
           </p>
           ${
             state.souls === 0 && state.gold === 0 && state.gems === 0
               ? '<p class="economy-zero">Bạn đang tay trắng — bấm <strong>Mở cổng ải</strong> để kiếm vốn đầu.</p>'
-              : ''
+              : state.souls < 100
+                ? '<p class="economy-zero">Chưa đủ 100 LH để quay — thắng/thua ải để kiếm Linh Hồn.</p>'
+                : ''
           }
         </div>
         <p class="section-label">Cải tạo hầm</p>
-        <div class="upgrade-list">${upgrades}</div>
+        <div class="upgrade-list">
+          <div class="upgrade-item">
+            <div>
+              <strong>Nâng Cost map</strong>
+              <div class="meta">+${MAP_UPGRADE.COST_CAP_BONUS} Cost mỗi cấp · Lv ${lvl}/${MAP_UPGRADE.MAX_LEVEL} · ải đầu ≈ Cap ${baseCapHint}</div>
+            </div>
+            <button type="button" id="btn-upgrade-map" ${maxed ? 'disabled' : ''}>
+              ${maxed ? 'MAX' : `${cost} gem`}
+            </button>
+          </div>
+        </div>
         <p class="how-inline muted">
           Mới chơi?
           <button type="button" class="ghost" id="btn-help">Xem hướng dẫn</button>
@@ -101,9 +141,12 @@ export function renderHub(root, ctx) {
   root.querySelector('#btn-collection').onclick = () => go('collection');
   root.querySelector('#btn-ach').onclick = () => go('achievements');
   root.querySelector('#btn-help').onclick = () => {
-    showTutorial(document.getElementById('modal'), {
-      onDone: () => toast('Chúc Sếp giữ được kho!'),
-    });
+    if (ctx.startTutorial) ctx.startTutorial();
+    else {
+      showTutorial(document.getElementById('modal'), {
+        onDone: () => toast('Chúc Sếp giữ được kho!'),
+      });
+    }
   };
   root.querySelector('#btn-reset').onclick = () => {
     if (confirm('Xóa toàn bộ tiến trình?')) {
@@ -115,19 +158,33 @@ export function renderHub(root, ctx) {
     }
   };
 
-  root.querySelectorAll('[data-upgrade]').forEach((btn) => {
-    btn.onclick = () => {
-      const res = tryUpgradeRoom(state, btn.getAttribute('data-upgrade'));
-      if (!res.ok) {
-        toast(res.reason);
-        return;
-      }
-      saveState(state);
-      const unlocked = evaluateAchievements(state);
-      announceAchievements?.(unlocked);
-      toast(`Phòng lên Lv ${res.level}`);
-      refreshChrome();
-      renderHub(root, ctx);
-    };
-  });
+  root.querySelector('#boss-picker').onclick = (e) => {
+    const btn = e.target.closest('[data-boss]');
+    if (!btn || btn.disabled) return;
+    const id = btn.getAttribute('data-boss');
+    const boss = getBoss(id);
+    if (!isBossUnlocked(boss, state)) {
+      toast(unlockHint(boss));
+      return;
+    }
+    if (state.selectedBossId === id) return;
+    state.selectedBossId = id;
+    saveState(state);
+    toast(`Boss: ${boss.name}`);
+    renderHub(root, ctx);
+  };
+
+  root.querySelector('#btn-upgrade-map').onclick = () => {
+    const res = tryUpgradeMap(state);
+    if (!res.ok) {
+      toast(res.reason);
+      return;
+    }
+    saveState(state);
+    const unlocked = evaluateAchievements(state);
+    announceAchievements?.(unlocked);
+    toast(`Hầm lên Lv ${res.level} · +${MAP_UPGRADE.COST_CAP_BONUS} Cost`);
+    refreshChrome();
+    renderHub(root, ctx);
+  };
 }

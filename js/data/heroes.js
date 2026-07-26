@@ -206,7 +206,7 @@ export const WAVE_PLANS = {
   },
   12: {
     theme: 'Hư không',
-    tip: 'Burst mage cực mạnh — Silence ngay từ phòng 1.',
+    tip: 'Burst mage cực mạnh — Silence ngay từ cửa cổng.',
     ids: [
       'hero_mage_05',
       'hero_mage_03',
@@ -332,6 +332,14 @@ export function buildWave(level = 1) {
 
   plan.ids.forEach((id, i) => {
     const template = HERO_BY_ID[id] || HEROES[0];
+    const roleLine =
+      template.class === 'WARRIOR'
+        ? 'Tuyến trước'
+        : template.class === 'MAGE'
+          ? 'Tuyến sau / phép'
+          : template.stealth
+            ? 'Sườn / đột phá'
+            : 'Áp sát';
     waves.push({
       ...template,
       instanceId: `${template.id}_L${level}_${i}`,
@@ -341,8 +349,76 @@ export function buildWave(level = 1) {
       spawnDelay: 0.85 + i * COMBAT.HERO_SPAWN_INTERVAL,
       waveTheme: plan.theme,
       waveTip: plan.tip,
+      formation: {
+        order: i + 1,
+        roleLine,
+        gateIndex: 0,
+        col: 0,
+        row: 0,
+      },
     });
   });
 
   return waves;
+}
+
+/**
+ * Gán ô cổng / lane cố định theo đội hình — gọi khi có map.
+ * Warrior → cổng giữa; Rogue → mép; Mage → spread.
+ */
+export function assignHeroFormation(wave, map) {
+  if (!wave?.length || !map?.gate?.length) return wave;
+  const gates = map.gate;
+  const mid = (gates.length - 1) / 2;
+  const sortedGates = gates
+    .map((g, i) => ({ ...g, i, distMid: Math.abs(i - mid) }))
+    .sort((a, b) => a.distMid - b.distMid || a.row - b.row);
+
+  const centerFirst = [...sortedGates];
+  const edgeFirst = [...sortedGates].sort(
+    (a, b) => b.distMid - a.distMid || a.row - b.row
+  );
+
+  const useCount = {};
+  function pickSpread(preferList) {
+    const pool = preferList.length ? preferList : gates;
+    let best = pool[0];
+    let bestN = Infinity;
+    for (const g of pool) {
+      const key = `${g.col},${g.row}`;
+      const n = useCount[key] || 0;
+      if (n < bestN) {
+        bestN = n;
+        best = g;
+      }
+    }
+    const key = `${best.col},${best.row}`;
+    useCount[key] = (useCount[key] || 0) + 1;
+    return best;
+  }
+
+  wave.forEach((h, i) => {
+    let g;
+    if (h.class === 'WARRIOR') g = pickSpread(centerFirst);
+    else if (h.class === 'ROGUE') g = pickSpread(edgeFirst);
+    else g = pickSpread(gates);
+
+    h.formation = {
+      order: i + 1,
+      roleLine:
+        h.class === 'WARRIOR'
+          ? 'Tuyến trước'
+          : h.class === 'MAGE'
+            ? 'Tuyến sau / phép'
+            : h.stealth
+              ? 'Sườn / đột phá'
+              : 'Áp sát',
+      gateIndex: gates.findIndex((x) => x.col === g.col && x.row === g.row),
+      col: g.col,
+      row: g.row,
+      spawnAt: h.spawnDelay,
+    };
+  });
+
+  return wave;
 }

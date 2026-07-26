@@ -761,6 +761,36 @@ body.gacha-boss-flash::after {
   color: var(--moss);
 }
 
+.monster-card .upgrade-row {
+  margin-top: 8px;
+}
+
+.monster-card .btn-upgrade-mon {
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.refund-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 2;
+  font-size: 0.58rem;
+  font-weight: 800;
+  padding: 2px 5px;
+  background: var(--moss);
+  color: var(--bone);
+  border: 1px solid var(--ink);
+}
+
+.pull-card,
+.reveal-face.front {
+  position: relative;
+}
+
 .monster-card.locked {
   opacity: 0.92;
   filter: none;

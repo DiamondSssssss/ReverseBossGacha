@@ -1,0 +1,161 @@
+import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js';
+
+/** Tối đa số loại quái trong 1 loadout */
+export const LOADOUT_MAX_TYPES = 5;
+
+/**
+ * Pool mang vào ải = bội số Cap map (Clash-style).
+ * Cap 5 → mang tối đa 10; xếp trận + thả trong trận không bao giờ vượt Cap cùng lúc.
+ */
+export const LOADOUT_POOL_MULT = 2;
+
+/** Pool cost tối đa mang vào ải (thường 2× Cap map). */
+export function loadoutMaxPoolCost(costCap) {
+  const cap = Math.max(1, Number(costCap) || 1);
+  return Math.max(cap, Math.floor(cap * LOADOUT_POOL_MULT));
+}
+
+export function loadoutPoolCost(loadout) {
+  let sum = 0;
+  for (const [id, n] of Object.entries(loadout || {})) {
+    const m = MONSTER_BY_ID[id];
+    if (!m || !(n > 0)) continue;
+    sum += m.cost * n;
+  }
+  return sum;
+}
+
+export function loadoutUnitCount(loadout) {
+  return Object.values(loadout || {}).reduce((s, n) => s + (Number(n) || 0), 0);
+}
+
+export function loadoutTypeCount(loadout) {
+  return Object.values(loadout || {}).filter((n) => n > 0).length;
+}
+
+/** Khóa ổn định để so sánh loadout */
+export function loadoutFingerprint(loadout) {
+  const keys = Object.keys(loadout || {})
+    .filter((id) => (loadout[id] || 0) > 0)
+    .sort();
+  const norm = {};
+  for (const k of keys) norm[k] = loadout[k];
+  return JSON.stringify(norm);
+}
+
+/**
+ * Chuẩn hóa loadout theo kho + tối đa LOADOUT_MAX_TYPES loại + pool ≤ costCap.
+ * @returns {{ [id: string]: number }}
+ */
+export function sanitizeLoadout(loadout, inventory, costCap = Infinity) {
+  const out = {};
+  if (!loadout) return out;
+  for (const [id, n] of Object.entries(loadout)) {
+    if (!MONSTER_BY_ID[id]) continue;
+    const have = inventory[id] || 0;
+    const take = Math.min(Math.max(0, Math.floor(Number(n) || 0)), have);
+    if (take > 0) out[id] = take;
+  }
+  const ids = Object.keys(out);
+  if (ids.length > LOADOUT_MAX_TYPES) {
+    ids.sort();
+    for (const id of ids.slice(LOADOUT_MAX_TYPES)) delete out[id];
+  }
+  const maxPool = Number.isFinite(costCap) ? loadoutMaxPoolCost(costCap) : Infinity;
+  if (Number.isFinite(maxPool)) {
+    // Cắt dần copy đắt nhất nếu vượt pool
+    while (loadoutPoolCost(out) > maxPool) {
+      const ranked = Object.keys(out)
+        .map((id) => ({ id, cost: MONSTER_BY_ID[id]?.cost || 1, n: out[id] }))
+        .sort((a, b) => b.cost - a.cost || b.n - a.n);
+      if (!ranked.length) break;
+      const top = ranked[0];
+      if (out[top.id] <= 1) delete out[top.id];
+      else out[top.id] -= 1;
+    }
+  }
+  return out;
+}
+
+/**
+ * Gợi ý loadout: ưu tiên utility/trap, ≤5 loại, tổng Cost ≤ costCap.
+ */
+export function suggestLoadout(inventory, costCap) {
+  const maxPool = loadoutMaxPoolCost(costCap);
+  const owned = MONSTERS.filter((m) => (inventory[m.id] || 0) > 0).sort((a, b) => {
+    const score = (m) => {
+      let s = 0;
+      const tags = m.tags || [];
+      if (tags.includes('silence')) s += 30;
+      if (tags.includes('trap') || tags.includes('detect')) s += 28;
+      if (tags.includes('utility')) s += 20;
+      if (tags.includes('tank') || tags.includes('tankette')) s += 12;
+      if (tags.includes('boss')) s += 8;
+      s += (6 - m.cost) * 3;
+      s += m.rarity;
+      return s;
+    };
+    return score(b) - score(a) || a.cost - b.cost;
+  });
+
+  const loadout = {};
+  let pool = 0;
+
+  for (const m of owned) {
+    const have = inventory[m.id] || 0;
+    const isNewType = !(loadout[m.id] > 0);
+    if (isNewType && loadoutTypeCount(loadout) >= LOADOUT_MAX_TYPES) continue;
+
+    for (let i = 0; i < have; i++) {
+      if (pool + m.cost > maxPool) break;
+      loadout[m.id] = (loadout[m.id] || 0) + 1;
+      pool += m.cost;
+    }
+    if (pool >= maxPool) break;
+  }
+
+  if (pool === 0 && owned[0] && owned[0].cost <= maxPool) {
+    loadout[owned[0].id] = 1;
+  }
+
+  return loadout;
+}
+
+/**
+ * Thêm 1 copy vào loadout nếu còn slot kho + pool + loại.
+ * @returns {{ ok: boolean, reason?: string, loadout: object }}
+ */
+export function tryAddToLoadout(loadout, inventory, monsterId, costCap) {
+  const m = MONSTER_BY_ID[monsterId];
+  if (!m) return { ok: false, reason: 'Quái không tồn tại', loadout };
+  const have = inventory[monsterId] || 0;
+  const cur = loadout[monsterId] || 0;
+  if (cur >= have) return { ok: false, reason: 'Hết số lượng trong kho', loadout };
+  if (cur <= 0 && loadoutTypeCount(loadout) >= LOADOUT_MAX_TYPES) {
+    return {
+      ok: false,
+      reason: `Tối đa ${LOADOUT_MAX_TYPES} loại quái trong loadout`,
+      loadout,
+    };
+  }
+  const maxPool = loadoutMaxPoolCost(costCap);
+  const pool = loadoutPoolCost(loadout);
+  if (pool + m.cost > maxPool) {
+    return {
+      ok: false,
+      reason: `Pool đầy (tối đa ${maxPool} = ${LOADOUT_POOL_MULT}× Cap map)`,
+      loadout,
+    };
+  }
+  const next = { ...loadout, [monsterId]: cur + 1 };
+  return { ok: true, loadout: next };
+}
+
+export function tryRemoveFromLoadout(loadout, monsterId) {
+  const cur = loadout[monsterId] || 0;
+  if (cur <= 0) return { ok: false, loadout };
+  const next = { ...loadout };
+  if (cur <= 1) delete next[monsterId];
+  else next[monsterId] = cur - 1;
+  return { ok: true, loadout: next };
+}

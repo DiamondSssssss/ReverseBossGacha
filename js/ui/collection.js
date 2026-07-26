@@ -1,6 +1,18 @@
 import { MONSTERS } from '../data/monsters.js';
-import { RARITY_COLORS, RARITY_LABELS } from '../data/constants.js';
+import {
+  RARITY_COLORS,
+  RARITY_LABELS,
+  INVENTORY_CAP,
+  MONSTER_UPGRADE,
+} from '../data/constants.js';
 import { monsterDisplayUrl } from '../render/sprites.js';
+import {
+  displayMonsterStats,
+  getMonsterUpgradeLevel,
+  tryUpgradeMonster,
+  upgradeMonsterCost,
+} from '../core/monsterUpgrade.js';
+import { evaluateAchievements } from '../core/achievements.js';
 
 const filters = {
   q: '',
@@ -40,8 +52,6 @@ function filterList(state) {
     if (!matchesRole(m, filters.role)) return false;
     if (filters.q) {
       const q = filters.q.toLowerCase();
-      // Chưa mở khóa: chỉ tìm theo độ hiếm / id ẩn, không lộ tên
-      const count = state.inventory[m.id] || 0;
       const hay =
         count > 0
           ? `${m.name} ${m.description} ${m.id}`.toLowerCase()
@@ -87,15 +97,25 @@ function renderCards(state) {
         </div>
       </article>`;
       }
+      const upLv = getMonsterUpgradeLevel(state, m.id);
+      const st = displayMonsterStats(m, upLv);
+      const maxed = upLv >= MONSTER_UPGRADE.MAX_LEVEL;
+      const upCost = upgradeMonsterCost(m.id, upLv);
+      const canAfford = state.gold >= upCost;
       return `
-      <article class="monster-card">
+      <article class="monster-card" data-mid="${m.id}">
         <img class="card-sprite" src="${src}" alt="" width="64" height="64" />
         <div class="body">
           <div class="stars" style="color:${RARITY_COLORS[m.rarity]}">${'★'.repeat(m.rarity)} <span class="rarity-tag">${RARITY_LABELS[m.rarity]}</span></div>
           <div class="name">${m.name}</div>
-          <div class="muted" style="font-size:0.75rem;margin-top:2px">Cost ${m.cost} · HP ${m.stats.hp} · ATK ${m.stats.atk}</div>
+          <div class="muted" style="font-size:0.75rem;margin-top:2px">Cost ${m.cost} · HP ${st.hp} · ATK ${st.atk}${upLv ? ` · Lv↑${upLv}` : ''}</div>
           <div class="desc">${m.description}</div>
-          <div class="count">Sở hữu ×${count}</div>
+          <div class="count">Sở hữu ×${count}/${INVENTORY_CAP}</div>
+          <div class="upgrade-row">
+            <button type="button" class="btn-upgrade-mon" data-upgrade="${m.id}" ${maxed || !canAfford ? 'disabled' : ''}>
+              ${maxed ? 'MAX' : `Nâng Lv ${upLv + 1} · ${upCost} vàng`}
+            </button>
+          </div>
         </div>
       </article>`;
     })
@@ -103,15 +123,37 @@ function renderCards(state) {
   return { html: cards || '<p class="muted collection-empty">Không có quái khớp bộ lọc.</p>', count: list.length };
 }
 
-function updateGrid(root, state) {
+function updateGrid(root, ctx) {
+  const state = ctx.state || ctx;
   const ownedCount = MONSTERS.filter((m) => (state.inventory[m.id] || 0) > 0).length;
   const { html, count } = renderCards(state);
   const grid = root.querySelector('#collection-grid');
   const meta = root.querySelector('#collection-meta');
   if (grid) grid.innerHTML = html;
   if (meta) {
-    meta.innerHTML = `Đã mở <strong>${ownedCount}/${MONSTERS.length}</strong> · Đang hiện ${count}`;
+    meta.innerHTML = `Đã mở <strong>${ownedCount}/${MONSTERS.length}</strong> · Cap ×${INVENTORY_CAP}/loại · Đang hiện ${count}`;
   }
+  bindUpgradeButtons(root, ctx.state ? ctx : { state });
+}
+
+function bindUpgradeButtons(root, ctx) {
+  const state = ctx.state;
+  root.querySelectorAll('[data-upgrade]').forEach((btn) => {
+    btn.onclick = () => {
+      const id = btn.getAttribute('data-upgrade');
+      const res = tryUpgradeMonster(state, id);
+      if (!res.ok) {
+        ctx.toast?.(res.reason);
+        return;
+      }
+      const unlocked = evaluateAchievements(state);
+      ctx.announceAchievements?.(unlocked);
+      const name = MONSTERS.find((m) => m.id === id)?.name || id;
+      ctx.toast?.(`${name} → Lv ${res.level}`);
+      ctx.refreshChrome?.();
+      renderCollection(root, ctx);
+    };
+  });
 }
 
 export function renderCollection(root, ctx) {
@@ -124,7 +166,8 @@ export function renderCollection(root, ctx) {
       <div>
         <p class="section-label" style="margin-top:0">Sưu tầm</p>
         <h2>Kho quái</h2>
-        <p class="muted" id="collection-meta">Đã mở <strong>${ownedCount}/${MONSTERS.length}</strong> · Đang hiện ${count}</p>
+        <p class="muted" id="collection-meta">Đã mở <strong>${ownedCount}/${MONSTERS.length}</strong> · Cap ×${INVENTORY_CAP}/loại · Đang hiện ${count}</p>
+        <p class="muted" style="font-size:0.78rem;margin:4px 0 0">Dùng <strong>Vàng</strong> nâng HP/ATK (+${Math.round(MONSTER_UPGRADE.STAT_PER_LEVEL * 100)}%/cấp · max Lv ${MONSTER_UPGRADE.MAX_LEVEL}).</p>
       </div>
     </div>
 
@@ -171,7 +214,7 @@ export function renderCollection(root, ctx) {
 
   root.querySelector('#col-q').addEventListener('input', (e) => {
     filters.q = e.target.value.trim();
-    updateGrid(root, state);
+    updateGrid(root, ctx);
   });
 
   root.querySelectorAll('[data-own]').forEach((btn) => {
@@ -194,6 +237,8 @@ export function renderCollection(root, ctx) {
   });
   root.querySelector('#col-sort').onchange = (e) => {
     filters.sort = e.target.value;
-    updateGrid(root, state);
+    updateGrid(root, ctx);
   };
+
+  bindUpgradeButtons(root, ctx);
 }

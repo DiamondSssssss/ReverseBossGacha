@@ -1,6 +1,6 @@
 import { COMBAT } from './constants.js';
 
-/** Terrain templates & dungeon layouts */
+/** @deprecated Multi-room strip removed — see maps.js STAGE_MAPS */
 
 export const TERRAIN = {
   NORMAL: 'NORMAL',
@@ -11,8 +11,8 @@ export const TERRAIN = {
 };
 
 /**
- * Base dungeon template — rooms between Gate and Treasure.
- * costCap can be boosted by room upgrades at runtime.
+ * Legacy template kept for reference / migration docs.
+ * Runtime uses getStageMap() from maps.js.
  */
 export const DUNGEON_TEMPLATE = {
   id: 'main_dungeon',
@@ -26,36 +26,12 @@ export const DUNGEON_TEMPLATE = {
       cols: COMBAT.GRID_COLS,
       rows: COMBAT.GRID_ROWS,
     },
-    {
-      id: 'room_2',
-      name: 'Hầm Trần Thấp',
-      terrain: TERRAIN.LOW_CEILING,
-      costCap: 8,
-      cols: COMBAT.GRID_COLS,
-      rows: COMBAT.GRID_ROWS,
-    },
-    {
-      id: 'room_3',
-      name: 'Phòng Tối',
-      terrain: TERRAIN.DARK,
-      costCap: 7,
-      cols: COMBAT.GRID_COLS,
-      rows: COMBAT.GRID_ROWS,
-    },
-    {
-      id: 'room_4',
-      name: 'Sảnh Rộng',
-      terrain: TERRAIN.HIGH,
-      costCap: 10,
-      cols: COMBAT.GRID_COLS,
-      rows: COMBAT.GRID_ROWS,
-    },
   ],
 };
 
 export function cloneDungeonRooms() {
   return DUNGEON_TEMPLATE.rooms.map((r) => ({
     ...r,
-    placements: [], // { monsterId, col, row }
+    placements: [],
   }));
 }

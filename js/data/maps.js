@@ -1,0 +1,569 @@
+/** Per-stage continuous battle maps — 1 ải = 1 map */
+
+import { TERRAIN } from './rooms.js';
+
+export const TILE = {
+  WALL: '#',
+  FLOOR: '.',
+  WATER: '~',
+  DARK: 'd',
+  LOW: 'l',
+  HIGH: 'h',
+  OBSTACLE: 'o',
+  HAZARD: '^',
+  GATE: 'G',
+  TREASURE: 'T',
+};
+
+const CHAR_TERRAIN = {
+  '~': TERRAIN.WATER,
+  d: TERRAIN.DARK,
+  l: TERRAIN.LOW_CEILING,
+  h: TERRAIN.HIGH,
+  '.': TERRAIN.NORMAL,
+  G: TERRAIN.NORMAL,
+  T: TERRAIN.NORMAL,
+  '^': TERRAIN.NORMAL,
+};
+
+/**
+ * @param {object} def
+ * @returns {object} compiled map (no placements yet)
+ */
+export function compileMap(def) {
+  const rows = def.tiles.length;
+  const cols = def.tiles[0].length;
+  const gate = [];
+  const treasure = [];
+  const blocked = new Set();
+  const terrain = {};
+  const walkable = [];
+
+  for (let r = 0; r < rows; r++) {
+    walkable[r] = [];
+    const line = def.tiles[r];
+    if (line.length !== cols) {
+      throw new Error(`Map ${def.id} row ${r} width mismatch`);
+    }
+    for (let c = 0; c < cols; c++) {
+      const ch = line[c];
+      const key = `${c},${r}`;
+      if (ch === TILE.WALL || ch === TILE.OBSTACLE) {
+        blocked.add(key);
+        walkable[r][c] = false;
+      } else {
+        walkable[r][c] = true;
+        if (ch === TILE.GATE) gate.push({ col: c, row: r });
+        if (ch === TILE.TREASURE) treasure.push({ col: c, row: r });
+        const t = CHAR_TERRAIN[ch] || TERRAIN.NORMAL;
+        if (t !== TERRAIN.NORMAL) terrain[key] = t;
+      }
+    }
+  }
+
+  // merge explicit terrain overrides
+  if (def.terrain) {
+    for (const [k, v] of Object.entries(def.terrain)) terrain[k] = v;
+  }
+
+  const buffIndex = {};
+  for (const b of def.buffs || []) {
+    for (const cell of b.cells) {
+      if (!buffIndex[cell]) buffIndex[cell] = [];
+      buffIndex[cell].push(b);
+    }
+  }
+
+  return {
+    id: def.id,
+    name: def.name,
+    tip: def.tip || '',
+    cols,
+    rows,
+    cellSize: def.cellSize || 44,
+    costCap: def.costCap,
+    baseCostCap: def.costCap,
+    gate: gate.length ? gate : [{ col: 0, row: Math.floor(rows / 2) }],
+    treasure: treasure.length
+      ? treasure
+      : [{ col: cols - 1, row: Math.floor(rows / 2) }],
+    tiles: def.tiles.map((row) => row.split('')),
+    blocked,
+    terrain,
+    buffs: def.buffs || [],
+    buffIndex,
+    walkable,
+    placements: [],
+  };
+}
+
+export function terrainAt(map, col, row) {
+  return map.terrain[`${col},${row}`] || TERRAIN.NORMAL;
+}
+
+export function isPlaceable(map, col, row) {
+  if (col < 0 || row < 0 || col >= map.cols || row >= map.rows) return false;
+  const key = `${col},${row}`;
+  if (map.blocked.has(key)) return false;
+  if (map.gate.some((g) => g.col === col && g.row === row)) return false;
+  if (map.treasure.some((t) => t.col === col && t.row === row)) return false;
+  return true;
+}
+
+export function cellKey(col, row) {
+  return `${col},${row}`;
+}
+
+/** Compact factory */
+function M(id, name, costCap, tiles, extras = {}) {
+  return { id, name, costCap, tiles, ...extras };
+}
+
+/**
+ * 20 unique stage layouts. Legend:
+ * # wall  o obstacle  . floor  ~ water  d dark  l low  h high  ^ hazard  G gate  T treasure
+ */
+const RAW_MAPS = {
+  1: M(
+    'stage_01',
+    'Hành Lang Mở',
+    5,
+    [
+      '##############',
+      '#............#',
+      '#............#',
+      'G............T',
+      'G............T',
+      '#............#',
+      '#............#',
+      '##############',
+    ],
+    {
+      tip: 'Map mở — chặn giữa hành lang. Cost thấp, tập xếp.',
+      buffs: [{ cells: ['6,3', '6,4'], side: 'monster', kind: 'ATK_UP', value: 1.15 }],
+    }
+  ),
+  2: M(
+    'stage_02',
+    'Ngã Ba Nhẹ',
+    5,
+    [
+      '##############',
+      '#......##....#',
+      '#......##....#',
+      'G............T',
+      'G............T',
+      '#......##....#',
+      '#......##....#',
+      '##############',
+    ],
+    {
+      tip: 'Hai lối phụ quanh trụ giữa — đừng để lọt một đường.',
+      buffs: [{ cells: ['5,3', '5,4'], side: 'monster', kind: 'DEF_UP', value: 1.2 }],
+    }
+  ),
+  3: M(
+    'stage_03',
+    'Choke Đôi',
+    5,
+    [
+      '##############',
+      '#..##....##..#',
+      '#............#',
+      'G............T',
+      'G............T',
+      '#............#',
+      '#..##....##..#',
+      '##############',
+    ],
+    {
+      tip: 'Hai choke hẹp — đặt bait/tank tại eo đất.',
+      buffs: [
+        { cells: ['4,3', '4,4', '9,3', '9,4'], side: 'monster', kind: 'ATK_UP', value: 1.25 },
+        { cells: ['7,2', '7,5'], side: 'hero', kind: 'SPEED_UP', value: 1.15 },
+      ],
+    }
+  ),
+  4: M(
+    'stage_04',
+    'Ngã Ba Sâu',
+    5,
+    [
+      '##############',
+      '#....#.......#',
+      '#....#..oo...#',
+      'G....#.......T',
+      'G........#...T',
+      '#...oo...#...#',
+      '#........#...#',
+      '##############',
+    ],
+    {
+      tip: 'Ba nhánh tới kho — phủ anti-stealth trên nhánh hẹp.',
+      buffs: [{ cells: ['8,3', '8,4'], side: 'monster', kind: 'ATK_UP', value: 1.3 }],
+    }
+  ),
+  5: M(
+    'stage_05',
+    'Đầm Lầy Hẹp',
+    5,
+    [
+      '##############',
+      '#~~~~....~~~~#',
+      '#~~~~.##.~~~~#',
+      'G~~~~....~~~~T',
+      'G~~~~....~~~~T',
+      '#~~~~.##.~~~~#',
+      '#~~~~....~~~~#',
+      '##############',
+    ],
+    {
+      tip: 'Nước làm chậm Hero — đặt quái WATER_BUFF trên ~.',
+      buffs: [
+        { cells: ['3,3', '3,4', '10,3', '10,4'], side: 'monster', kind: 'ATK_UP', value: 1.2 },
+        { cells: ['6,3', '7,4'], side: 'hero', kind: 'SPEED_UP', value: 1.2 },
+      ],
+    }
+  ),
+  6: M(
+    'stage_06',
+    'Mê Cung Nước',
+    5,
+    [
+      '##############',
+      '#~~....~~..~~#',
+      '#~~.##.~~##~~#',
+      'G~~....~~....T',
+      'G~~.##.~~##..T',
+      '#~~....~~....#',
+      '#~~....~~..~~#',
+      '##############',
+    ],
+    {
+      tip: 'Đường nước quanh co — Leviathan / Hàu mạnh ở đây.',
+      buffs: [{ cells: ['5,3', '8,3', '8,4'], side: 'monster', kind: 'ATK_UP', value: 1.35 }],
+    }
+  ),
+  7: M(
+    'stage_07',
+    'Hồ Chữ U',
+    5,
+    [
+      '##############',
+      '#~~~~~~~~~~~~#',
+      '#~~......~~..#',
+      'G~~..##..~~..T',
+      'G~~..##..~~..T',
+      '#~~......~~..#',
+      '#~~~~~~~~~~~~#',
+      '##############',
+    ],
+    {
+      tip: 'Vòng nước ngoài + lối khô giữa — chọn choke khô hoặc buff nước.',
+      buffs: [
+        { cells: ['6,3', '6,4'], side: 'monster', kind: 'DEF_UP', value: 1.25 },
+        { cells: ['2,1', '11,1'], side: 'hero', kind: 'SPEED_DOWN', value: 0.8 },
+      ],
+    }
+  ),
+  8: M(
+    'stage_08',
+    'Hành Lang Tối',
+    5,
+    [
+      '##############',
+      '#dddd....dddd#',
+      '#dd..####..dd#',
+      'Gdd........ddT',
+      'Gdd........ddT',
+      '#dd..####..dd#',
+      '#dddd....dddd#',
+      '##############',
+    ],
+    {
+      tip: 'Tối giảm tầm Hero — DARK_BUFF / Mắt thần trên d.',
+      buffs: [
+        { cells: ['4,3', '4,4', '9,3', '9,4'], side: 'monster', kind: 'ATK_UP', value: 1.3 },
+        { cells: ['6,3', '7,4'], side: 'hero', kind: 'REVEAL_AURA', value: 1 },
+      ],
+    }
+  ),
+  9: M(
+    'stage_09',
+    'Song Đạo Bóng',
+    6,
+    [
+      '##############',
+      '#dddd#...#ddd#',
+      '#dddd#...#ddd#',
+      'Gdddd.....dddT',
+      'Gdddd.....dddT',
+      '#dddd#...#ddd#',
+      '#dddd#...#ddd#',
+      '##############',
+    ],
+    {
+      tip: 'Hai hành lang tối + giữa sáng — rogue thích mép.',
+      buffs: [{ cells: ['5,3', '8,4'], side: 'monster', kind: 'ATK_UP', value: 1.25 }],
+    }
+  ),
+  10: M(
+    'stage_10',
+    'Hầm Đèn Lồng',
+    6,
+    [
+      '##############',
+      '#d..d..d..d..#',
+      '#d##d##d##d##d',
+      'Gd...........T',
+      'Gd...........T',
+      '#d##d##d##d##d',
+      '#d..d..d..d..#',
+      '##############',
+    ],
+    {
+      tip: 'Cột tối xen kẽ — đặt reveal ở nút giao.',
+      buffs: [
+        { cells: ['3,3', '6,3', '9,4'], side: 'monster', kind: 'ATK_UP', value: 1.2 },
+        { cells: ['7,3', '7,4'], side: 'hero', kind: 'SPEED_UP', value: 1.15 },
+      ],
+    }
+  ),
+  11: M(
+    'stage_11',
+    'Hang Trần Thấp',
+    6,
+    [
+      '##############',
+      '#llllllllllll#',
+      '#ll##ll##ll##l',
+      'Gll........llT',
+      'Gll........llT',
+      '#ll##ll##ll##l',
+      '#llllllllllll#',
+      '##############',
+    ],
+    {
+      tip: 'Trần thấp — Rồng Sợ Độ Cao cực mạnh. Đặt ở l.',
+      buffs: [{ cells: ['5,3', '5,4', '8,3', '8,4'], side: 'monster', kind: 'ATK_UP', value: 1.35 }],
+    }
+  ),
+  12: M(
+    'stage_12',
+    'Hang Động Hẹp',
+    6,
+    [
+      '##############',
+      '#ll....ll....#',
+      '#ll.##.ll.##.#',
+      'Gll.##.ll.##.T',
+      'Gll....ll....T',
+      '#ll.##.ll.##.#',
+      '#ll....ll....#',
+      '##############',
+    ],
+    {
+      tip: 'Nhiều eo hẹp — tank + boss trần thấp.',
+      buffs: [
+        { cells: ['4,3', '9,4'], side: 'monster', kind: 'DEF_UP', value: 1.3 },
+        { cells: ['6,2', '7,5'], side: 'hero', kind: 'SPEED_UP', value: 1.2 },
+      ],
+    }
+  ),
+  13: M(
+    'stage_13',
+    'Mê Cung Trần',
+    6,
+    [
+      '##############',
+      '#l.l.l.l.l.l.#',
+      '#l#l#l#l#l#l#l',
+      'Gl.l.l.l.l.l.T',
+      'Gl.l.l.l.l.l.T',
+      '#l#l#l#l#l#l#l',
+      '#l.l.l.l.l.l.#',
+      '##############',
+    ],
+    {
+      tip: 'Lưới cột — rogue có đường phụ, warrior đi thẳng.',
+      buffs: [{ cells: ['6,3', '7,4'], side: 'monster', kind: 'ATK_UP', value: 1.4 }],
+    }
+  ),
+  14: M(
+    'stage_14',
+    'Sảnh Rộng',
+    6,
+    [
+      '##############',
+      '#hhhhhhhhhhhh#',
+      '#hh........hh#',
+      'Ghh........hhT',
+      'Ghh........hhT',
+      '#hh........hh#',
+      '#hhhhhhhhhhhh#',
+      '##############',
+    ],
+    {
+      tip: 'Trần cao / mở — mage kite mạnh; quái trần thấp yếu.',
+      buffs: [
+        { cells: ['5,3', '8,4'], side: 'hero', kind: 'SPEED_UP', value: 1.25 },
+        { cells: ['6,3', '7,4'], side: 'monster', kind: 'ATK_UP', value: 1.15 },
+      ],
+    }
+  ),
+  15: M(
+    'stage_15',
+    'Quảng Trường',
+    6,
+    [
+      '##############',
+      '#hh..oooo..hh#',
+      '#hh........hh#',
+      'Ghh...##...hhT',
+      'Ghh...##...hhT',
+      '#hh........hh#',
+      '#hh..oooo..hh#',
+      '##############',
+    ],
+    {
+      tip: 'Nhiều lane — phủ aura / ranged, đừng dồn một điểm.',
+      buffs: [{ cells: ['4,3', '9,4'], side: 'monster', kind: 'ATK_UP', value: 1.2 }],
+    }
+  ),
+  16: M(
+    'stage_16',
+    'Đấu Trường Cao',
+    6,
+    [
+      '##############',
+      '#h..........h#',
+      '#h..######..h#',
+      'Gh..........hT',
+      'Gh..........hT',
+      '#h..######..h#',
+      '#h..........h#',
+      '##############',
+    ],
+    {
+      tip: 'Vòng ngoài + lõi tường — chọn phòng thủ vành đai hay cổng kho.',
+      buffs: [
+        { cells: ['3,3', '10,4'], side: 'hero', kind: 'SPEED_UP', value: 1.2 },
+        { cells: ['6,3', '7,4'], side: 'monster', kind: 'DEF_UP', value: 1.35 },
+      ],
+    }
+  ),
+  17: M(
+    'stage_17',
+    'Pháo Đài Kép',
+    6,
+    [
+      '##############',
+      '#~~..##..dd..#',
+      '#~~......dd..#',
+      'G............T',
+      'G............T',
+      '#ll......hh..#',
+      '#ll..##..hh..#',
+      '##############',
+    ],
+    {
+      tip: 'Bốn vùng địa hình — chọn quái theo ô đặt.',
+      buffs: [
+        { cells: ['2,1', '2,2'], side: 'monster', kind: 'ATK_UP', value: 1.3 },
+        { cells: ['10,1', '10,2'], side: 'monster', kind: 'ATK_UP', value: 1.3 },
+        { cells: ['6,3', '7,4'], side: 'hero', kind: 'SPEED_UP', value: 1.15 },
+      ],
+    }
+  ),
+  18: M(
+    'stage_18',
+    'Thành Lũy',
+    6,
+    [
+      '##############',
+      '#....oooo....#',
+      '#..##....##..#',
+      'G............T',
+      'G............T',
+      '#..##....##..#',
+      '#....oooo....#',
+      '##############',
+    ],
+    {
+      tip: 'Lõi phòng thủ + hai sườn — chặn cả ba đường vào kho.',
+      buffs: [
+        { cells: ['5,3', '8,3', '5,4', '8,4'], side: 'monster', kind: 'DEF_UP', value: 1.4 },
+        { cells: ['3,3', '10,4'], side: 'hero', kind: 'SPEED_UP', value: 1.2 },
+      ],
+    }
+  ),
+  19: M(
+    'stage_19',
+    'Pháo Đài Hỗn Địa',
+    6,
+    [
+      '##############',
+      '#~~dd##llhh~~#',
+      '#~~..##..~~..#',
+      'G............T',
+      'G............T',
+      '#..~~##..dd..#',
+      '#hhll##dd~~hh#',
+      '##############',
+    ],
+    {
+      tip: 'Hỗn địa hình — đọc ô trước khi thả boss.',
+      buffs: [
+        { cells: ['3,3', '10,4'], side: 'monster', kind: 'ATK_UP', value: 1.35 },
+        { cells: ['6,3', '7,4'], side: 'hero', kind: 'SPEED_UP', value: 1.2 },
+        { cells: ['1,1', '12,6'], side: 'both', kind: 'HEAL_TICK', value: 4 },
+      ],
+    }
+  ),
+  20: M(
+    'stage_20',
+    'Sảnh Boss Lệch',
+    6,
+    [
+      '##############',
+      '#d....####...#',
+      '#d...........#',
+      'G.....#......T',
+      'G......#.....T',
+      '#~~~~~.......#',
+      '#~~~~~####...#',
+      '##############',
+    ],
+    {
+      tip: 'Đường chính hẹp + sườn nước/tối — kho hở một cánh.',
+      buffs: [
+        { cells: ['5,3', '5,4'], side: 'monster', kind: 'ATK_UP', value: 1.45 },
+        { cells: ['10,2', '10,5'], side: 'hero', kind: 'SPEED_UP', value: 1.25 },
+        { cells: ['2,5', '3,5'], side: 'monster', kind: 'ATK_UP', value: 1.3 },
+      ],
+    }
+  ),
+};
+
+export const STAGE_MAPS = {};
+for (let i = 1; i <= 20; i++) {
+  STAGE_MAPS[i] = compileMap(RAW_MAPS[i]);
+}
+
+export function getStageMap(level) {
+  const lv = Math.max(1, Math.min(20, level | 0));
+  const base = STAGE_MAPS[lv];
+  return {
+    ...base,
+    blocked: new Set(base.blocked),
+    terrain: { ...base.terrain },
+    buffIndex: { ...base.buffIndex },
+    buffs: base.buffs.map((b) => ({ ...b, cells: [...b.cells] })),
+    gate: base.gate.map((g) => ({ ...g })),
+    treasure: base.treasure.map((t) => ({ ...t })),
+    tiles: base.tiles.map((row) => [...row]),
+    walkable: base.walkable.map((row) => [...row]),
+    placements: [],
+    costCap: base.baseCostCap,
+  };
+}

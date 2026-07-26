@@ -74,7 +74,7 @@ export function renderGacha(root, ctx) {
     <div class="gacha-hero">
       <p class="section-label" style="margin-top:0">Gacha</p>
       <h2>Quay ấn quái</h2>
-      <p class="muted">Dùng <strong>Linh Hồn</strong> (thắng ải mới có). Pity ${GACHA.PITY_THRESHOLD} → chắc Boss 5★.</p>
+      <p class="muted">Dùng <strong>Linh Hồn</strong> (thắng ải). Mỗi loại tối đa ×3 — dư hoàn LH. Pity ${GACHA.PITY_THRESHOLD} → chắc Boss 5★.</p>
       <div id="souls-hint"></div>
     </div>
 
@@ -144,12 +144,13 @@ export function renderGacha(root, ctx) {
         const m = r.monster;
         const stars = '★'.repeat(m.rarity);
         return `
-          <div class="pull-card r${m.rarity} ${r.isNew ? 'is-new' : ''}" style="animation-delay:${i * 0.04}s;border-color:${RARITY_COLORS[m.rarity]}">
+          <div class="pull-card r${m.rarity} ${r.isNew ? 'is-new' : ''} ${r.refunded ? 'is-refund' : ''}" style="animation-delay:${i * 0.04}s;border-color:${RARITY_COLORS[m.rarity]}">
             ${r.isNew ? '<span class="new-badge">MỚI</span>' : ''}
+            ${r.refunded ? `<span class="refund-badge">+${r.soulsRefunded} LH</span>` : ''}
             <img class="pull-sprite" src="${monsterSpriteUrl(m.id, m.color, m.rarity)}" alt="" width="52" height="52" />
             <div class="stars" style="color:${m.rarity === 5 ? '#e6b84a' : RARITY_COLORS[m.rarity]}">${stars}</div>
             <div style="font-weight:700;font-family:var(--font-display)">${m.name}</div>
-            <div class="muted" style="font-size:0.75rem">${RARITY_LABELS[m.rarity]}${r.pityHit ? ' · Pity' : ''}</div>
+            <div class="muted" style="font-size:0.75rem">${RARITY_LABELS[m.rarity]}${r.pityHit ? ' · Pity' : ''}${r.refunded ? ' · Trùng' : ''}</div>
           </div>`;
       })
       .join('');
@@ -160,7 +161,7 @@ export function renderGacha(root, ctx) {
     const lockedUrl = getSpriteDataUrl(getLockedMonsterSprite(m.rarity));
     const openUrl = monsterSpriteUrl(m.id, m.color, m.rarity);
     return `
-      <div class="reveal-card r${m.rarity} ${r.isNew ? 'is-new' : ''} ${faceDown ? 'face-down' : 'revealed'}" data-rarity="${m.rarity}">
+      <div class="reveal-card r${m.rarity} ${r.isNew ? 'is-new' : ''} ${r.refunded ? 'is-refund' : ''} ${faceDown ? 'face-down' : 'revealed'}" data-rarity="${m.rarity}">
         <div class="reveal-card-inner">
           <div class="reveal-face back">
             <img src="${lockedUrl}" alt="?" width="72" height="72" />
@@ -169,11 +170,12 @@ export function renderGacha(root, ctx) {
           <div class="reveal-face front" style="--rc:${RARITY_COLORS[m.rarity]}">
             ${r.isNew ? '<span class="new-badge">MỚI</span>' : ''}
             ${r.pityHit ? '<span class="pity-badge">PITY</span>' : ''}
+            ${r.refunded ? `<span class="refund-badge">+${r.soulsRefunded} LH</span>` : ''}
             <div class="reveal-rays" aria-hidden="true"></div>
             <img class="reveal-sprite" src="${openUrl}" alt="" width="88" height="88" />
             <div class="reveal-stars" style="color:${m.rarity >= 5 ? '#ffd54f' : RARITY_COLORS[m.rarity]}">${'★'.repeat(m.rarity)}</div>
             <strong class="reveal-name">${m.name}</strong>
-            <span class="reveal-meta">${RARITY_LABELS[m.rarity]} · C${m.cost}</span>
+            <span class="reveal-meta">${RARITY_LABELS[m.rarity]} · C${m.cost}${r.refunded ? ' · Trùng' : ''}</span>
           </div>
         </div>
       </div>`;
@@ -283,6 +285,8 @@ export function renderGacha(root, ctx) {
 
     if (res.results.some((r) => r.monster.rarity === 5)) toast('Boss xuất hiện!');
     else if (res.results.some((r) => r.isNew && r.monster.rarity >= 4)) toast('Mở khóa ấn hiếm!');
+    const refundTotal = res.results.reduce((s, r) => s + (r.soulsRefunded || 0), 0);
+    if (refundTotal > 0) toast(`Trùng cap ×3 — hoàn ${refundTotal} Linh Hồn`);
 
     stageHint.textContent = 'Chạm Quay để mở ấn';
     // keep reveal open until user closes

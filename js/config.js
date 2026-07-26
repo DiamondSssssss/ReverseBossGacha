@@ -1,7 +1,7 @@
 /**
  * API backend (username / password / tên hiển thị — giống GameBanCa).
  * Trên production cùng domain: để trống → gọi /api/...
- * Dev local không qua nginx: http://127.0.0.1:3007
+ * Dev local không qua nginx: http://127.0.0.1:3001
  */
 export const API_BASE = '';
 

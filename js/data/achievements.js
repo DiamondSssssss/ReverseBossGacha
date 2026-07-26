@@ -1,5 +1,7 @@
 /** Achievement definitions — clear goals toward "clearing" the game */
 
+import { MAP_UPGRADE } from './constants.js';
+
 export const ACHIEVEMENTS = [
   // —— Onboarding / first steps ——
   {
@@ -17,7 +19,7 @@ export const ACHIEVEMENTS = [
     desc: 'Thắng ải đầu tiên.',
     icon: '🛡️',
     category: 'combat',
-    reward: { souls: 100, gold: 50 },
+    reward: { souls: 100, gold: 50, gems: 1 },
     check: (s) => (s.stats?.wins || 0) >= 1,
   },
   {
@@ -37,7 +39,7 @@ export const ACHIEVEMENTS = [
     desc: 'Thắng 5 ải.',
     icon: '⚔️',
     category: 'combat',
-    reward: { souls: 150, gold: 80 },
+    reward: { souls: 150, gold: 80, gems: 1 },
     check: (s) => (s.stats?.wins || 0) >= 5,
   },
   {
@@ -141,20 +143,22 @@ export const ACHIEVEMENTS = [
   {
     id: 'upgrade_room',
     title: 'Thợ Cải Tạo',
-    desc: 'Nâng cấp bất kỳ phòng nào 1 lần.',
+    desc: 'Nâng cấp hầm (Cost map) 1 lần bằng Gem.',
     icon: '🔧',
     category: 'meta',
     reward: { gold: 50, souls: 50 },
-    check: (s) => Object.values(s.roomUpgrades || {}).some((lv) => lv >= 1),
+    check: (s) => (s.mapUpgrade || 0) >= 1 || Object.values(s.roomUpgrades || {}).some((lv) => lv >= 1),
   },
   {
     id: 'max_one_room',
-    title: 'Phòng Siêu Cấp',
-    desc: 'Nâng một phòng lên cấp tối đa.',
+    title: 'Hầm Siêu Cấp',
+    desc: 'Nâng Cost map lên cấp tối đa.',
     icon: '🏗️',
     category: 'meta',
     reward: { gold: 200, souls: 100, gems: 2 },
-    check: (s) => Object.values(s.roomUpgrades || {}).some((lv) => lv >= 5),
+    check: (s) =>
+      (s.mapUpgrade || 0) >= MAP_UPGRADE.MAX_LEVEL ||
+      Object.values(s.roomUpgrades || {}).some((lv) => lv >= MAP_UPGRADE.MAX_LEVEL),
   },
   {
     id: 'use_spell',

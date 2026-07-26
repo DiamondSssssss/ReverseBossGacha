@@ -1,4 +1,4 @@
-/* Tutorial + Achievements */
+/* Tutorial + Achievements + Coach tour */
 
 .tip-banner {
   display: flex;
@@ -51,6 +51,96 @@
 }
 
 .tut-list li { margin-bottom: 6px; }
+
+/* —— Guided coach overlay —— */
+.coach-root {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  pointer-events: none;
+}
+
+.coach-spotlight {
+  position: fixed;
+  z-index: 9001;
+  border: 2.5px solid var(--seal, #c43c28);
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 9999px rgba(26, 22, 18, 0.58),
+    0 0 0 3px rgba(196, 60, 40, 0.35);
+  pointer-events: none;
+  transition: top 0.2s ease, left 0.2s ease, width 0.2s ease, height 0.2s ease;
+}
+
+.coach-card {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 9002;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 14px 16px 12px;
+  background: var(--bone, #ebe4d6);
+  border: 2.5px solid var(--ink, #1a1612);
+  box-shadow: 4px 4px 0 rgba(26, 22, 18, 0.2);
+  pointer-events: auto;
+  animation: coachIn 0.28s ease;
+}
+
+@keyframes coachIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.coach-progress {
+  font-size: 0.68rem;
+  color: var(--seal, #c43c28);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.coach-card h3 {
+  margin: 0 0 6px;
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 1.15rem;
+  line-height: 1.25;
+}
+
+.coach-body {
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--ink-soft, #4a4238);
+}
+
+.coach-body .tut-list {
+  margin: 6px 0 0;
+  font-size: 0.84rem;
+}
+
+.coach-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.coach-actions button {
+  min-height: 40px;
+}
+
+.coach-pulse {
+  position: relative;
+  z-index: 9001 !important;
+  animation: coachPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes coachPulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.08); }
+}
 
 .ach-hero {
   margin-bottom: 14px;
@@ -155,5 +245,11 @@
 @media (min-width: 1024px) {
   .ach-summary {
     max-width: 480px;
+  }
+  .coach-card {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: min(420px, calc(100vw - 24px));
   }
 }

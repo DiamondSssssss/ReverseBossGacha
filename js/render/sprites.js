@@ -1166,12 +1166,9 @@ export function heroSpriteUrl(id, heroClass, color) {
 }
 
 /**
- * Draw sprite centered at world position with animation.
- * @param {CanvasRenderingContext2D} ctx
- * @param {HTMLCanvasElement} sprite
- * @param {number} x
- * @param {number} y
- * @param {object} [anim]
+ * Draw sprite centered at world position with pose animation.
+ * pose: idle | run | attack | cast | defend | flee | hurt | death
+ * @returns {{ x: number, y: number, w: number, h: number }} tâm + kích thước đã vẽ (để gắn HP bar)
  */
 export function drawSpriteAt(ctx, sprite, x, y, anim = {}) {
   const {
@@ -1181,16 +1178,141 @@ export function drawSpriteAt(ctx, sprite, x, y, anim = {}) {
     flash = 0,
     alpha = 1,
     squash = 1,
+    pose = 'idle',
+    poseT = 0,
+    lungeX = 0,
+    lungeY = 0,
+    tint = null,
+    shake = 0,
   } = anim;
-  const w = size * (facing < 0 ? -1 : 1) * (flash > 0 ? 1.12 : 1) * squash;
-  const h = size * (flash > 0 ? 0.92 : 1) / squash;
+
+  let sx = squash;
+  let sy = 1 / Math.max(0.5, squash);
+  let rot = 0;
+  let ox = lungeX;
+  let oy = bob + lungeY;
+  let a = alpha;
+
+  switch (pose) {
+    case 'run': {
+      const cycle = Math.sin(poseT * Math.PI * 2);
+      sx = 1 + cycle * 0.08;
+      sy = 1 - cycle * 0.08;
+      // không dịch oy — bob đã lo trên combat; tránh lệch HP
+      break;
+    }
+    case 'attack': {
+      const t = Math.max(0, Math.min(1, poseT));
+      sx = 1 + t * 0.18;
+      sy = 1 - t * 0.1;
+      break;
+    }
+    case 'cast': {
+      const pulse = 0.5 + 0.5 * Math.sin(poseT * Math.PI);
+      sx = 1 - poseT * 0.04;
+      sy = 1 + poseT * 0.12;
+      ctx.save();
+      ctx.globalAlpha = 0.35 * pulse * a;
+      ctx.strokeStyle = tint || '#ce93d8';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(x + ox, y + oy, size * (0.55 + poseT * 0.25), 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+      break;
+    }
+    case 'defend': {
+      sx = 0.92;
+      sy = 1.08;
+      break;
+    }
+    case 'flee': {
+      const cycle = Math.sin(poseT * Math.PI * 2);
+      sx = 1.1 + cycle * 0.1;
+      sy = 0.9 - cycle * 0.05;
+      break;
+    }
+    case 'hurt': {
+      sx = 1.08;
+      sy = 0.92;
+      break;
+    }
+    case 'death': {
+      a = 0.35;
+      sy = 0.7;
+      sx = 1.2;
+      break;
+    }
+    default:
+      break;
+  }
+
+  const flashMul = flash > 0 ? 1.1 : 1;
+  const flashH = flash > 0 ? 0.92 : 1;
+  // Luôn dương — flip bằng scale, tránh drawImage width âm lệch tâm
+  const drawW = size * flashMul * Math.abs(sx);
+  const drawH = size * flashH * Math.abs(sy);
+  const vx = x + ox;
+  const vy = y + oy;
+  const face = facing < 0 ? -1 : 1;
+
   ctx.save();
-  ctx.globalAlpha = alpha;
+  ctx.globalAlpha = a;
   if (flash > 0) {
     ctx.shadowColor = '#fff';
     ctx.shadowBlur = 12;
   }
-  ctx.translate(x, y + bob);
-  ctx.drawImage(sprite, -Math.abs(w) / 2, -h / 2, w, h);
+  if (pose === 'flee') {
+    ctx.shadowColor = '#ffeb3b';
+    ctx.shadowBlur = 8;
+  }
+  if (pose === 'defend') {
+    ctx.strokeStyle = 'rgba(129,212,250,0.75)';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(vx, vy, size * 0.58, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.translate(vx, vy);
+  if (rot) ctx.rotate(rot);
+  if (face < 0) ctx.scale(-1, 1);
+  ctx.drawImage(sprite, -drawW / 2, -drawH / 2, drawW, drawH);
   ctx.restore();
+
+  return { x: vx, y: vy, w: drawW, h: drawH };
+}
+
+/** @deprecated dùng return của drawSpriteAt */
+export function spriteVisualOffset(anim = {}) {
+  const {
+    bob = 0,
+    pose = 'idle',
+    poseT = 0,
+    lungeX = 0,
+    lungeY = 0,
+    shake = 0,
+  } = anim;
+
+  let ox = lungeX;
+  let oy = bob + lungeY;
+
+  switch (pose) {
+    case 'run': {
+      const cycle = Math.sin(poseT * Math.PI * 2);
+      oy += Math.abs(cycle) * 2;
+      break;
+    }
+    case 'cast': {
+      oy -= poseT * 4;
+      break;
+    }
+    case 'hurt': {
+      ox += shake;
+      break;
+    }
+    default:
+      break;
+  }
+
+  return { ox, oy };
 }

@@ -1,27 +1,17 @@
 /**
- * Interactive FX for setup board — ambient particles, place/remove bursts, path shimmer.
+ * Setup board FX — ít particle, đúng chỗ: place/remove + path pulse theo ô.
  */
 
 import { ParticleSystem } from '../render/particles.js';
 
-const TERRAIN_AMBIENT = {
-  WATER: { colors: ['#4db6ac', '#80cbc4', '#e0f2f1'], rate: 14, shape: 'circle', gravity: -8 },
-  LOW_CEILING: { colors: ['#a1887f', '#d7ccc8', '#efebe9'], rate: 8, shape: 'square', gravity: 25 },
-  DARK: { colors: ['#5c6bc0', '#7986cb', '#9fa8da'], rate: 10, shape: 'star', gravity: -20 },
-  HIGH: { colors: ['#ffe082', '#fff8e1', '#ffcc80'], rate: 9, shape: 'spark', gravity: -15 },
-  NORMAL: { colors: ['#bcaaa4', '#d7ccc8'], rate: 6, shape: 'circle', gravity: 10 },
-};
-
 /**
- * @param {HTMLElement} boardEl - .room-board
+ * @param {HTMLElement} boardEl
  * @param {object} opts
- * @returns {() => void} dispose
+ * @param {Array<{col:number,row:number}>} [opts.path]
+ * @returns {() => void}
  */
 export function attachSetupBoardFx(boardEl, opts = {}) {
-  const terrain = opts.terrain || 'NORMAL';
-  const stage = boardEl.querySelector('.board-stage');
-  if (!stage) return () => {};
-
+  const stage = boardEl.querySelector('.board-stage') || boardEl;
   let canvas = boardEl.querySelector('.board-fx');
   if (!canvas) {
     canvas = document.createElement('canvas');
@@ -32,12 +22,11 @@ export function attachSetupBoardFx(boardEl, opts = {}) {
 
   const ctx = canvas.getContext('2d');
   const particles = new ParticleSystem();
-  const ambient = TERRAIN_AMBIENT[terrain] || TERRAIN_AMBIENT.NORMAL;
-
   let running = true;
   let last = performance.now();
   let pathPhase = 0;
   let raf = 0;
+  let pathCells = opts.path || [];
 
   function resize() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -62,69 +51,80 @@ export function attachSetupBoardFx(boardEl, opts = {}) {
     };
   }
 
+  function cellElAt(col, row) {
+    return boardEl.querySelector(`.grid-cell[data-col="${col}"][data-row="${row}"]`);
+  }
+
   function burstAtCell(cellEl, color, kind = 'place') {
+    if (!cellEl) return;
     const p = boardPointFromCell(cellEl);
     if (kind === 'place') {
-      particles.burst(p.x, p.y, color || '#ffe082');
-      particles.magic(p.x, p.y, color || '#ffd54f');
+      particles.burst(p.x, p.y, color || '#c9a05a');
+      particles.magic(p.x, p.y - 4, color || '#9a6b2a');
     } else if (kind === 'remove') {
-      particles.death(p.x, p.y, color || '#90a4ae');
+      particles.death(p.x, p.y, color || '#7a7164');
     } else {
-      particles.hit(p.x, p.y, color || '#fff');
+      particles.hit(p.x, p.y, color || '#f7f1e6');
     }
   }
 
-  function ambientTick(dt, w, h) {
-    const n = ambient.rate * dt;
-    if (Math.random() > n) return;
-    particles.emit(Math.random() * w, h * (0.25 + Math.random() * 0.6), {
-      count: 1 + ((Math.random() * 2) | 0),
-      colors: ambient.colors,
-      speed: 18 + Math.random() * 25,
-      life: 1.1,
-      size: 2 + Math.random() * 2,
-      gravity: ambient.gravity,
-      shape: ambient.shape,
-      angle: terrain === 'WATER' ? -Math.PI / 2 : Math.random() * Math.PI * 2,
-      spread: terrain === 'WATER' ? 0.6 : Math.PI * 2,
-    });
+  function burstAt(col, row, color, kind) {
+    burstAtCell(cellElAt(col, row), color, kind);
   }
 
-  function drawPathShimmer(w, h) {
-    const grid = boardEl.querySelector('.grid-board');
-    if (!grid) return;
-    const br = boardEl.getBoundingClientRect();
-    const gr = grid.getBoundingClientRect();
-    const gx = gr.left - br.left;
-    const gy = gr.top - br.top;
-    const gw = gr.width;
-    const gh = gr.height;
+  function floatCost(cellEl, text, color) {
+    if (!cellEl) return;
+    const p = boardPointFromCell(cellEl);
+    const el = document.createElement('span');
+    el.className = 'board-float';
+    el.textContent = text;
+    el.style.left = p.x + 'px';
+    el.style.top = p.y + 'px';
+    el.style.color = color || '#2f6f5e';
+    el.style.textShadow = '0 1px 0 #f7f1e6';
+    boardEl.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('go'));
+    setTimeout(() => el.remove(), 700);
+  }
 
-    ctx.save();
-    ctx.globalAlpha = 0.22;
-    const midY = gy + gh / 2;
-    const grad = ctx.createLinearGradient(gx, midY, gx + gw, midY);
-    const t = (pathPhase % 1 + 1) % 1;
-    grad.addColorStop(Math.max(0, t - 0.15), 'rgba(255,213,79,0)');
-    grad.addColorStop(t, 'rgba(255,213,79,0.85)');
-    grad.addColorStop(Math.min(1, t + 0.15), 'rgba(255,213,79,0)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(gx, midY - 3, gw, 6);
-
-    // flowing chevrons
-    ctx.globalAlpha = 0.35;
-    ctx.fillStyle = '#2f6f5e';
-    const step = gw / 6;
-    for (let i = 0; i < 6; i++) {
-      const x = gx + i * step + ((pathPhase * step) % step);
+  function drawPathPulse() {
+    if (!pathCells.length) return;
+    const n = pathCells.length;
+    const idx = Math.floor(((pathPhase % 1) + 1) % 1 * n);
+    for (let i = 0; i < n; i++) {
+      const cell = pathCells[i];
+      const el = cellElAt(cell.col, cell.row);
+      if (!el || el.classList.contains('wall-cell')) continue;
+      const p = boardPointFromCell(el);
+      const dist = Math.min(Math.abs(i - idx), Math.abs(i - idx + n), Math.abs(i - idx - n));
+      const a = Math.max(0, 0.45 - dist * 0.12);
+      if (a <= 0.02) continue;
       ctx.beginPath();
-      ctx.moveTo(x, midY - 5);
-      ctx.lineTo(x + 8, midY);
-      ctx.lineTo(x, midY + 5);
-      ctx.closePath();
+      ctx.globalAlpha = a;
+      ctx.fillStyle = '#2f6f5e';
+      ctx.arc(p.x, p.y, 3.5 + (i === idx ? 2.5 : 0), 0, Math.PI * 2);
       ctx.fill();
     }
-    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
+  /** Soft sparkle only on hovered water / buff cells */
+  function sparkleHover(dt) {
+    const hover = boardEl.querySelector('.grid-cell.hover-preview');
+    if (!hover || Math.random() > dt * 3) return;
+    const isWater = hover.classList.contains('terrain-WATER');
+    const isBuff = hover.classList.contains('buff-monster') || hover.classList.contains('buff-hero');
+    if (!isWater && !isBuff) return;
+    const p = boardPointFromCell(hover);
+    particles.emit(p.x + (Math.random() - 0.5) * 12, p.y + (Math.random() - 0.5) * 12, {
+      count: 1,
+      colors: isWater ? ['#5a8a82', '#7ea8a0'] : ['#2f6f5e', '#9a6b2a'],
+      speed: 12,
+      life: 0.6,
+      size: 2,
+      gravity: isWater ? -12 : -6,
+      shape: 'circle',
+    });
   }
 
   function loop(ts) {
@@ -132,17 +132,14 @@ export function attachSetupBoardFx(boardEl, opts = {}) {
     let dt = (ts - last) / 1000;
     last = ts;
     if (dt > 0.05) dt = 0.05;
-
+    pathPhase += dt * 0.7;
+    sparkleHover(dt);
+    particles.update(dt);
     const w = canvas._cssW || 1;
     const h = canvas._cssH || 1;
-    pathPhase += dt * 0.55;
-    ambientTick(dt, w, h);
-    particles.update(dt);
-
     ctx.clearRect(0, 0, w, h);
-    drawPathShimmer(w, h);
+    drawPathPulse();
     particles.draw(ctx);
-
     raf = requestAnimationFrame(loop);
   }
 
@@ -151,13 +148,17 @@ export function attachSetupBoardFx(boardEl, opts = {}) {
   window.addEventListener('resize', onResize);
   raf = requestAnimationFrame(loop);
 
-  // Public hooks hung on board for setup.js
   boardEl._setupFx = {
     burstAtCell,
+    burstAt,
+    floatCost,
+    setPath(path) {
+      pathCells = path || [];
+    },
     sparkleSelect(color) {
       const w = canvas._cssW || 100;
       const h = canvas._cssH || 100;
-      particles.magic(w * 0.5, h * 0.35, color || '#ffd54f');
+      particles.magic(w * 0.5, 28, color || '#9a6b2a');
     },
   };
 

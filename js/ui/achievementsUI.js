@@ -73,9 +73,12 @@ export function renderAchievements(root, ctx) {
   `;
 
   root.querySelector('#btn-replay-tut').onclick = () => {
-    showTutorial(document.getElementById('modal'), {
-      onDone: () => toast('Xong hướng dẫn'),
-    });
+    if (ctx.startTutorial) ctx.startTutorial();
+    else {
+      showTutorial(document.getElementById('modal'), {
+        onDone: () => toast('Xong hướng dẫn'),
+      });
+    }
   };
 }
 

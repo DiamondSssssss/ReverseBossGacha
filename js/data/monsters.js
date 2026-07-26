@@ -16,7 +16,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 60, atk: 12, speed: 2.2, range: 1.0, atkSpeed: 1.4 },
     passive: 'KNOCK_BACK_ROOM', tags: ['utility', 'knock'], color: '#8d6e63',
-    description: 'Cắn bản đồ — đẩy Hero lùi về phòng trước.',
+    description: 'Cắn — đẩy Hero lùi về phía cổng vài ô.',
   },
   {
     id: 'goblin_bait',
@@ -96,7 +96,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 55, atk: 13, speed: 2.3, range: 1.0, atkSpeed: 1.4 },
     passive: 'KNOCK_BACK_ROOM', tags: ['knock'], color: '#f48fb1',
-    description: 'Giật đồ rồi đẩy Hero lùi phòng.',
+    description: 'Giật rồi đẩy Hero lùi về phía cổng.',
   },
   {
     id: 'ink_blot',
@@ -276,7 +276,7 @@ export const MONSTERS = [
     rarity: 3, cost: 3,
     stats: { hp: 170, atk: 38, speed: 1.0, range: 3.0, atkSpeed: 0.85 },
     passive: 'NONE', tags: ['ranged'], color: '#78909c',
-    description: 'Bắn xa qua cả phòng.',
+    description: 'Bắn xa — giữ ô, cần đường nhìn.',
   },
   {
     id: 'hex_cat',
@@ -292,7 +292,7 @@ export const MONSTERS = [
     rarity: 3, cost: 3,
     stats: { hp: 380, atk: 30, speed: 0.7, range: 1.2, atkSpeed: 0.7 },
     passive: 'WATER_BUFF', tags: ['tank', 'water'], color: '#4db6ac',
-    description: 'Mạnh hơn rõ khi ở phòng nước.',
+    description: 'Mạnh hơn rõ khi đứng ô nước.',
   },
   {
     id: 'lantern_keeper',
@@ -326,7 +326,7 @@ export const MONSTERS = [
     rarity: 4, cost: 5,
     stats: { hp: 650, atk: 45, speed: 0.7, range: 1.5, atkSpeed: 0.65 },
     passive: 'WATER_BUFF', tags: ['epic', 'tank'], color: '#4dd0e1',
-    description: '+40% HP & ATK khi ở phòng ngập nước.',
+    description: '+40% HP & ATK khi đứng ô ngập nước.',
   },
   {
     id: 'iron_howler',
@@ -366,17 +366,15 @@ export const MONSTERS = [
     rarity: 4, cost: 5,
     stats: { hp: 320, atk: 60, speed: 1.3, range: 1.8, atkSpeed: 1.05 },
     passive: 'DARK_BUFF', tags: ['epic', 'dark'], color: '#6a1b9a',
-    description: 'Mạnh rõ trong phòng tối.',
+    description: 'Mạnh rõ trên ô tối.',
   },
-
-  // ——— 5★ Legendary / Boss (5) ———
   {
     id: 'dragon_01',
     name: 'Rồng Sợ Độ Cao',
     rarity: 5, cost: 7,
     stats: { hp: 900, atk: 150, speed: 1.2, range: 2.8, atkSpeed: 0.9 },
     passive: 'BUFF_IN_LOW_CEILING_ROOM', tags: ['boss', 'dps'], color: '#ef5350',
-    description: 'Phòng cao −50% ATK; phòng trần thấp/tối +200% ATK.',
+    description: 'Ô trần cao −50% ATK; ô trần thấp/tối +200% ATK.',
   },
   {
     id: 'abyss_hydra',
@@ -392,7 +390,7 @@ export const MONSTERS = [
     rarity: 5, cost: 6,
     stats: { hp: 700, atk: 110, speed: 1.8, range: 2.2, atkSpeed: 1.2 },
     passive: 'DARK_BUFF', tags: ['boss', 'dps'], color: '#311b92',
-    description: '+100% ATK trong phòng tối.',
+    description: '+100% ATK trên ô tối.',
   },
   {
     id: 'tide_leviathan',
@@ -400,7 +398,7 @@ export const MONSTERS = [
     rarity: 5, cost: 8,
     stats: { hp: 1100, atk: 100, speed: 0.9, range: 2.4, atkSpeed: 0.85 },
     passive: 'WATER_BUFF', tags: ['boss', 'water'], color: '#0277bd',
-    description: 'Boss nước — cực mạnh ở phòng ngập.',
+    description: 'Boss nước — cực mạnh trên ô ngập.',
   },
   {
     id: 'crown_behemoth',
@@ -411,6 +409,64 @@ export const MONSTERS = [
     description: 'Tank boss — nghiền nát Chiến sĩ.',
   },
 ];
+
+/** Explicit AI roles (overrides inference defaults) */
+const AI_OVERRIDES = {
+  bone_pile: { role: 'aura_support', leash: 1, hold: true },
+  news_rat: { role: 'knockbacker', leash: 4 },
+  goblin_bait: { role: 'bait_taunt', leash: 2.5 },
+  mute_mite: { role: 'anti_mage', leash: 4, prefer: ['MAGE'] },
+  candle_bug: { role: 'chaser', leash: 3 },
+  moss_slug: { role: 'aura_support', leash: 1.5, hold: true },
+  squeak_bat: { role: 'chaser', leash: 5 },
+  pebble_imp: { role: 'ranged_guard', leash: 2, hold: true },
+  dust_wisp: { role: 'anti_mage', leash: 3.5, prefer: ['MAGE'] },
+  fungus_spore: { role: 'aura_support', leash: 1, hold: true },
+  tin_knight: { role: 'bait_taunt', leash: 2, hold: true },
+  pickpocket_pixie: { role: 'knockbacker', leash: 4 },
+  ink_blot: { role: 'anti_mage', leash: 4, prefer: ['MAGE'] },
+  crate_mimic_baby: { role: 'bait_taunt', leash: 2, hold: true },
+  spark_moth: { role: 'chaser', leash: 4 },
+  mud_hand: { role: 'aura_support', leash: 2, hold: true },
+  echo_frog: { role: 'chaser', leash: 3.5 },
+  nail_sprite: { role: 'chaser', leash: 4 },
+  rag_doll: { role: 'bait_taunt', leash: 1.5, hold: true },
+  coin_scarab: { role: 'chaser', leash: 4 },
+  slime_sticky: { role: 'anti_mage', leash: 3, prefer: ['MAGE'] },
+  ward_eye: { role: 'anti_rogue', leash: 1, hold: true, prefer: ['ROGUE'] },
+  spike_trap: { role: 'trap', leash: 0, hold: true },
+  poison_toad: { role: 'aura_support', leash: 2, hold: true },
+  mirror_shade: { role: 'anti_rogue', leash: 4, prefer: ['ROGUE'] },
+  chain_ghoul: { role: 'bait_taunt', leash: 3, blocksPath: true },
+  ember_lizard: { role: 'chaser', leash: 4 },
+  web_widow: { role: 'aura_support', leash: 2, hold: true },
+  oil_slick: { role: 'trap', leash: 0, hold: true },
+  bell_wraith: { role: 'anti_mage', leash: 3.5, prefer: ['MAGE'] },
+  frost_imp: { role: 'aura_support', leash: 2.5, hold: true },
+  brute_troll: { role: 'bait_taunt', leash: 3, blocksPath: true },
+  blade_dancer: { role: 'chaser', leash: 5 },
+  stone_archer: { role: 'ranged_guard', leash: 1.5, hold: true },
+  hex_cat: { role: 'anti_mage', leash: 4, prefer: ['MAGE'] },
+  barnacle_brute: { role: 'bait_taunt', leash: 2, hold: true, blocksPath: true },
+  lantern_keeper: { role: 'anti_rogue', leash: 2.5, prefer: ['ROGUE'], hold: true },
+  bone_captain: { role: 'bait_taunt', leash: 3, blocksPath: true },
+  shadow_panther: { role: 'chaser', leash: 5.5 },
+  crystal_golem: { role: 'bait_taunt', leash: 2, hold: true, blocksPath: true },
+  iron_howler: { role: 'chaser', leash: 4.5 },
+  plague_doctor: { role: 'aura_support', leash: 2.5, hold: true },
+  obsidian_guard: { role: 'bait_taunt', leash: 2, hold: true, blocksPath: true },
+  storm_harpy: { role: 'chaser', leash: 5 },
+  grave_monk: { role: 'chaser', leash: 4 },
+  dragon_01: { role: 'boss_elite', leash: 6, blocksPath: true },
+  abyss_hydra: { role: 'boss_elite', leash: 6, prefer: ['WARRIOR'], blocksPath: true },
+  void_wraith: { role: 'boss_elite', leash: 6, blocksPath: true },
+  tide_leviathan: { role: 'boss_elite', leash: 5, hold: true, blocksPath: true },
+  crown_behemoth: { role: 'boss_elite', leash: 5, prefer: ['WARRIOR'], blocksPath: true },
+};
+
+for (const m of MONSTERS) {
+  if (AI_OVERRIDES[m.id]) m.ai = AI_OVERRIDES[m.id];
+}
 
 export const MONSTER_BY_ID = Object.fromEntries(MONSTERS.map((m) => [m.id, m]));
 

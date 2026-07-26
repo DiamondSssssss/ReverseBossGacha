@@ -5,15 +5,16 @@ import {
   inventoryCopy,
 } from './core/storage.js';
 import { createRunState } from './core/dungeon.js';
+import { loadoutFingerprint } from './core/loadout.js';
 import { evaluateAchievements } from './core/achievements.js';
 import { initAuth, onAuthChange } from './core/auth.js';
 import { renderHub } from './ui/hub.js';
 import { renderGacha } from './ui/gachaUI.js';
 import { renderCollection } from './ui/collection.js';
 import { renderScout, renderSetup } from './ui/setup.js';
-import { renderCombat, renderReward, stopCombatIfAny } from './ui/combat.js';
+import { renderCombat, renderReward, stopCombatIfAny, getCombatEngine } from './ui/combat.js';
 import { renderAchievements, announceUnlocks } from './ui/achievementsUI.js';
-import { showTutorial, showTipBanner } from './ui/tutorial.js';
+import { startGuidedTour, showTipBanner } from './ui/tutorial.js';
 import { renderAccountBar } from './ui/authUI.js';
 
 const state = loadState();
@@ -80,6 +81,50 @@ function startRun() {
   lastReward = null;
 }
 
+/** Áp loadout → inventory session (chỉ quái mang vào xếp trận). */
+function applyLoadout(loadout) {
+  if (!run) return;
+  const clean = { ...loadout };
+  const nextKey = loadoutFingerprint(clean);
+  const changed = run.appliedLoadoutKey !== nextKey;
+
+  run.loadout = clean;
+  run.loadoutReady = true;
+  run.appliedLoadoutKey = nextKey;
+
+  if (changed) {
+    run.map.placements = [];
+    run.selectedMonsterId = null;
+    inventory = { ...clean };
+    return;
+  }
+
+  // Giữ board nếu loadout không đổi — trừ lại số đã xếp
+  inventory = { ...clean };
+  for (const p of run.map.placements || []) {
+    if (inventory[p.monsterId] > 0) {
+      inventory[p.monsterId] -= 1;
+      if (inventory[p.monsterId] <= 0) delete inventory[p.monsterId];
+    }
+  }
+}
+
+/** Nếu vào setup mà inventory vẫn là cả kho → thu về loadout. */
+function ensureLoadoutInventory() {
+  if (!run?.loadout || !inventory) return;
+  if (run.loadoutReady) return;
+  const load = run.loadout;
+  const next = { ...load };
+  for (const p of run.map.placements || []) {
+    if (next[p.monsterId] > 0) {
+      next[p.monsterId] -= 1;
+      if (next[p.monsterId] <= 0) delete next[p.monsterId];
+    }
+  }
+  inventory = next;
+  run.loadoutReady = true;
+}
+
 function announceAchievements(unlocks) {
   announceUnlocks(unlocks, { toast, modalEl });
   refreshChrome();
@@ -87,13 +132,14 @@ function announceAchievements(unlocks) {
 
 function maybeStartTutorial() {
   if (state.tutorialDone) return;
-  showTutorial(modalEl, {
+  startGuidedTour(bag, {
     onDone: () => {
       state.tutorialDone = true;
       saveState(state);
       const unlocked = evaluateAchievements(state);
       announceAchievements(unlocked);
       refreshChrome();
+      getCombatEngine()?.setPaused?.(false);
       if (currentScreen === 'hub') renderScreen('hub');
     },
   });
@@ -115,12 +161,29 @@ const bag = {
   set lastReward(v) {
     lastReward = v;
   },
+  currentScreen: () => currentScreen,
   go,
   toast,
   refreshChrome,
   startRun,
+  applyLoadout,
+  ensureLoadoutInventory,
   announceAchievements,
   maybeStartTutorial,
+  setCombatPaused: (on) => getCombatEngine()?.setPaused?.(!!on),
+  startTutorial: () =>
+    startGuidedTour(bag, {
+      onDone: () => {
+        if (!state.tutorialDone) {
+          state.tutorialDone = true;
+          saveState(state);
+          evaluateAchievements(state);
+        }
+        getCombatEngine()?.setPaused?.(false);
+        toast('Xong hướng dẫn tận tay');
+        refreshChrome();
+      },
+    }),
   reset() {
     const fresh = resetState();
     Object.keys(state).forEach((k) => delete state[k]);
@@ -129,6 +192,8 @@ const bag = {
     inventory = null;
   },
 };
+
+window.__RBG_BAG__ = bag;
 
 function cleanupScreen(name) {
   const el = screens[name];
@@ -206,6 +271,7 @@ function renderScreen(name) {
     case 'setup':
       if (!run) startRun();
       if (!inventory) inventory = inventoryCopy(state);
+      ensureLoadoutInventory();
       renderSetup(root, bag);
       break;
     case 'combat':
