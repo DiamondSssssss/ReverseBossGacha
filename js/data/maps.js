@@ -1,6 +1,6 @@
 /** Per-stage continuous battle maps — 1 ải = 1 map */
 
-import { TERRAIN } from './rooms.js?v=67';
+import { TERRAIN } from './rooms.js?v=68';
 
 export const TILE = {
   WALL: '#',
@@ -11,6 +11,9 @@ export const TILE = {
   HIGH: 'h',
   OBSTACLE: 'o',
   HAZARD: '^',
+  FIRE: 'f',
+  ICE: 'i',
+  POISON: 'p',
   GATE: 'G',
   TREASURE: 'T',
   /** Hành lang — Hero đi được, không đặt quái (chống gatekeep) */
@@ -22,6 +25,9 @@ const CHAR_TERRAIN = {
   d: TERRAIN.DARK,
   l: TERRAIN.LOW_CEILING,
   h: TERRAIN.HIGH,
+  f: TERRAIN.FIRE,
+  i: TERRAIN.ICE,
+  p: TERRAIN.POISON,
   '.': TERRAIN.NORMAL,
   G: TERRAIN.NORMAL,
   T: TERRAIN.NORMAL,
@@ -40,6 +46,7 @@ export function compileMap(def) {
   const treasure = [];
   const blocked = new Set();
   const noPlace = new Set();
+  const hazard = new Set();
   const terrain = {};
   const walkable = [];
 
@@ -60,6 +67,7 @@ export function compileMap(def) {
         if (ch === TILE.GATE) gate.push({ col: c, row: r });
         if (ch === TILE.TREASURE) treasure.push({ col: c, row: r });
         if (ch === TILE.NOPLACE) noPlace.add(key);
+        if (ch === TILE.HAZARD) hazard.add(key);
         const t = CHAR_TERRAIN[ch] || TERRAIN.NORMAL;
         if (t !== TERRAIN.NORMAL) terrain[key] = t;
       }
@@ -97,6 +105,7 @@ export function compileMap(def) {
     tiles: def.tiles.map((row) => row.split('')),
     blocked,
     noPlace,
+    hazard,
     terrain,
     buffs: def.buffs || [],
     buffIndex,
@@ -140,12 +149,12 @@ const RAW_MAPS = {
     5,
     [
       '##############',
-      '#............#',
-      '#............#',
+      '#.....ff.....#',
+      '#.....ii.....#',
       'G............T',
       'G............T',
-      '#............#',
-      '#............#',
+      '#.....pp.....#',
+      '#......f.....#',
       '##############',
     ],
     {
@@ -179,16 +188,18 @@ const RAW_MAPS = {
     [
       '##############',
       '#..##....##..#',
-      '#............#',
+      '#.....i......#',
       'G............T',
       'G............T',
-      '#............#',
+      '#.....ff.....#',
       '#..##....##..#',
       '##############',
     ],
     {
       tip: 'Hai choke hẹp — đặt bait/tank tại eo đất.',
       buffs: [
+      { kind: 'FIRE_ZONE', side: 'monster', value: 1.3, cells: ['6,2','6,3','7,2','7,3'] },
+        { kind: 'ATK_UP', side: 'monster', value: 1.2, cells: ['10,2','10,3','10,4','10,5'] },
         { cells: ['4,3', '4,4', '9,3', '9,4'], side: 'monster', kind: 'ATK_UP', value: 1.25 },
         { cells: ['7,2', '7,5'], side: 'hero', kind: 'SPEED_UP', value: 1.15 },
       ],
@@ -205,7 +216,7 @@ const RAW_MAPS = {
       'G....#.......T',
       'G........#...T',
       '#...oo...#...#',
-      '#........#...#',
+      '#.....ii.#...#',
       '##############',
     ],
     {
@@ -251,7 +262,9 @@ const RAW_MAPS = {
     ],
     {
       tip: 'Đường nước quanh co — Leviathan / Hàu mạnh ở đây.',
-      buffs: [{ cells: ['5,3', '8,3', '8,4'], side: 'monster', kind: 'ATK_UP', value: 1.35 }],
+      buffs: [
+      { kind: 'FIRE_ZONE', side: 'monster', value: 1.3, cells: ['6,2','6,3','7,2','7,3'] },
+        { kind: 'ATK_UP', side: 'monster', value: 1.2, cells: ['10,2','10,3','10,4','10,5'] },{ cells: ['5,3', '8,3', '8,4'], side: 'monster', kind: 'ATK_UP', value: 1.35 }],
     }
   ),
   7: M(
@@ -271,6 +284,8 @@ const RAW_MAPS = {
     {
       tip: 'Vòng nước ngoài + lối khô giữa — chọn choke khô hoặc buff nước.',
       buffs: [
+      { kind: 'SPEED_DOWN', side: 'hero', value: 0.75, cells: ['3,3','3,4','4,3','4,4'] },
+        { kind: 'ICE_ZONE', side: 'monster', value: 1.3, cells: ['8,3','8,4','9,3','9,4'] },
         { cells: ['6,3', '6,4'], side: 'monster', kind: 'DEF_UP', value: 1.25 },
         { cells: ['2,1', '11,1'], side: 'hero', kind: 'SPEED_DOWN', value: 0.8 },
       ],
@@ -293,6 +308,8 @@ const RAW_MAPS = {
     {
       tip: 'Tối giảm tầm Hero — DARK_BUFF / Mắt thần trên d.',
       buffs: [
+      { kind: 'REVEAL_AURA', side: 'monster', value: 1, cells: ['4,2','4,3','4,4'] },
+        { kind: 'POISON_ZONE', side: 'monster', value: 1.3, cells: ['5,4','5,5','6,4','6,5'] },
         { cells: ['4,3', '4,4', '9,3', '9,4'], side: 'monster', kind: 'ATK_UP', value: 1.3 },
         { cells: ['6,3', '7,4'], side: 'hero', kind: 'REVEAL_AURA', value: 1 },
       ],
@@ -314,7 +331,9 @@ const RAW_MAPS = {
     ],
     {
       tip: 'Hai hành lang tối + giữa sáng — rogue thích mép.',
-      buffs: [{ cells: ['5,3', '8,4'], side: 'monster', kind: 'ATK_UP', value: 1.25 }],
+      buffs: [
+      { kind: 'FIRE_ZONE', side: 'monster', value: 1.3, cells: ['6,2','6,3','7,2','7,3'] },
+        { kind: 'ATK_UP', side: 'monster', value: 1.2, cells: ['10,2','10,3','10,4','10,5'] },{ cells: ['5,3', '8,4'], side: 'monster', kind: 'ATK_UP', value: 1.25 }],
     }
   ),
   10: M(
@@ -375,6 +394,8 @@ const RAW_MAPS = {
     {
       tip: 'Nhiều eo hẹp — tank + boss trần thấp.',
       buffs: [
+      { kind: 'FIRE_ZONE', side: 'monster', value: 1.3, cells: ['6,2','6,3','7,2','7,3'] },
+        { kind: 'ATK_UP', side: 'monster', value: 1.2, cells: ['10,2','10,3','10,4','10,5'] },
         { cells: ['4,3', '9,4'], side: 'monster', kind: 'DEF_UP', value: 1.3 },
         { cells: ['6,2', '7,5'], side: 'hero', kind: 'SPEED_UP', value: 1.2 },
       ],
@@ -416,6 +437,8 @@ const RAW_MAPS = {
     {
       tip: 'Trần cao / mở — mage kite mạnh; quái trần thấp yếu.',
       buffs: [
+      { kind: 'FIRE_ZONE', side: 'monster', value: 1.3, cells: ['6,2','6,3','7,2','7,3'] },
+        { kind: 'REVEAL_AURA', side: 'monster', value: 1, cells: ['4,2','4,3','4,4'] },
         { cells: ['5,3', '8,4'], side: 'hero', kind: 'SPEED_UP', value: 1.25 },
         { cells: ['6,3', '7,4'], side: 'monster', kind: 'ATK_UP', value: 1.15 },
       ],
@@ -437,7 +460,9 @@ const RAW_MAPS = {
     ],
     {
       tip: 'Nhiều lane — phủ aura / ranged, đừng dồn một điểm.',
-      buffs: [{ cells: ['4,3', '9,4'], side: 'monster', kind: 'ATK_UP', value: 1.2 }],
+      buffs: [
+      { kind: 'FIRE_ZONE', side: 'monster', value: 1.3, cells: ['6,2','6,3','7,2','7,3'] },
+        { kind: 'ATK_UP', side: 'monster', value: 1.2, cells: ['10,2','10,3','10,4','10,5'] },{ cells: ['4,3', '9,4'], side: 'monster', kind: 'ATK_UP', value: 1.2 }],
     }
   ),
   16: M(
@@ -502,6 +527,8 @@ const RAW_MAPS = {
     {
       tip: 'Lõi phòng thủ + hai sườn — chặn cả ba đường vào kho.',
       buffs: [
+      { kind: 'FIRE_ZONE', side: 'monster', value: 1.3, cells: ['6,2','6,3','7,2','7,3'] },
+        { kind: 'ATK_UP', side: 'monster', value: 1.2, cells: ['10,2','10,3','10,4','10,5'] },
         { cells: ['5,3', '8,3', '5,4', '8,4'], side: 'monster', kind: 'DEF_UP', value: 1.4 },
         { cells: ['3,3', '10,4'], side: 'hero', kind: 'SPEED_UP', value: 1.2 },
       ],
@@ -547,6 +574,9 @@ const RAW_MAPS = {
     {
       tip: 'Đường chính hẹp + sườn nước/tối — kho hở một cánh.',
       buffs: [
+      { kind: 'ICE_ZONE', side: 'monster', value: 1.3, cells: ['8,3','8,4','9,3','9,4'] },
+        { kind: 'POISON_ZONE', side: 'monster', value: 1.3, cells: ['5,4','5,5','6,4','6,5'] },
+        { kind: 'ATK_UP', side: 'monster', value: 1.2, cells: ['10,2','10,3','10,4','10,5'] },
         { cells: ['5,3', '5,4'], side: 'monster', kind: 'ATK_UP', value: 1.45 },
         { cells: ['10,2', '10,5'], side: 'hero', kind: 'SPEED_UP', value: 1.25 },
         { cells: ['2,5', '3,5'], side: 'monster', kind: 'ATK_UP', value: 1.3 },
@@ -564,7 +594,7 @@ const RAW_MAPS = {
       'G............T',
       'G............T',
       '#...##..##.~~#',
-      '#..........~~#',
+      '#.....pp...~~#',
       '##############',
     ],
     {
@@ -592,6 +622,8 @@ const RAW_MAPS = {
     {
       tip: 'Choke kép — chiến binh dễ giữ tuyến.',
       buffs: [
+      { kind: 'ICE_ZONE', side: 'monster', value: 1.3, cells: ['8,3','8,4','9,3','9,4'] },
+        { kind: 'ATK_UP', side: 'monster', value: 1.2, cells: ['10,2','10,3','10,4','10,5'] },
         { cells: ['4,3', '9,4'], side: 'monster', kind: 'DEF_UP', value: 1.3 },
         { cells: ['6,3', '7,4'], side: 'hero', kind: 'ATK_UP', value: 1.2 },
       ],
@@ -630,7 +662,7 @@ const RAW_MAPS = {
       'G............T',
       'G............T',
       '#.....oooo..d#',
-      '#...........d#',
+      '#......f....d#',
       '##############',
     ],
     {
@@ -683,6 +715,8 @@ const RAW_MAPS = {
     {
       tip: 'Cổng trống + hazard giữa — đặt sau lò, đọc địa hình.',
       buffs: [
+      { kind: 'POISON_ZONE', side: 'monster', value: 1.3, cells: ['5,4','5,5','6,4','6,5'] },
+        { kind: 'ATK_UP', side: 'monster', value: 1.2, cells: ['10,2','10,3','10,4','10,5'] },
         { cells: ['1,3', '2,4', '3,3'], side: 'hero', kind: 'SPEED_UP', value: 1.35 },
         { cells: ['2,2', '2,5'], side: 'hero', kind: 'ATK_UP', value: 1.2 },
         { cells: ['6,3', '7,4'], side: 'monster', kind: 'ATK_UP', value: 1.4 },
@@ -698,10 +732,10 @@ const RAW_MAPS = {
     [
       '##############',
       '#xxxdddd..~~.#',
-      '#xxx.........#',
+      '#xxx..i......#',
       'Gxxx..##ll...T',
       'Gxxx..##hh...T',
-      '#xxx.........#',
+      '#xxx..ff.....#',
       '#xxx~~..dddd.#',
       '##############',
     ],
@@ -734,6 +768,8 @@ const RAW_MAPS = {
     {
       tip: 'Hành lang cổng trống — phòng thủ bắt đầu từ giữa map.',
       buffs: [
+      { kind: 'FIRE_ZONE', side: 'monster', value: 1.3, cells: ['6,2','6,3','7,2','7,3'] },
+        { kind: 'ICE_ZONE', side: 'monster', value: 1.3, cells: ['8,3','8,4','9,3','9,4'] },
         { cells: ['1,3', '2,4', '3,3', '3,4'], side: 'hero', kind: 'SPEED_UP', value: 1.35 },
         { cells: ['2,3', '2,4'], side: 'hero', kind: 'ATK_UP', value: 1.25 },
         { cells: ['6,3', '7,3', '6,4', '7,4'], side: 'monster', kind: 'DEF_UP', value: 1.45 },
@@ -749,10 +785,10 @@ const RAW_MAPS = {
     [
       '##############',
       '#xxx~~dd##ll.#',
-      '#xxx.........#',
+      '#xxx..ii.....#',
       'Gxxx..^^hh...T',
       'Gxxx..hh^^...T',
-      '#xxx.........#',
+      '#xxx..pp.....#',
       '#xxxll##dd~~.#',
       '##############',
     ],
@@ -775,16 +811,18 @@ const RAW_MAPS = {
     [
       '##############',
       '#xxx~~~~##~~~#',
-      '#xxx.........#',
+      '#xxx...f.....#',
       'Gxxx..#..dd..T',
       'Gxxx...#.ll..T',
-      '#xxx.........#',
+      '#xxx..i......#',
       '#xxx~~~##~~~~#',
       '##############',
     ],
     {
       tip: 'Ải 30 — hành lang cổng trống, buff hero mạnh gần G.',
       buffs: [
+      { kind: 'FIRE_ZONE', side: 'monster', value: 1.3, cells: ['6,2','6,3','7,2','7,3'] },
+        { kind: 'ATK_UP', side: 'monster', value: 1.2, cells: ['10,2','10,3','10,4','10,5'] },
         { cells: ['1,3', '2,3', '1,4', '2,4'], side: 'hero', kind: 'SPEED_UP', value: 1.4 },
         { cells: ['3,3', '3,4'], side: 'hero', kind: 'ATK_UP', value: 1.25 },
         { cells: ['3,2', '3,5'], side: 'hero', kind: 'HEAL_TICK', value: 5 },
@@ -805,7 +843,7 @@ const RAW_MAPS = {
       '#xxxx.##.....#',
       'Gxxxx..llhh..T',
       'Gxxxx..hhll..T',
-      '#xxxx....##..#',
+      '#xxxx.ff.##..#',
       '#xxxx.oo..~~.#',
       '##############',
     ],
@@ -857,7 +895,7 @@ const RAW_MAPS = {
       '#xxxx..~~....#',
       'Gxxxx..ll....T',
       'Gxxxx..hh....T',
-      '#xxxx....~~..#',
+      '#xxxx.ii.~~..#',
       '#xxxxdd....dd#',
       '##############',
     ],
@@ -881,7 +919,7 @@ const RAW_MAPS = {
     [
       '##############',
       '#xxxxoooooo.d#',
-      '#xxxx.......d#',
+      '#xxxx.pp....d#',
       'Gxxxx..~~ll..T',
       'Gxxxx..hh~~..T',
       '#xxxxd.......#',
@@ -908,16 +946,18 @@ const RAW_MAPS = {
     [
       '##############',
       '#xxxx.##..hh.#',
-      '#xxxx........#',
+      '#xxxx..f.....#',
       'Gxxxx..~~....T',
       'Gxxxx..dd....T',
-      '#xxxx........#',
+      '#xxxx.i......#',
       '#xxxx.hh..##.#',
       '##############',
     ],
     {
       tip: 'Heal hero gần cổng — hạ healer địch trước.',
       buffs: [
+      { kind: 'POISON_ZONE', side: 'monster', value: 1.3, cells: ['5,4','5,5','6,4','6,5'] },
+        { kind: 'ATK_UP', side: 'monster', value: 1.2, cells: ['10,2','10,3','10,4','10,5'] },
         { cells: ['1,3', '2,4', '3,3', '4,4'], side: 'hero', kind: 'HEAL_TICK', value: 8 },
         { cells: ['2,3', '3,4'], side: 'hero', kind: 'SPEED_UP', value: 1.3 },
         { cells: ['4,2', '4,5'], side: 'hero', kind: 'ATK_UP', value: 1.2 },
@@ -945,6 +985,9 @@ const RAW_MAPS = {
     {
       tip: 'Cost 10 — cổng trống + hazard. Đặt sau lò.',
       buffs: [
+      { kind: 'POISON_ZONE', side: 'monster', value: 1.3, cells: ['5,4','5,5','6,4','6,5'] },
+        { kind: 'FIRE_ZONE', side: 'monster', value: 1.3, cells: ['6,2','6,3','7,2','7,3'] },
+        { kind: 'REVEAL_AURA', side: 'monster', value: 1, cells: ['4,2','4,3','4,4'] },
         { cells: ['1,3', '2,3', '3,4', '4,4'], side: 'hero', kind: 'SPEED_UP', value: 1.4 },
         { cells: ['2,4', '3,3'], side: 'hero', kind: 'ATK_UP', value: 1.3 },
         { cells: ['4,2', '4,5'], side: 'hero', kind: 'HEAL_TICK', value: 6 },
@@ -989,10 +1032,10 @@ const RAW_MAPS = {
     [
       '##############',
       '#xxxx~~dd..~~#',
-      '#xxxx........#',
+      '#xxxx.ff.....#',
       'Gxxxx..##ll..T',
       'Gxxxx..##hh..T',
-      '#xxxx........#',
+      '#xxxx.ii.....#',
       '#xxxx~~..dd~~#',
       '##############',
     ],
@@ -1055,6 +1098,8 @@ const RAW_MAPS = {
     {
       tip: 'Ải 40 — cổng trống, buff hero dày. Còn hành trình 41–50.',
       buffs: [
+      { kind: 'ICE_ZONE', side: 'monster', value: 1.3, cells: ['8,3','8,4','9,3','9,4'] },
+        { kind: 'ATK_UP', side: 'monster', value: 1.2, cells: ['10,2','10,3','10,4','10,5'] },
         { cells: ['1,3', '2,3', '1,4', '2,4'], side: 'hero', kind: 'SPEED_UP', value: 1.45 },
         { cells: ['3,3', '3,4', '4,3'], side: 'hero', kind: 'ATK_UP', value: 1.3 },
         { cells: ['4,4', '3,2', '3,5'], side: 'hero', kind: 'HEAL_TICK', value: 8 },
@@ -1101,16 +1146,19 @@ const RAW_MAPS = {
     [
       '##############',
       '#xxxxhhhh....#',
-      '#xxxx........#',
+      '#xxxx.pp.....#',
       'Gxxxx..oo....T',
       'Gxxxx....oo..T',
-      '#xxxx........#',
-      '#xxxx....hhhh#',
+      '#xxxx..f.....#',
+      '#xxxx.i..hhhh#',
       '##############',
     ],
     {
       tip: 'Cao địa cho cung thủ địch — đặt gap-close giữa đường.',
       buffs: [
+      { kind: 'ICE_ZONE', side: 'monster', value: 1.3, cells: ['8,3','8,4','9,3','9,4'] },
+        { kind: 'ATK_UP', side: 'monster', value: 1.2, cells: ['10,2','10,3','10,4','10,5'] },
+        { kind: 'SPEED_DOWN', side: 'hero', value: 0.75, cells: ['3,3','3,4','4,3','4,4'] },
         { cells: ['1,3', '2,3', '1,4', '2,4'], side: 'hero', kind: 'SPEED_UP', value: 1.45 },
         { cells: ['3,3', '4,4'], side: 'hero', kind: 'ATK_UP', value: 1.3 },
         { cells: ['3,2', '4,5'], side: 'hero', kind: 'HEAL_TICK', value: 6 },
@@ -1155,10 +1203,10 @@ const RAW_MAPS = {
     [
       '##############',
       '#xxxx^^..^^..#',
-      '#xxxx........#',
+      '#xxxx.ff.....#',
       'Gxxxx..~~~~..T',
       'Gxxxx..~~~~..T',
-      '#xxxx........#',
+      '#xxxx.ii.....#',
       '#xxxx..^^..^^#',
       '##############',
     ],
@@ -1192,6 +1240,8 @@ const RAW_MAPS = {
     {
       tip: 'Cost 12 — hỗn địa hình. Cung / tank / berserk cùng lúc.',
       buffs: [
+      { kind: 'FIRE_ZONE', side: 'monster', value: 1.3, cells: ['6,2','6,3','7,2','7,3'] },
+        { kind: 'ATK_UP', side: 'monster', value: 1.2, cells: ['10,2','10,3','10,4','10,5'] },
         { cells: ['1,3', '2,4', '3,3', '4,4'], side: 'hero', kind: 'SPEED_UP', value: 1.45 },
         { cells: ['2,3', '3,4'], side: 'hero', kind: 'ATK_UP', value: 1.3 },
         { cells: ['4,2', '4,5'], side: 'hero', kind: 'HEAL_TICK', value: 8 },
@@ -1264,16 +1314,19 @@ const RAW_MAPS = {
     [
       '##############',
       '#xxxxhhhh##oo#',
-      '#xxxx........#',
+      '#xxxx.pp.....#',
       'Gxxxx..~~....T',
       'Gxxxx....~~..T',
-      '#xxxx........#',
+      '#xxxx..f.....#',
       '#xxxxoo##hhhh#',
       '##############',
     ],
     {
       tip: 'Cực cung + cực tank — hai kiểu khắc chế khác nhau.',
       buffs: [
+      { kind: 'FIRE_ZONE', side: 'monster', value: 1.3, cells: ['6,2','6,3','7,2','7,3'] },
+        { kind: 'POISON_ZONE', side: 'monster', value: 1.3, cells: ['5,4','5,5','6,4','6,5'] },
+        { kind: 'ICE_ZONE', side: 'monster', value: 1.3, cells: ['8,3','8,4','9,3','9,4'] },
         { cells: ['1,3', '2,4', '3,3'], side: 'hero', kind: 'SPEED_UP', value: 1.45 },
         { cells: ['2,3', '3,4'], side: 'hero', kind: 'ATK_UP', value: 1.3 },
         { cells: ['4,2', '4,5'], side: 'hero', kind: 'HEAL_TICK', value: 8 },

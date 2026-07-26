@@ -1,21 +1,36 @@
-import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=67';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=67';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=67';
-import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=67';
-import { mapUsedCost } from './dungeon.js?v=67';
-import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=67';
-import { ParticleSystem } from '../render/particles.js?v=67';
+import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=68';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=68';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=68';
+import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=68';
+import { mapUsedCost } from './dungeon.js?v=68';
+import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=68';
+import { ParticleSystem } from '../render/particles.js?v=68';
 import {
   getMonsterSprite,
   getHeroSprite,
   drawSpriteAt,
-} from '../render/sprites.js?v=67';
-import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=67';
-import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=67';
-import { computeHeroAttackDamage, applyIncomingDamage, applyHealCutOnHit } from './ai/skills.js?v=67';
-import { getTileModifiers, spawnMonsterStats } from './ai/tileModifiers.js?v=67';
-import { dist } from './ai/targeting.js?v=67';
-import { getHeroProfile } from './ai/profiles.js?v=67';
+} from '../render/sprites.js?v=68';
+import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=68';
+import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=68';
+import {
+  computeHeroAttackDamage,
+  applyIncomingDamage,
+  applyHealCutOnHit,
+  applyOnHitStatuses,
+  applyBurn,
+  applyPoison,
+  applyFreeze,
+  applyStun,
+  applySlow,
+  tickStatusDots,
+  TRAP_EFFECTS,
+  isTrapPassive,
+  statusTelegraphColor,
+  auraRadiusCells,
+} from './ai/skills.js?v=68';
+import { getTileModifiers, spawnMonsterStats } from './ai/tileModifiers.js?v=68';
+import { dist } from './ai/targeting.js?v=68';
+import { getHeroProfile } from './ai/profiles.js?v=68';
 import {
   patternForHero,
   patternForMonster,
@@ -23,7 +38,7 @@ import {
   tickAttack,
   ensureAttackState,
   resolveDisplayAnim,
-} from './ai/attackPatterns.js?v=67';
+} from './ai/attackPatterns.js?v=68';
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
@@ -63,6 +78,9 @@ const TERRAIN_COLORS = {
   LOW_CEILING: '#3d2a24',
   DARK: '#1a1612',
   HIGH: '#353028',
+  FIRE: '#4a2818',
+  ICE: '#1a3040',
+  POISON: '#2a3820',
 };
 
 export class CombatEngine {
@@ -107,6 +125,8 @@ export class CombatEngine {
     this.drawScale = 1;
     this.drawOffsetY = 40;
     this.speedMul = 1;
+    /** Manual pan — no auto-follow */
+    this._camUserLocked = false;
 
     this.monsters = [];
     this.heroes = [];
@@ -200,7 +220,11 @@ export class CombatEngine {
       atkCd: 0,
       alive: true,
       firstHitDone: false,
-      isTrap: (tpl.tags?.includes('trap') && tpl.stats.speed === 0) || ai.role === 'trap',
+      isTrap:
+        isTrapPassive(tpl.passive) ||
+        (tpl.tags?.includes('trap') && tpl.stats.speed === 0) ||
+        ai.role === 'trap',
+      auraRadius: tpl.auraRadius ?? null,
       ai,
       flash: 0,
       bobPhase: Math.random() * Math.PI * 2,
@@ -337,6 +361,41 @@ export class CombatEngine {
 
   _viewWorldW() {
     return this.viewW / (this.drawScale || 1);
+  }
+
+  _cameraBounds() {
+    const viewW = this._viewWorldW();
+    const minCam = COMBAT.CAMERA_MIN_X;
+    const maxCam = Math.max(minCam, this.totalWidth - viewW + 40);
+    return { minCam, maxCam, viewW };
+  }
+
+  clampCameraX(x) {
+    const { minCam, maxCam } = this._cameraBounds();
+    return Math.max(minCam, Math.min(maxCam, x));
+  }
+
+  /** Pan camera by world-delta (positive dx → look right) */
+  panCamera(dxWorld) {
+    this._camUserLocked = true;
+    this.cameraX = this.clampCameraX(this.cameraX + dxWorld);
+  }
+
+  /** Jump camera so gate is visible */
+  focusGate() {
+    this._camUserLocked = true;
+    const { viewW } = this._cameraBounds();
+    const gateX = (this.map.gate[0]?.col ?? 0) * this.CELL;
+    this.cameraX = this.clampCameraX(gateX - viewW * 0.25);
+  }
+
+  /** Jump camera so treasure is visible */
+  focusTreasure() {
+    this._camUserLocked = true;
+    const { viewW } = this._cameraBounds();
+    const tx =
+      (this.map.treasure[0]?.col ?? this.map.cols - 1) * this.CELL + this.CELL * 0.5;
+    this.cameraX = this.clampCameraX(tx - viewW * 0.65);
   }
 
   start() {
@@ -526,12 +585,6 @@ export class CombatEngine {
     for (const h of this.heroes) {
       if (!h.alive) continue;
       if (h.tempSilenceUntil && this.time < h.tempSilenceUntil) h.silenced = true;
-      if (h.poisonUntil && this.time < h.poisonUntil && h.poisonDps > 0) {
-        h.hp -= h.poisonDps * dt;
-        if (Math.random() < dt * 4) {
-          this.particles.burst(h.x, h.y - 6, '#66bb6a');
-        }
-      }
     }
     this._spawnHeroes();
     this._updateHeroes(dt);
@@ -539,13 +592,54 @@ export class CombatEngine {
 
     for (const m of this.monsters) {
       if (!m.alive || m.isTrap) continue;
-      if (m.passive === 'SLOW_AURA' && Math.random() < dt * 1.2) {
-        this.particles.frost(m.x + (Math.random() - 0.5) * 12, m.y);
+      // DoT on monsters
+      const mDot = tickStatusDots(m, this.time, dt);
+      if (mDot > 0) {
+        m.hp -= Math.round(mDot / (m.tileDefMul || 1));
+        if (m.hp <= 0) {
+          m.alive = false;
+          this._onMonsterDeath(m, null);
+          continue;
+        }
+      }
+      if (m.passive === 'SLOW_AURA') {
+        const radius = auraRadiusCells(m) * this.CELL;
+        for (const h of this.heroes) {
+          if (!h.alive) continue;
+          if (dist(h, m) <= radius) {
+            applySlow(h, this.time, { factor: 0.62, duration: 0.45 });
+          }
+        }
+        if (Math.random() < dt * 1.2) {
+          this.particles.frost(m.x + (Math.random() - 0.5) * 12, m.y);
+        }
+      }
+      if (m.passive === 'AURA_STUN') {
+        const radius = auraRadiusCells(m) * this.CELL;
+        m._auraStunCd = (m._auraStunCd || 0) - dt;
+        if (m._auraStunCd <= 0) {
+          for (const h of this.heroes) {
+            if (!h.alive) continue;
+            if (dist(h, m) <= radius) {
+              applyStun(h, this.time, 0.55);
+              this._floatStatusOnce(h, 'stun', 'CHOÁNG', '#ffe082');
+            }
+          }
+          m._auraStunCd = 4.5;
+        }
+      }
+      if (m.passive === 'AURA_TAUNT') {
+        const radius = auraRadiusCells(m) * this.CELL;
+        for (const h of this.heroes) {
+          if (!h.alive) continue;
+          if (dist(h, m) <= radius && h.intent === 'fighting') {
+            h.fightTarget = m;
+          }
+        }
       }
       if (m.passive === 'HEAL_AURA' || m.passive === 'HEAL_PULSE') {
         this._tickMonsterHeal(m, dt);
       }
-      // Mythic heal tag (blood idol) — vẫn heal dù passive là treasure tax
       if (m.tags?.includes('heal') && m.passive?.startsWith('MYTHIC_')) {
         this._tickMonsterHeal(m, dt);
       }
@@ -576,6 +670,13 @@ export class CombatEngine {
       if (mod.silence) h.silenced = true;
       if (mod.defMul !== 1) h.tileDefMul = mod.defMul;
       else h.tileDefMul = 1;
+      const terr = this.map.terrain[`${col},${row}`];
+      if (terr === 'FIRE' && Math.random() < dt * 1.2) {
+        applyBurn(h, this.time, { dps: 7, duration: 1.2 });
+      }
+      if (terr === 'POISON' && Math.random() < dt * 1.0) {
+        applyPoison(h, this.time, { dps: 6, duration: 1.5 });
+      }
     }
     for (const m of this.monsters) {
       if (!m.alive) continue;
@@ -634,6 +735,42 @@ export class CombatEngine {
       }
       if (Math.random() < dt * 1.5) {
         this.particles.burst(m.x, m.y - 8, '#e53935');
+      }
+    }
+    if (m.passive === 'MYTHIC_INFERNO') {
+      const cell = this._unitCell(m);
+      const terr = terrainAt(this.map, cell.col, cell.row);
+      if (terr !== 'FIRE') {
+        m.hp -= m.maxHp * 0.01 * dt;
+        if (Math.random() < dt * 2) this.particles.burn?.(m.x, m.y);
+        if (m.hp <= 0) {
+          m.alive = false;
+          this._onMonsterDeath(m, null);
+        }
+      }
+      // also apply burn on nearby heroes occasionally
+      if (Math.random() < dt * 0.8) {
+        for (const h of this.heroes) {
+          if (!h.alive) continue;
+          if (dist(h, m) < m.range * 0.9) applyBurn(h, this.time, { dps: 12, duration: 2 });
+        }
+      }
+    }
+    if (m.passive === 'MYTHIC_TOXIN') {
+      const r = this.CELL * 2.2;
+      for (const ally of this.monsters) {
+        if (!ally.alive || ally === m || ally.isTrap) continue;
+        if (dist(ally, m) > r) continue;
+        ally.hp -= 4 * dt;
+      }
+      for (const h of this.heroes) {
+        if (!h.alive) continue;
+        if (dist(h, m) < m.range) applyPoison(h, this.time, { dps: 10, duration: 2.5 });
+      }
+    }
+    if (m.passive === 'MYTHIC_STASIS') {
+      if (m._stasisSelfLock && this.time < m._stasisSelfLock) {
+        m.atkCd = Math.max(m.atkCd || 0, 0.3);
       }
     }
   }
@@ -746,15 +883,25 @@ export class CombatEngine {
       for (const m of this.monsters) {
         if (!m.alive || !m.isTrap) continue;
         if (dist(hero, m) < this.CELL * 0.55) {
-          const dmg = applyIncomingDamage(hero, m.atk, this.time);
-          hero.hp -= Math.round(dmg / (hero.tileDefMul || 1));
-          hero.flash = 0.25;
-          m.hp = 0;
-          m.alive = false;
-          this.particles.burst(m.x, m.y, m.color || '#ff7043');
-          this._float(hero.x, hero.y - 10, `Bẫy -${m.atk}`, '#ff7043');
-          this._onMonsterDeath(m, hero);
+          this._triggerTrap(m, hero);
         }
+      }
+
+      // status DoTs
+      const heroDot = tickStatusDots(hero, this.time, dt);
+      if (heroDot > 0) {
+        hero.hp -= Math.round(heroDot / (hero.tileDefMul || 1));
+        if (Math.random() < dt * 2.2) {
+          if (hero.burnUntil && this.time < hero.burnUntil) this.particles.burn?.(hero.x, hero.y);
+          else this.particles.poison?.(hero.x, hero.y);
+        }
+      }
+
+      // hazard tiles
+      const hz = this._unitCell(hero);
+      if (this.map.hazard?.has(`${hz.col},${hz.row}`)) {
+        hero.hp -= 6 * dt;
+        if (Math.random() < dt * 1.4) applyBurn(hero, this.time, { dps: 8, duration: 1.5 });
       }
 
       if (atkBusy) {
@@ -827,15 +974,8 @@ export class CombatEngine {
       }
     }
 
-    const focus = this.heroes.find((h) => h.alive) || null;
-    const viewW = this._viewWorldW();
-    const minCam = COMBAT.CAMERA_MIN_X;
-    const maxCam = Math.max(minCam, this.totalWidth - viewW + 40);
-    if (focus) {
-      this.cameraX = Math.max(minCam, Math.min(maxCam, focus.x - viewW * 0.35));
-    } else if (!this.spawnQueue.every((h) => h.spawned)) {
-      this.cameraX = minCam;
-    }
+    // Camera is player-controlled (pan / focus buttons). Keep clamped only.
+    this.cameraX = this.clampCameraX(this.cameraX);
   }
 
   /** @returns {boolean} busy in attack */
@@ -859,11 +999,16 @@ export class CombatEngine {
           : result.pattern?.aoe
             ? this.CELL * 2.2
             : this.CELL * 0.9;
+      const tgColor =
+        statusTelegraphColor(side === 'hero' ? unit.skills : unit.passive) ||
+        unit.color ||
+        '#fff';
       unit.telegraph = {
         x: result.target.x,
         y: result.target.y,
-        r: aoe,
-        color: unit.color || '#fff',
+        r: aoe * 1.15,
+        color: tgColor,
+        pulse: true,
       };
     } else if (unit.atkPhase === 'idle') {
       unit.telegraph = null;
@@ -891,15 +1036,90 @@ export class CombatEngine {
     }
   }
 
+  _triggerTrap(m, hero) {
+    const fx = TRAP_EFFECTS[m.passive] || TRAP_EFFECTS.TRAP_SPIKE;
+    let raw = Math.round(m.atk * (fx.dmgMul ?? 1));
+    let dmg = applyIncomingDamage(hero, raw, this.time);
+    dmg = Math.round(dmg / (hero.tileDefMul || 1));
+    hero.hp -= dmg;
+    hero.flash = 0.25;
+    const label =
+      fx.kind === 'slow'
+        ? 'Dầu!'
+        : fx.kind === 'burn'
+          ? 'Đốt!'
+          : fx.kind === 'poison'
+            ? 'Độc!'
+            : fx.kind === 'freeze'
+              ? 'Băng!'
+              : fx.kind === 'stun'
+                ? 'Choáng!'
+                : `Bẫy -${dmg}`;
+    this._float(hero.x, hero.y - 10, label, m.color || '#ff7043');
+    this.particles.burst(m.x, m.y, m.color || '#ff7043');
+
+    if (fx.kind === 'slow') applySlow(hero, this.time, { factor: fx.slowFactor, duration: fx.slowDur });
+    if (fx.kind === 'burn') {
+      applyBurn(hero, this.time, { dps: fx.burnDps, duration: fx.burnDur });
+      this.particles.burn?.(hero.x, hero.y);
+    }
+    if (fx.kind === 'poison') {
+      applyPoison(hero, this.time, { dps: fx.poisonDps, duration: fx.poisonDur });
+      this.particles.poison?.(hero.x, hero.y);
+    }
+    if (fx.kind === 'freeze') {
+      applyFreeze(hero, this.time, fx.freezeDur);
+      this.particles.frost(hero.x, hero.y);
+    }
+    if (fx.kind === 'stun') {
+      applyStun(hero, this.time, fx.stunDur);
+      this.particles.stun?.(hero.x, hero.y);
+    }
+
+    if (fx.consume !== false) {
+      m.hp = 0;
+      m.alive = false;
+      this._onMonsterDeath(m, hero);
+    }
+  }
+
+  _floatStatusOnce(unit, key, text, color) {
+    unit._statusFloatCd = unit._statusFloatCd || {};
+    if (this.time < (unit._statusFloatCd[key] || 0)) return;
+    unit._statusFloatCd[key] = this.time + 1.4;
+    this._float(unit.x, unit.y - 14, text, color);
+  }
+
   _heroAttack(hero, target, _pattern) {
-    this._beam(hero, target, hero.color || '#ef9a9a');
+    const elemColor =
+      statusTelegraphColor(hero.skills) || hero.color || '#ef9a9a';
+    this._beam(hero, target, elemColor);
     hero.flash = 0.18;
-    this.particles.hit(target.x, target.y, hero.color || '#ef9a9a');
+    this.particles.hit(target.x, target.y, elemColor);
     if (hero.class === 'MAGE') this.particles.magic(target.x, target.y, hero.color);
 
-    const { dmg, silenced, isAoe, freeze } = computeHeroAttackDamage(hero, target, this.time);
+    const {
+      dmg,
+      silenced,
+      isAoe,
+      freeze,
+      burn,
+      poison,
+      stun,
+      defShred,
+      pierce,
+      lifesteal,
+    } = computeHeroAttackDamage(hero, target, this.time);
+
+    const defMul = pierce
+      ? Math.max(0.55, (target.tileDefMul || 1) * 0.55)
+      : (target.tileDefMul || 1) *
+        (target.defShredUntil && this.time < target.defShredUntil
+          ? target.defShredFactor || 0.7
+          : 1);
+
     if (silenced) {
-      const dealt = Math.round(dmg / (target.tileDefMul || 1));
+      const dealt = Math.round(dmg / defMul);
       target.hp -= dealt;
       target.flash = 0.2;
       this._float(target.x, target.y, 'Câm!', '#b39ddb');
@@ -910,12 +1130,18 @@ export class CombatEngine {
       return;
     }
 
+    const hitFlags = { freeze, burn, poison, stun, defShred };
+
     if (isAoe && hero.aoeRadius > 0) {
       for (const m of this.monsters) {
         if (!m.alive || m.isTrap) continue;
         if (dist(target, m) <= hero.aoeRadius) {
-          m.hp -= Math.round(dmg / (m.tileDefMul || 1));
+          const mDef =
+            (m.tileDefMul || 1) *
+            (m.defShredUntil && this.time < m.defShredUntil ? m.defShredFactor || 0.7 : 1);
+          m.hp -= Math.round(dmg / (pierce ? Math.max(0.55, mDef * 0.55) : mDef));
           m.flash = 0.15;
+          applyOnHitStatuses(hero, m, this.time, hitFlags);
           if (m.hp <= 0) {
             m.alive = false;
             this._onMonsterDeath(m, hero);
@@ -923,23 +1149,58 @@ export class CombatEngine {
         }
       }
       if (freeze && !hero.silenced) {
-        target.frozenUntil = this.time + 1.2;
         this.particles.frost(target.x, target.y);
+        this._floatStatusOnce(target, 'freeze', 'ĐÓNG BĂNG', '#81d4fa');
+      }
+      if (burn) {
+        this.particles.burn?.(target.x, target.y);
+        this._floatStatusOnce(target, 'burn', 'ĐỐT', '#ff7043');
       }
       this._float(target.x, target.y, `AoE ${dmg}`, '#ce93d8');
     } else {
-      target.hp -= Math.round(dmg / (target.tileDefMul || 1));
+      target.hp -= Math.round(dmg / defMul);
       target.flash = 0.15;
       this._float(target.x, target.y, `-${dmg}`, '#ef9a9a');
-      if (freeze && !hero.silenced) {
-        target.frozenUntil = this.time + 1.2;
+      const applied = applyOnHitStatuses(hero, target, this.time, hitFlags);
+      if (applied.includes('freeze')) {
         this.particles.frost(target.x, target.y);
+        this._floatStatusOnce(target, 'freeze', 'ĐÓNG BĂNG', '#81d4fa');
+      }
+      if (applied.includes('burn')) {
+        this.particles.burn?.(target.x, target.y);
+        this._floatStatusOnce(target, 'burn', 'ĐỐT', '#ff7043');
+      }
+      if (applied.includes('poison')) {
+        this.particles.poison?.(target.x, target.y);
+        this._floatStatusOnce(target, 'poison', 'ĐỘC', '#9ccc65');
+      }
+      if (applied.includes('stun')) {
+        this.particles.stun?.(target.x, target.y);
+        this._floatStatusOnce(target, 'stun', 'CHOÁNG', '#ffe082');
       }
       if (target.hp <= 0) {
         target.alive = false;
         this._onMonsterDeath(target, hero);
       }
     }
+
+    if (lifesteal && dmg > 0) {
+      const heal = Math.round(dmg * 0.18);
+      hero.hp = Math.min(hero.maxHp, hero.hp + heal);
+      if (heal > 0) this._float(hero.x, hero.y - 8, `+${heal}`, '#ef9a9a');
+    }
+
+    // Healer Sương Y slow pulse
+    if (hero._justHealedSlow) {
+      hero._justHealedSlow = false;
+      for (const m of this.monsters) {
+        if (!m.alive || m.isTrap) continue;
+        if (dist(hero, m) < (hero.range || 3) * this.CELL) {
+          applySlow(m, this.time, { factor: 0.7, duration: 2.2 });
+        }
+      }
+    }
+
     applyHealCutOnHit(hero, target, this.time);
     if (hero.skills?.includes('HEAL_CUT_HIT') && target.alive) {
       this._float(target.x, target.y + 10, 'Vết!', '#7e57c2');
@@ -959,7 +1220,7 @@ export class CombatEngine {
     // Quái aura giảm hồi Hero
     for (const m of this.monsters) {
       if (!m.alive || m.passive !== 'ANTI_HEAL_AURA') continue;
-      const radius = (m.range || 2) * this.CELL * 1.05;
+      const radius = auraRadiusCells(m) * this.CELL * 1.05;
       const factor =
         m.rarity >= 5 ? 0.22 : m.rarity >= 4 ? 0.32 : m.rarity >= 3 ? 0.42 : 0.55;
       for (const h of this.heroes) {
@@ -1034,7 +1295,7 @@ export class CombatEngine {
       if (m._healPulseT < 2.4) return;
       m._healPulseT = 0;
     }
-    const radius = (m.range || 2) * this.CELL * (pulse ? 1.15 : 1);
+    const radius = auraRadiusCells(m) * this.CELL * (pulse ? 1.15 : 1);
     const base =
       m.rarity >= 5 ? 0.09 : m.rarity >= 4 ? 0.07 : m.rarity >= 3 ? 0.055 : m.rarity >= 2 ? 0.04 : 0.028;
     const ratio = pulse ? base * 2.2 : base * dt * 1.15;
@@ -1104,6 +1365,10 @@ export class CombatEngine {
 
     for (const m of this.monsters) {
       if (!m.alive || m.isTrap) continue;
+      if (this.time < (m.stunnedUntil || 0) || this.time < (m.frozenUntil || 0)) {
+        m.telegraph = null;
+        continue;
+      }
       ensureAttackState(m);
       m._time = this.time;
       if (m.atkCd > 0) m.atkCd -= dt;
@@ -1119,7 +1384,8 @@ export class CombatEngine {
           m.atkCd = 1 / m.atkSpeed;
         }
       } else if (decision.action === 'chase' && decision.target) {
-        const spd = m.speed * this.CELL * 0.4;
+        let spd = m.speed * this.CELL * 0.4;
+        if (m.slowUntil && this.time < m.slowUntil) spd *= m.slowFactor ?? 0.55;
         const dx = decision.target.x - m.x;
         const dy = decision.target.y - m.y;
         const d = Math.hypot(dx, dy) || 1;
@@ -1129,7 +1395,8 @@ export class CombatEngine {
         const dx = m.homeX - m.x;
         const dy = m.homeY - m.y;
         const d = Math.hypot(dx, dy) || 1;
-        const spd = m.speed * this.CELL * 0.35;
+        let spd = m.speed * this.CELL * 0.35;
+        if (m.slowUntil && this.time < m.slowUntil) spd *= m.slowFactor ?? 0.55;
         this._moveMonster(m, (dx / d) * spd * dt, (dy / d) * spd * dt);
       }
     }
@@ -1166,9 +1433,10 @@ export class CombatEngine {
   }
 
   _monsterAttack(m, hero, pattern) {
-    this._beam(m, hero, m.color || '#66bb6a');
+    const elemColor = statusTelegraphColor(m.passive) || m.color || '#66bb6a';
+    this._beam(m, hero, elemColor);
     m.flash = 0.16;
-    this.particles.hit(hero.x, hero.y, m.color || '#66bb6a');
+    this.particles.hit(hero.x, hero.y, elemColor);
     let dmg = m.atk;
     if (m.passive === 'BURST_FIRST_HIT' && !m.firstHitDone) {
       dmg *= 2;
@@ -1189,16 +1457,17 @@ export class CombatEngine {
       hero.silenced = true;
       this._float(hero.x, hero.y, 'Silence!', '#7e57c2');
     }
-    // Boss cleave/slam hits nearby heroes
-    if (pattern?.aoe) {
+    if (pattern?.aoe || m.passive === 'RANGED_VOLLEY') {
+      const aoeR = m.passive === 'RANGED_VOLLEY' ? this.CELL * 1.6 : this.CELL * 2.2;
       for (const h of this.heroes) {
         if (!h.alive || h === hero) continue;
-        if (dist(m, h) < this.CELL * 2.2) {
-          let splash = Math.round(dmg * 0.45);
+        if (dist(m, h) < aoeR) {
+          let splash = Math.round(dmg * (m.passive === 'RANGED_VOLLEY' ? 0.55 : 0.45));
           splash = applyIncomingDamage(h, splash, this.time);
           splash = Math.round(splash / (h.tileDefMul || 1));
           h.hp -= splash;
           h.flash = 0.2;
+          applyOnHitStatuses(m, h, this.time);
         }
       }
     }
@@ -1217,14 +1486,29 @@ export class CombatEngine {
     dmg = applyIncomingDamage(hero, dmg, this.time);
     dmg = Math.round(dmg / (hero.tileDefMul || 1));
     hero.hp -= dmg;
-    hero.flash = 0.22;
-    this._float(hero.x, hero.y - 8, `-${dmg}`, m.color);
+    hero.flash = 0.2;
+    this._float(hero.x, hero.y, `-${dmg}`, '#ffab91');
+
+    const applied = applyOnHitStatuses(m, hero, this.time);
+    if (applied.includes('freeze')) {
+      this.particles.frost(hero.x, hero.y);
+      this._floatStatusOnce(hero, 'freeze', 'ĐÓNG BĂNG', '#81d4fa');
+    }
+    if (applied.includes('burn')) {
+      this.particles.burn?.(hero.x, hero.y);
+      this._floatStatusOnce(hero, 'burn', 'ĐỐT', '#ff7043');
+    }
+    if (applied.includes('poison')) {
+      this.particles.poison?.(hero.x, hero.y);
+      this._floatStatusOnce(hero, 'poison', 'ĐỘC', '#9ccc65');
+    }
+    if (applied.includes('stun')) {
+      this.particles.stun?.(hero.x, hero.y);
+      this._floatStatusOnce(hero, 'stun', 'CHOÁNG', '#ffe082');
+    }
+
     if (m.passive === 'HEAL_CUT_ON_HIT') {
-      applyHealCutOnHit(
-        { skills: ['HEAL_CUT_HIT'], rarity: m.rarity, passive: 'HEAL_CUT_ON_HIT' },
-        hero,
-        this.time
-      );
+      applyHealCutOnHit(m, hero, this.time);
       this._float(hero.x, hero.y + 10, 'Giảm hồi!', '#a1887f');
     }
   }
@@ -1309,7 +1593,10 @@ export class CombatEngine {
 
         const buffs = this.map.buffIndex[key] || [];
         for (const b of buffs) {
-          if (b.side === 'monster') ctx.fillStyle = 'rgba(102,187,106,0.22)';
+          if (b.kind === 'FIRE_ZONE') ctx.fillStyle = 'rgba(255,87,34,0.28)';
+          else if (b.kind === 'ICE_ZONE') ctx.fillStyle = 'rgba(129,212,250,0.28)';
+          else if (b.kind === 'POISON_ZONE') ctx.fillStyle = 'rgba(156,204,101,0.28)';
+          else if (b.side === 'monster') ctx.fillStyle = 'rgba(102,187,106,0.22)';
           else if (b.side === 'hero') ctx.fillStyle = 'rgba(239,83,80,0.18)';
           else ctx.fillStyle = 'rgba(255,213,79,0.15)';
           ctx.fillRect(x, y, CELL, CELL);
@@ -1330,6 +1617,29 @@ export class CombatEngine {
           ctx.setLineDash([3, 3]);
           ctx.strokeRect(x + 3, y + 3, CELL - 6, CELL - 6);
           ctx.setLineDash([]);
+        }
+        if (ch === '^' || this.map.hazard?.has(key)) {
+          ctx.fillStyle = 'rgba(255,112,67,0.28)';
+          ctx.fillRect(x, y, CELL, CELL);
+          ctx.fillStyle = 'rgba(255,171,64,0.35)';
+          ctx.beginPath();
+          ctx.moveTo(x + CELL * 0.5, y + 6);
+          ctx.lineTo(x + CELL - 6, y + CELL - 6);
+          ctx.lineTo(x + 6, y + CELL - 6);
+          ctx.closePath();
+          ctx.fill();
+        }
+        if (ch === 'f' || terrain === 'FIRE') {
+          ctx.fillStyle = 'rgba(255,87,34,0.2)';
+          ctx.fillRect(x, y, CELL, CELL);
+        }
+        if (ch === 'i' || terrain === 'ICE') {
+          ctx.fillStyle = 'rgba(129,212,250,0.22)';
+          ctx.fillRect(x, y, CELL, CELL);
+        }
+        if (ch === 'p' || terrain === 'POISON') {
+          ctx.fillStyle = 'rgba(156,204,101,0.22)';
+          ctx.fillRect(x, y, CELL, CELL);
         }
 
         ctx.strokeStyle = 'rgba(255,255,255,0.05)';
@@ -1407,14 +1717,44 @@ export class CombatEngine {
     for (const u of [...this.heroes, ...this.monsters]) {
       if (!u.alive || !u.telegraph) continue;
       const tg = u.telegraph;
-      ctx.strokeStyle = u.color || 'rgba(255,255,255,0.5)';
-      ctx.globalAlpha = 0.35 + 0.25 * Math.sin(this.time * 8);
-      ctx.lineWidth = 2;
-      ctx.setLineDash([4, 3]);
+      ctx.strokeStyle = tg.color || u.color || 'rgba(255,255,255,0.5)';
+      ctx.globalAlpha = 0.4 + 0.35 * Math.sin(this.time * 10);
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([5, 3]);
       ctx.beginPath();
       ctx.arc(tg.x, tg.y, tg.r, 0, Math.PI * 2);
       ctx.stroke();
       ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+    }
+
+    // Aura rings for support monsters
+    for (const m of this.monsters) {
+      if (!m.alive || m.isTrap) continue;
+      const auraPassives = [
+        'SLOW_AURA',
+        'HEAL_AURA',
+        'HEAL_PULSE',
+        'ANTI_HEAL_AURA',
+        'AURA_TAUNT',
+        'AURA_STUN',
+      ];
+      if (!auraPassives.includes(m.passive)) continue;
+      const r = auraRadiusCells(m) * this.CELL;
+      const col =
+        m.passive === 'HEAL_AURA' || m.passive === 'HEAL_PULSE'
+          ? 'rgba(129,199,132,0.35)'
+          : m.passive === 'ANTI_HEAL_AURA'
+            ? 'rgba(161,136,127,0.4)'
+            : m.passive === 'AURA_STUN'
+              ? 'rgba(255,224,130,0.4)'
+              : 'rgba(129,212,250,0.35)';
+      ctx.strokeStyle = col;
+      ctx.globalAlpha = 0.25 + 0.15 * Math.sin(this.time * 3 + (m.bobPhase || 0));
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(m.x, m.y, r, 0, Math.PI * 2);
+      ctx.stroke();
       ctx.globalAlpha = 1;
     }
 

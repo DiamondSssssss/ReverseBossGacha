@@ -152,10 +152,23 @@ export function patternForHero(hero, profile) {
 
 export function patternForMonster(m) {
   const role = m.ai?.role || 'chaser';
-  if (role === 'trap') return { ...MONSTER_PATTERNS.trap_burst };
-  if (role === 'ranged_guard') return { ...MONSTER_PATTERNS.ranged_shot };
+  const p = m.passive || '';
+  if (role === 'trap' || String(p).startsWith('TRAP_')) return { ...MONSTER_PATTERNS.trap_burst };
+  if (
+    role === 'ranged_guard' ||
+    p === 'RANGED_VOLLEY' ||
+    p === 'RANGED_BURN' ||
+    p === 'RANGED_FROST' ||
+    p === 'RANGED_POISON' ||
+    p === 'FROST_BOLT' ||
+    p === 'MYTHIC_INFERNO' ||
+    p === 'MYTHIC_TOXIN' ||
+    p === 'MYTHIC_STASIS'
+  ) {
+    return { ...MONSTER_PATTERNS.ranged_shot };
+  }
   if (role === 'knockbacker') return { ...MONSTER_PATTERNS.knock_hit };
-  if (role === 'anti_mage') return { ...MONSTER_PATTERNS.silence_cast };
+  if (role === 'anti_mage' || p === 'SILENCE_ON_HIT') return { ...MONSTER_PATTERNS.silence_cast };
   if (role === 'bait_taunt' || role === 'aura_support') {
     return { ...MONSTER_PATTERNS.slow_swing };
   }

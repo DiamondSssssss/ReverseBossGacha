@@ -1,11 +1,11 @@
-import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=67';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=67';
-import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=67';
-import { CombatEngine } from '../core/combatEngine.js?v=67';
-import { saveState } from '../core/storage.js?v=67';
-import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=67';
-import { monsterSpriteUrl } from '../render/sprites.js?v=67';
-import { bindMonsterTips, hideMonsterTip } from './monsterTip.js?v=67';
+import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=68';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=68';
+import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=68';
+import { CombatEngine } from '../core/combatEngine.js?v=68';
+import { saveState } from '../core/storage.js?v=68';
+import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=68';
+import { monsterSpriteUrl } from '../render/sprites.js?v=68';
+import { bindMonsterTips, hideMonsterTip } from './monsterTip.js?v=68';
 
 let engine = null;
 
@@ -60,7 +60,7 @@ export function renderCombat(root, ctx) {
       <div class="combat-head">
         <div>
           <h2>Chiến đấu · ${boss.name}</h2>
-          <p class="combat-legend">Chọn quái dưới → chạm map để thả · Cost sân ≤ Cap</p>
+          <p class="combat-legend">Kéo map xem trận · Chọn quái → chạm thả · Cost ≤ Cap</p>
         </div>
         <div class="combat-head-right">
           <div class="speed-row" id="speed-row" role="group" aria-label="Tốc độ">
@@ -92,6 +92,11 @@ export function renderCombat(root, ctx) {
           </button>`
           )
           .join('')}
+      </div>
+      <div class="combat-cam-row">
+        <button type="button" class="cam-btn" id="btn-cam-gate" title="Nhìn về Cổng">Về Cổng</button>
+        <button type="button" class="cam-btn" id="btn-cam-treasure" title="Nhìn về Kho">Về Kho</button>
+        <span class="muted cam-hint">Kéo map để xem</span>
       </div>
       <div class="combat-controls">
         <button type="button" id="btn-pause">Tạm dừng</button>
@@ -287,12 +292,53 @@ export function renderCombat(root, ctx) {
     btn.onclick = () => cast(btn.getAttribute('data-spell'));
   }
 
-  canvas.addEventListener('click', (e) => {
+  root.querySelector('#btn-cam-gate').onclick = () => engine?.focusGate();
+  root.querySelector('#btn-cam-treasure').onclick = () => engine?.focusTreasure();
+
+  // Drag to pan; tap (no drag) deploys if a card is selected
+  const PAN_THRESH = 6;
+  let panPtr = null;
+
+  function ptrPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const src = e.touches?.[0] || e.changedTouches?.[0] || e;
+    return { x: src.clientX - rect.left, y: src.clientY - rect.top, clientX: src.clientX };
+  }
+
+  function onPanStart(e) {
     if (!engine || engine.result) return;
+    if (e.button != null && e.button !== 0) return;
+    const p = ptrPos(e);
+    panPtr = { startX: p.x, startY: p.y, lastX: p.x, dragged: false };
+    if (e.pointerId != null) canvas.setPointerCapture?.(e.pointerId);
+  }
+
+  function onPanMove(e) {
+    if (!panPtr || !engine) return;
+    const p = ptrPos(e);
+    const dx = p.x - panPtr.lastX;
+    const total = Math.hypot(p.x - panPtr.startX, p.y - panPtr.startY);
+    if (total >= PAN_THRESH) panPtr.dragged = true;
+    if (panPtr.dragged) {
+      const scale = engine.drawScale || 1;
+      engine.panCamera(-dx / scale);
+      e.preventDefault?.();
+    }
+    panPtr.lastX = p.x;
+  }
+
+  function onPanEnd(e) {
+    if (!panPtr || !engine) {
+      panPtr = null;
+      return;
+    }
+    const wasDrag = panPtr.dragged;
+    const p = ptrPos(e);
+    panPtr = null;
+    if (wasDrag || engine.result) return;
     const id = engine.selectedDeployId;
     if (!id) return;
-    const rect = canvas.getBoundingClientRect();
-    const cell = engine.screenToCell(e.clientX - rect.left, e.clientY - rect.top);
+    const cell = engine.screenToCell(p.x, p.y);
     if (!cell) {
       toast('Ngoài map');
       return;
@@ -306,6 +352,21 @@ export function renderCombat(root, ctx) {
       engine.selectedDeployId = null;
     }
     engine.hooks.onUpdate?.(engine.snapshot());
+  }
+
+  canvas.style.touchAction = 'none';
+  canvas.style.cursor = 'grab';
+  canvas.addEventListener('pointerdown', onPanStart);
+  canvas.addEventListener('pointermove', onPanMove);
+  canvas.addEventListener('pointerup', onPanEnd);
+  canvas.addEventListener('pointercancel', () => {
+    panPtr = null;
+  });
+  canvas.addEventListener('pointerdown', () => {
+    canvas.style.cursor = 'grabbing';
+  });
+  canvas.addEventListener('pointerup', () => {
+    canvas.style.cursor = 'grab';
   });
 
   speedRow.querySelectorAll('.speed-btn').forEach((btn) => {

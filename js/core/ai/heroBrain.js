@@ -1,14 +1,15 @@
-import { getHeroProfile } from './profiles.js?v=67';
-import { scoreMonsterForHero, dist } from './targeting.js?v=67';
+import { getHeroProfile } from './profiles.js?v=68';
+import { scoreMonsterForHero, dist } from './targeting.js?v=68';
 import {
   ensureHeroSkillState,
   tryActivateShield,
   tryTauntSelf,
   tickStealthRegen,
   tryHealAlly,
-} from './skills.js?v=67';
-import { findPath, findPathAway, buildBlockedFromMap } from '../pathfinding.js?v=67';
-import { SPELLS } from '../../data/constants.js?v=67';
+  applySlow,
+} from './skills.js?v=68';
+import { findPath, findPathAway, buildBlockedFromMap } from '../pathfinding.js?v=68';
+import { SPELLS } from '../../data/constants.js?v=68';
 
 /**
  * Decide hero combat intent for this frame.
@@ -48,6 +49,15 @@ export function tickHeroBrain(hero, ctx) {
       combat?._float?.bind(combat),
       combat?.particles
     );
+    if (hero._justHealedSlow) {
+      hero._justHealedSlow = false;
+      for (const m of monsters) {
+        if (!m.alive || m.isTrap) continue;
+        if (dist(hero, m) < (hero.range || 3) * cellSize) {
+          applySlow(m, time, { factor: 0.7, duration: 2.2 });
+        }
+      }
+    }
   }
 
   // Pick target
@@ -119,18 +129,21 @@ export function tickHeroBrain(hero, ctx) {
 }
 
 export function heroSpeedMultiplier(hero, ctx) {
-  const { time, globalSlowUntil, zones, monsters, cellSize, map, terrainAt } = ctx;
-  let speedMul = hero.slowFactor || 1;
+  const { time, globalSlowUntil, zones, monsters, cellSize } = ctx;
+  let speedMul = 1;
   if (time < globalSlowUntil) speedMul *= SPELLS.slow_wave.slowFactor;
   for (const z of zones) {
     if (dist(hero, z) < z.r) speedMul *= z.factor;
   }
   for (const m of monsters) {
     if (!m.alive || m.passive !== 'SLOW_AURA') continue;
-    if (dist(hero, m) < cellSize * 2.2) speedMul *= 0.65;
+    const r = (m.auraRadius || 2.2) * cellSize;
+    if (dist(hero, m) < r) speedMul *= 0.65;
   }
-  // tile terrain / buffs applied by combat via hero.tileSpeedMul
   if (hero.tileSpeedMul) speedMul *= hero.tileSpeedMul;
+  if (hero.slowUntil && time < hero.slowUntil) {
+    speedMul *= hero.slowFactor ?? 0.55;
+  }
   return speedMul;
 }
 

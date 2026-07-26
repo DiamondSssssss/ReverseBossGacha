@@ -1,5 +1,5 @@
-import { scoreHeroForMonster, dist } from './targeting.js?v=67';
-import { los } from '../pathfinding.js?v=67';
+import { scoreHeroForMonster, dist } from './targeting.js?v=68';
+import { los } from '../pathfinding.js?v=68';
 
 /**
  * Monster AI tick — returns { action, target }
@@ -107,13 +107,26 @@ export function inferMonsterAi(tpl) {
   if (passive === 'KNOCK_BACK_ROOM' || tags.includes('knock')) {
     return { role: 'knockbacker', leash: 4 };
   }
-  if (passive === 'SLOW_AURA') {
+  if (
+    passive === 'SLOW_AURA' ||
+    passive === 'AURA_TAUNT' ||
+    passive === 'AURA_STUN' ||
+    passive === 'ANTI_HEAL_AURA'
+  ) {
     return { role: 'aura_support', leash: 2, hold: true };
   }
   if (passive === 'HEAL_AURA' || passive === 'HEAL_PULSE' || tags.includes('heal')) {
     return { role: 'aura_support', leash: 2.5, hold: true };
   }
-  if (tags.includes('ranged') || (tpl.stats.range >= 2.5 && tpl.stats.speed <= 1.1)) {
+  if (
+    tags.includes('ranged') ||
+    passive === 'RANGED_VOLLEY' ||
+    passive === 'RANGED_BURN' ||
+    passive === 'RANGED_FROST' ||
+    passive === 'RANGED_POISON' ||
+    passive === 'FROST_BOLT' ||
+    (tpl.stats.range >= 2.5 && tpl.stats.speed <= 1.1)
+  ) {
     return { role: 'ranged_guard', leash: 1.5, hold: true };
   }
   if (tags.includes('boss') || tpl.rarity >= 5) {

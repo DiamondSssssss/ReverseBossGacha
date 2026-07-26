@@ -1,6 +1,6 @@
-import { TERRAIN } from '../../data/rooms.js?v=67';
-import { COMBAT, MONSTER_UPGRADE } from '../../data/constants.js?v=67';
-import { monsterStatMul } from '../monsterUpgrade.js?v=67';
+import { TERRAIN } from '../../data/rooms.js?v=68';
+import { COMBAT, MONSTER_UPGRADE } from '../../data/constants.js?v=68';
+import { monsterStatMul } from '../monsterUpgrade.js?v=68';
 
 /**
  * Continuous tile modifiers for a unit standing on a cell.
@@ -20,22 +20,30 @@ export function getTileModifiers(map, col, row, side, unit) {
   const key = `${col},${row}`;
   const terrain = map.terrain[key] || TERRAIN.NORMAL;
 
-  // Terrain effects
   if (side === 'hero') {
     if (terrain === TERRAIN.WATER) out.speedMul *= COMBAT.WATER_HERO_SLOW;
     if (terrain === TERRAIN.DARK) out.rangeAdd -= COMBAT.DARK_RANGE_PENALTY;
+    if (terrain === TERRAIN.FIRE) out.speedMul *= 0.9;
+    if (terrain === TERRAIN.ICE) out.speedMul *= 0.75;
+    if (terrain === TERRAIN.POISON) out.speedMul *= 0.92;
   }
 
   if (side === 'monster' && unit) {
     switch (unit.passive) {
       case 'WATER_BUFF':
-        if (terrain === TERRAIN.WATER) {
-          out.atkMul *= 1.4;
-          // HP already scaled at spawn if placed on water; keep atk continuous
-        }
+        if (terrain === TERRAIN.WATER) out.atkMul *= 1.4;
         break;
       case 'DARK_BUFF':
         if (terrain === TERRAIN.DARK) out.atkMul *= 2;
+        break;
+      case 'FIRE_BUFF':
+        if (terrain === TERRAIN.FIRE) out.atkMul *= 1.45;
+        break;
+      case 'ICE_BUFF':
+        if (terrain === TERRAIN.ICE) out.atkMul *= 1.4;
+        break;
+      case 'POISON_BUFF':
+        if (terrain === TERRAIN.POISON) out.atkMul *= 1.4;
         break;
       case 'BUFF_IN_LOW_CEILING_ROOM':
         if (terrain === TERRAIN.HIGH) out.atkMul *= 0.5;
@@ -48,7 +56,6 @@ export function getTileModifiers(map, col, row, side, unit) {
     }
   }
 
-  // Buff zones
   const buffs = map.buffIndex[key] || [];
   for (const b of buffs) {
     if (b.side !== 'both' && b.side !== side) continue;
@@ -73,6 +80,18 @@ export function getTileModifiers(map, col, row, side, unit) {
         break;
       case 'SILENCE_ZONE':
         if (side === 'hero') out.silence = true;
+        break;
+      case 'FIRE_ZONE':
+        if (side === 'monster') out.atkMul *= b.value || 1.25;
+        if (side === 'hero') out.speedMul *= 0.88;
+        break;
+      case 'ICE_ZONE':
+        if (side === 'monster') out.atkMul *= b.value || 1.25;
+        if (side === 'hero') out.speedMul *= 0.8;
+        break;
+      case 'POISON_ZONE':
+        if (side === 'monster') out.atkMul *= b.value || 1.25;
+        if (side === 'hero') out.speedMul *= 0.9;
         break;
       default:
         break;
@@ -101,6 +120,24 @@ export function spawnMonsterStats(template, terrain, upgradeLevel = 0) {
       break;
     case 'DARK_BUFF':
       if (terrain === 'DARK') atkMul = 2;
+      break;
+    case 'FIRE_BUFF':
+      if (terrain === 'FIRE') {
+        atkMul = 1.45;
+        hpMul = 1.2;
+      }
+      break;
+    case 'ICE_BUFF':
+      if (terrain === 'ICE') {
+        atkMul = 1.4;
+        hpMul = 1.2;
+      }
+      break;
+    case 'POISON_BUFF':
+      if (terrain === 'POISON') {
+        atkMul = 1.4;
+        hpMul = 1.15;
+      }
       break;
     default:
       break;

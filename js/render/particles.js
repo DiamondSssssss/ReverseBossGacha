@@ -108,6 +108,42 @@ export class ParticleSystem {
     });
   }
 
+  burn(x, y) {
+    this.emit(x, y, {
+      count: 9,
+      colors: ['#ff7043', '#ffab40', '#ff5722', '#fff'],
+      speed: 55,
+      life: 0.65,
+      size: 2.8,
+      gravity: -20,
+      shape: 'spark',
+    });
+  }
+
+  poison(x, y) {
+    this.emit(x, y, {
+      count: 8,
+      colors: ['#9ccc65', '#689f38', '#c5e1a5'],
+      speed: 30,
+      life: 0.85,
+      size: 2.6,
+      gravity: -15,
+      shape: 'circle',
+    });
+  }
+
+  stun(x, y) {
+    this.emit(x, y, {
+      count: 7,
+      colors: ['#ffe082', '#ffd54f', '#fff'],
+      speed: 70,
+      life: 0.4,
+      size: 3,
+      gravity: 10,
+      shape: 'star',
+    });
+  }
+
   heal(x, y) {
     this.emit(x, y, {
       count: 8,

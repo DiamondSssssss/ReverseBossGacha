@@ -209,6 +209,24 @@
   font-size: 0.58rem;
 }
 
+.combat-cam-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.combat-cam-row .cam-btn {
+  min-height: 30px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.75rem;
+}
+
+.combat-cam-row .cam-hint {
+  font-size: 0.68rem;
+  margin-left: auto;
+}
+
 .combat-controls {
   display: flex;
   gap: 6px;
@@ -219,6 +237,12 @@
   flex: 1;
   min-height: 36px;
   padding: 0.35rem 0.5rem;
+}
+
+#combat-canvas {
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
 }
 
 .reward-stage {

@@ -1,4 +1,4 @@
-import { COMBAT } from './constants.js?v=67';
+import { COMBAT } from './constants.js?v=68';
 
 /** @deprecated Multi-room strip removed — see maps.js STAGE_MAPS */
 
@@ -8,6 +8,9 @@ export const TERRAIN = {
   LOW_CEILING: 'LOW_CEILING',
   DARK: 'DARK',
   HIGH: 'HIGH',
+  FIRE: 'FIRE',
+  ICE: 'ICE',
+  POISON: 'POISON',
 };
 
 /**

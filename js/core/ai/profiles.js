@@ -356,6 +356,58 @@ export const HERO_PROFILES = {
     engageBias: 1.0,
     antiHeal: true,
   },
+  hero_archer_06: {
+    archetype: 'archer',
+    idealRange: 3.8,
+    kiteBelow: 2.0,
+    preferFreeze: true,
+    engageBias: 0.4,
+  },
+  hero_mage_08: {
+    archetype: 'mage',
+    idealRange: 3.1,
+    kiteBelow: 1.6,
+    aoePrefer: true,
+    engageBias: 0.4,
+  },
+  hero_rogue_08: {
+    archetype: 'rogue',
+    stealthRush: true,
+    engageBias: 0.35,
+  },
+  hero_tank_06: {
+    archetype: 'tank',
+    engageBias: 1.6,
+    holdFight: true,
+    tauntSelf: true,
+    shieldAt: 0.5,
+  },
+  hero_healer_06: {
+    archetype: 'healer',
+    idealRange: 3.0,
+    kiteBelow: 1.5,
+    engageBias: 0.2,
+    healPriority: true,
+  },
+  hero_hex_06: {
+    archetype: 'hexer',
+    idealRange: 2.6,
+    kiteBelow: 1.4,
+    engageBias: 0.85,
+    antiHeal: true,
+  },
+  hero_archer_07: {
+    archetype: 'archer',
+    idealRange: 3.9,
+    kiteBelow: 2.0,
+    engageBias: 0.45,
+  },
+  hero_berserker_06: {
+    archetype: 'berserker',
+    engageBias: 1.7,
+    holdFight: true,
+    preferLowHp: true,
+  },
 };
 
 export function getHeroProfile(heroId, heroClass) {
