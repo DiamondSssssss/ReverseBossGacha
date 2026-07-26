@@ -1013,7 +1013,7 @@ body.play-fit #screen-scout.screen.active {
 
 .loadout-pool {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
   gap: 6px;
   max-height: min(42vh, 320px);
   overflow-y: auto;
@@ -1405,6 +1405,43 @@ body.play-fit .screen.active > .combat-wrap {
 .loadout-stat-panel.has-unit {
   border-color: var(--seal, #c43c28);
   background: #fffaf0;
+}
+
+.loadout-stat-panel.sticky-stat {
+  position: sticky;
+  bottom: 0;
+  z-index: 4;
+  margin-top: 10px;
+  margin-bottom: 0;
+  box-shadow: 0 -6px 16px rgba(26, 22, 18, 0.08);
+}
+
+.pick-stats {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--ink);
+  margin-top: 2px;
+}
+
+.pick-stats.dim {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.loadout-chip .pick-stats {
+  font-size: 0.58rem;
+}
+
+.loadout-pick .pick-stats {
+  width: 100%;
+  text-align: center;
+}
+
+.tray-item .pick-stats {
+  font-size: 0.58rem;
+  margin-top: 1px;
 }
 
 .loadout-pick:hover:not(:disabled):not([aria-disabled="true"]),

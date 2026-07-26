@@ -34,6 +34,10 @@ import {
   monsterTipLine,
   monsterTipHtml,
 } from './monsterTip.js';
+import {
+  displayMonsterStats,
+  getMonsterUpgradeLevel,
+} from '../core/monsterUpgrade.js';
 
 function shortName(name) {
   if (!name) return '?';
@@ -220,12 +224,15 @@ export function renderScout(root, ctx) {
       .map(([id, n]) => {
         const m = MONSTER_BY_ID[id];
         if (!m) return '';
+        const upLv = getMonsterUpgradeLevel(state, id);
+        const st = displayMonsterStats(m, upLv);
         return `
           <button type="button" class="loadout-chip" data-remove="${id}" data-mid="${id}">
             <img src="${monsterSpriteUrl(id, m.color, m.rarity)}" alt="" width="36" height="36" />
             <span class="loadout-chip-meta">
               <strong>${shortName(m.name)}</strong>
-              <span>C${m.cost} · ×${n}</span>
+              <span>C${m.cost} · ×${n}${upLv ? ` · ↑${upLv}` : ''}</span>
+              <span class="pick-stats">HP ${st.hp} · ATK ${st.atk}</span>
             </span>
             <span class="loadout-chip-x">−</span>
           </button>`;
@@ -239,12 +246,16 @@ export function renderScout(root, ctx) {
         const left = have - inLoad;
         const blockedNew = inLoad <= 0 && typesFull;
         const full = left <= 0 || blockedNew;
+        const upLv = getMonsterUpgradeLevel(state, m.id);
+        const st = displayMonsterStats(m, upLv);
         return `
           <button type="button" class="loadout-pick ${full ? 'is-full' : ''}" data-add="${m.id}" data-mid="${m.id}" ${full ? 'aria-disabled="true"' : ''}>
             <img src="${monsterSpriteUrl(m.id, m.color, m.rarity)}" alt="" width="44" height="44" />
             <span class="stars" style="color:${RARITY_COLORS[m.rarity]}">${'★'.repeat(m.rarity)}</span>
             <strong>${shortName(m.name)}</strong>
-            <span class="muted">C${m.cost} · kho ×${have}${inLoad ? ` · +${inLoad}` : ''}</span>
+            <span class="muted">C${m.cost} · kho ×${have}${inLoad ? ` · +${inLoad}` : ''}${upLv ? ` · ↑${upLv}` : ''}</span>
+            <span class="pick-stats">HP ${st.hp} · ATK ${st.atk}</span>
+            <span class="pick-stats dim">SPD ${st.speed} · RNG ${st.range}</span>
           </button>`;
       })
       .join('');
@@ -284,12 +295,12 @@ export function renderScout(root, ctx) {
           <button type="button" class="filter-chip ${filterRole === 'dps' ? 'active' : ''}" data-lrole="dps">DPS</button>
         </div>
 
-        <div class="unit-stat-panel loadout-stat-panel" id="loadout-stat-panel">
-          <p class="muted" style="margin:0;font-size:0.75rem">Hover thẻ quái bên dưới để xem HP / ATK / mô tả.</p>
-        </div>
-
         <div class="loadout-pool">
           ${poolCards || '<p class="muted">Kho trống — quay Gacha trước.</p>'}
+        </div>
+
+        <div class="unit-stat-panel loadout-stat-panel sticky-stat" id="loadout-stat-panel">
+          <p class="muted" style="margin:0;font-size:0.75rem">Chạm / hover thẻ quái để xem mô tả chi tiết.</p>
         </div>
       `,
     };
@@ -301,7 +312,7 @@ export function renderScout(root, ctx) {
     const statPanel = panel.querySelector('#loadout-stat-panel');
 
     function showPickInfo(el) {
-      const id = el.getAttribute('data-mid');
+      const id = el?.getAttribute?.('data-mid');
       if (!id) return;
       if (statPanel) {
         statPanel.innerHTML = monsterTipHtml(id, state);
@@ -314,10 +325,27 @@ export function renderScout(root, ctx) {
       if (statPanel) {
         statPanel.classList.remove('has-unit');
         statPanel.innerHTML =
-          '<p class="muted" style="margin:0;font-size:0.75rem">Hover thẻ quái bên dưới để xem HP / ATK / mô tả.</p>';
+          '<p class="muted" style="margin:0;font-size:0.75rem">Chạm / hover thẻ quái để xem mô tả chi tiết.</p>';
       }
       hideMonsterTip();
     }
+
+    // Event delegation — không phụ thuộc bind từng nút
+    panel.onpointerover = (e) => {
+      const el = e.target.closest?.('[data-mid]');
+      if (!el || !panel.contains(el)) return;
+      showPickInfo(el);
+    };
+    panel.onpointerout = (e) => {
+      const el = e.target.closest?.('[data-mid]');
+      if (!el) return;
+      const to = e.relatedTarget;
+      if (to && (el === to || el.contains(to))) return;
+      if (to && to.closest?.('[data-mid]') && panel.contains(to.closest('[data-mid]'))) {
+        return; // chuyển sang thẻ khác — pointerover sẽ cập nhật
+      }
+      clearPickInfo();
+    };
 
     panel.querySelectorAll('[data-add]').forEach((btn) => {
       btn.onclick = (e) => {
@@ -326,6 +354,7 @@ export function renderScout(root, ctx) {
         if (btn.classList.contains('is-full') || btn.getAttribute('aria-disabled') === 'true') {
           return;
         }
+        showPickInfo(btn); // chạm cũng hiện tip (mobile)
         const id = btn.getAttribute('data-add');
         const res = tryAddToLoadout(run.loadout, vault, id, map.costCap);
         if (!res.ok) {
@@ -335,10 +364,6 @@ export function renderScout(root, ctx) {
         run.loadout = res.loadout;
         refreshLoadout();
       };
-      btn.onpointerenter = () => showPickInfo(btn);
-      btn.onmouseenter = () => showPickInfo(btn);
-      btn.onpointerleave = () => clearPickInfo();
-      btn.onmouseleave = () => clearPickInfo();
     });
 
     panel.querySelectorAll('[data-remove]').forEach((btn) => {
@@ -346,16 +371,13 @@ export function renderScout(root, ctx) {
         e.preventDefault();
         e.stopPropagation();
         const id = btn.getAttribute('data-remove');
+        showPickInfo(btn);
         const res = tryRemoveFromLoadout(run.loadout, id);
         if (res.ok) {
           run.loadout = res.loadout;
           refreshLoadout();
         }
       };
-      btn.onpointerenter = () => showPickInfo(btn);
-      btn.onmouseenter = () => showPickInfo(btn);
-      btn.onpointerleave = () => clearPickInfo();
-      btn.onmouseleave = () => clearPickInfo();
     });
 
     panel.querySelectorAll('[data-lrole]').forEach((btn) => {
@@ -611,12 +633,15 @@ export function renderSetup(root, ctx) {
         if (!m) return '';
         const trap = m.tags?.includes('trap');
         const src = monsterSpriteUrl(id, m.color, m.rarity);
+        const upLv = getMonsterUpgradeLevel(state, id);
+        const st = displayMonsterStats(m, upLv);
         return `
-          <button type="button" class="tray-item ${selectedId === id ? 'selected' : ''}" data-mid="${id}" draggable="true" title="${m.name}">
+          <button type="button" class="tray-item ${selectedId === id ? 'selected' : ''}" data-mid="${id}" draggable="true">
             <img class="tray-sprite" src="${src}" alt="" width="40" height="40" draggable="false" />
             <div style="color:${RARITY_COLORS[m.rarity]}">${'★'.repeat(m.rarity)}</div>
             <div>${shortName(m.name)}</div>
             <div class="muted">C${m.cost} · ×${count}${trap ? ' · Bẫy' : ''}</div>
+            <div class="pick-stats">HP ${st.hp} · ATK ${st.atk}</div>
           </button>`;
       })
       .join('');
