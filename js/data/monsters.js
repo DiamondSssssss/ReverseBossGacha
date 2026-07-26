@@ -763,6 +763,72 @@ export const MONSTERS = [
     passive: 'HEAL_PULSE', tags: ['boss', 'heal', 'utility'], color: '#fdd835',
     description: 'Boss hỗ trợ — pulse hồi máu diện rộng cực mạnh.',
   },
+  {
+    id: 'spore_cleric',
+    name: 'Bào Tử Mục Sư',
+    rarity: 2, cost: 2,
+    stats: { hp: 160, atk: 10, speed: 1.15, range: 2.2, atkSpeed: 0.75 },
+    passive: 'HEAL_AURA', tags: ['utility', 'heal'], color: '#9ccc65',
+    description: 'Aura hồi nhẹ — rẻ để giữ tuyến sớm.',
+  },
+  {
+    id: 'resin_monk',
+    name: 'Tu Sĩ Nhựa',
+    rarity: 3, cost: 3,
+    stats: { hp: 260, atk: 16, speed: 1.05, range: 2.5, atkSpeed: 0.7 },
+    passive: 'HEAL_AURA', tags: ['utility', 'heal', 'tankette'], color: '#7cb342',
+    description: 'Hồi máu + máu khá — khó focus một phát.',
+  },
+  {
+    id: 'lotus_warden',
+    name: 'Hộ Pháp Sen',
+    rarity: 4, cost: 5,
+    stats: { hp: 400, atk: 26, speed: 1.1, range: 3.1, atkSpeed: 0.8 },
+    passive: 'HEAL_PULSE', tags: ['utility', 'heal', 'support'], color: '#558b2f',
+    description: 'Pulse hồi mạnh — kết hợp tank rất dai.',
+  },
+
+  // ——— Giảm hồi (anti-heal) — khắc chế healer Hero ———
+  {
+    id: 'rust_leech',
+    name: 'Đỉa Gỉ',
+    rarity: 1, cost: 1,
+    stats: { hp: 70, atk: 10, speed: 1.5, range: 1.8, atkSpeed: 1.0 },
+    passive: 'ANTI_HEAL_AURA', tags: ['utility', 'anti_heal'], color: '#8d6e63',
+    description: 'Aura giảm hồi máu Hero gần đó.',
+  },
+  {
+    id: 'wound_wasp',
+    name: 'Ong Vết Thương',
+    rarity: 2, cost: 2,
+    stats: { hp: 110, atk: 22, speed: 2.0, range: 1.4, atkSpeed: 1.25 },
+    passive: 'HEAL_CUT_ON_HIT', tags: ['dps', 'anti_heal'], color: '#a1887f',
+    description: 'Đánh trúng → Hero bị giảm hồi trong vài giây.',
+  },
+  {
+    id: 'blight_toad',
+    name: 'Cóc Ô Uế',
+    rarity: 3, cost: 3,
+    stats: { hp: 240, atk: 20, speed: 1.1, range: 2.4, atkSpeed: 0.85 },
+    passive: 'ANTI_HEAL_AURA', tags: ['utility', 'anti_heal', 'tankette'], color: '#6d4c41',
+    description: 'Aura giảm hồi mạnh hơn — đặt gần tuyến healer địch.',
+  },
+  {
+    id: 'null_nurse',
+    name: 'Y Tá Hư Vô',
+    rarity: 4, cost: 5,
+    stats: { hp: 360, atk: 30, speed: 1.2, range: 2.8, atkSpeed: 0.9 },
+    passive: 'ANTI_HEAL_AURA', tags: ['utility', 'anti_heal', 'support'], color: '#5d4037',
+    description: 'Khắc chế healer — Aura cắt hồi diện rộng.',
+  },
+  {
+    id: 'grievous_idol',
+    name: 'Tượng Chí Mạng',
+    rarity: 5, cost: 7,
+    stats: { hp: 700, atk: 45, speed: 0.9, range: 3.2, atkSpeed: 0.7 },
+    passive: 'ANTI_HEAL_AURA', tags: ['boss', 'anti_heal', 'tank'], color: '#3e2723',
+    description: 'Boss anti-heal — healer gần như vô dụng trong vùng.',
+  },
 ];
 
 /** Explicit AI roles (overrides inference defaults) */
@@ -860,6 +926,14 @@ const AI_OVERRIDES = {
   vita_toad: { role: 'aura_support', leash: 2.5, hold: true },
   bloom_dryad: { role: 'aura_support', leash: 3, hold: true },
   sanctum_angel: { role: 'aura_support', leash: 3.5, hold: true },
+  spore_cleric: { role: 'aura_support', leash: 2.2, hold: true },
+  resin_monk: { role: 'aura_support', leash: 2.5, hold: true },
+  lotus_warden: { role: 'aura_support', leash: 3, hold: true },
+  rust_leech: { role: 'aura_support', leash: 2.5, hold: true, prefer: ['HEALER'] },
+  wound_wasp: { role: 'chaser', leash: 4, prefer: ['HEALER'] },
+  blight_toad: { role: 'aura_support', leash: 2.8, hold: true, prefer: ['HEALER'] },
+  null_nurse: { role: 'aura_support', leash: 3.2, hold: true, prefer: ['HEALER'] },
+  grievous_idol: { role: 'boss_elite', leash: 4, hold: true, prefer: ['HEALER'], blocksPath: true },
 };
 
 for (const m of MONSTERS) {

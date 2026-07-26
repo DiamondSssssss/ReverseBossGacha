@@ -1160,6 +1160,14 @@ const MONSTER_KIND = {
   vita_toad: 'frog',
   bloom_dryad: 'wisp',
   sanctum_angel: 'monk',
+  spore_cleric: 'mushroom',
+  resin_monk: 'monk',
+  lotus_warden: 'wisp',
+  rust_leech: 'hand',
+  wound_wasp: 'insect',
+  blight_toad: 'frog',
+  null_nurse: 'wraith',
+  grievous_idol: 'knight',
 };
 
 const HERO_KIND = {
@@ -1208,6 +1216,11 @@ const HERO_KIND = {
   hero_berserker_03: 'heroBerserker',
   hero_berserker_04: 'heroBerserker',
   hero_berserker_05: 'heroBerserker',
+  hero_hex_01: 'heroMage',
+  hero_hex_02: 'heroMage',
+  hero_hex_03: 'heroMage',
+  hero_hex_04: 'heroMage',
+  hero_hex_05: 'heroMage',
 };
 
 function paintBackground(ctx, rarity) {
@@ -1312,7 +1325,7 @@ export function getHeroSprite(id, heroClass = 'WARRIOR', color = '#ef9a9a') {
   paintBackground(ctx, 3);
   const kind =
     HERO_KIND[id] ||
-    (heroClass === 'MAGE' || heroClass === 'HEALER'
+    (heroClass === 'MAGE' || heroClass === 'HEALER' || heroClass === 'HEXER'
       ? 'heroMage'
       : heroClass === 'ROGUE'
         ? 'heroRogue'

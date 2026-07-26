@@ -213,6 +213,7 @@ export const HERO_CLASS_LABELS = {
   ARCHER: 'Cung thủ',
   TANK: 'Thuần tank',
   BERSERKER: 'Berserker',
+  HEXER: 'Diệt hồi',
 };
 
 export const LANE_LABELS = ['Trên', 'Giữa', 'Dưới'];

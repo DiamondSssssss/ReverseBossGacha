@@ -3,16 +3,16 @@ import {
   TERRAIN_LABELS,
   RARITY_COLORS,
   HERO_CLASS_LABELS,
-} from '../data/constants.js?v=64';
-import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=64';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=64';
-import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=64';
+} from '../data/constants.js?v=67';
+import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=67';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=67';
+import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=67';
 import {
   mapUsedCost,
   placeMonster,
   removePlacement,
   totalPlacements,
-} from '../core/dungeon.js?v=64';
+} from '../core/dungeon.js?v=67';
 import {
   loadoutMaxPoolCost,
   loadoutPoolCost,
@@ -22,19 +22,19 @@ import {
   suggestLoadout,
   tryAddToLoadout,
   tryRemoveFromLoadout,
-} from '../core/loadout.js?v=64';
-import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=64';
-import { attachSetupBoardFx } from './setupBoardFx.js?v=64';
-import { playGhostWalk } from './setupPreview.js?v=64';
-import { saveState } from '../core/storage.js?v=64';
+} from '../core/loadout.js?v=67';
+import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=67';
+import { attachSetupBoardFx } from './setupBoardFx.js?v=67';
+import { playGhostWalk } from './setupPreview.js?v=67';
+import { saveState } from '../core/storage.js?v=67';
 import {
   hideMonsterTip,
   monsterTipHtml,
-} from './monsterTip.js?v=64';
+} from './monsterTip.js?v=67';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,
-} from '../core/monsterUpgrade.js?v=64';
+} from '../core/monsterUpgrade.js?v=67';
 
 function shortName(name) {
   if (!name) return '?';
@@ -220,7 +220,8 @@ export function renderScout(root, ctx) {
         : 'Có Đạo tặc → focus DPS / chậm'
     );
   }
-  if (classes.includes('HEALER')) tips.push('Có Healer → ưu tiên hạ hồi máu');
+  if (classes.includes('HEALER')) tips.push('Có Healer → ưu tiên hạ hồi máu / mang anti-heal');
+  if (classes.includes('HEXER')) tips.push('Có Diệt hồi → heal quái bị giảm — vẫn focus hexer nếu cần');
 
   function loadoutPanelHtml() {
     const loadout = run.loadout || {};

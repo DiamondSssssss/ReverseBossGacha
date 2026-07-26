@@ -1,14 +1,14 @@
-import { getHeroProfile } from './profiles.js?v=64';
-import { scoreMonsterForHero, dist } from './targeting.js?v=64';
+import { getHeroProfile } from './profiles.js?v=67';
+import { scoreMonsterForHero, dist } from './targeting.js?v=67';
 import {
   ensureHeroSkillState,
   tryActivateShield,
   tryTauntSelf,
   tickStealthRegen,
   tryHealAlly,
-} from './skills.js?v=64';
-import { findPath, findPathAway, buildBlockedFromMap } from '../pathfinding.js?v=64';
-import { SPELLS } from '../../data/constants.js?v=64';
+} from './skills.js?v=67';
+import { findPath, findPathAway, buildBlockedFromMap } from '../pathfinding.js?v=67';
+import { SPELLS } from '../../data/constants.js?v=67';
 
 /**
  * Decide hero combat intent for this frame.
@@ -77,9 +77,11 @@ export function tickHeroBrain(hero, ctx) {
   const dToTarget = best ? dist(hero, best) : Infinity;
   const range = hero.effectiveRange ?? hero.range;
 
-  // Mage / Archer kite
+  // Mage / Archer / Hexer kite
   if (
-    (profile.archetype === 'mage' || profile.archetype === 'archer') &&
+    (profile.archetype === 'mage' ||
+      profile.archetype === 'archer' ||
+      profile.archetype === 'hexer') &&
     best &&
     dToTarget < (profile.kiteBelow || 1.5) * cellSize &&
     !hero.silenced

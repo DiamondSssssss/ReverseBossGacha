@@ -1,6 +1,6 @@
-import { HEROES } from '../data/heroes.js?v=64';
-import { HERO_CLASS_LABELS } from '../data/constants.js?v=64';
-import { heroSpriteUrl } from '../render/sprites.js?v=64';
+import { HEROES } from '../data/heroes.js?v=67';
+import { HERO_CLASS_LABELS } from '../data/constants.js?v=67';
+import { heroSpriteUrl } from '../render/sprites.js?v=67';
 
 const filters = {
   q: '',
@@ -19,8 +19,9 @@ const CLASS_ORDER = {
   BERSERKER: 2,
   ARCHER: 3,
   MAGE: 4,
-  HEALER: 5,
-  ROGUE: 6,
+  HEXER: 5,
+  HEALER: 6,
+  ROGUE: 7,
 };
 
 function filterList() {
@@ -56,6 +57,7 @@ function skillTags(h) {
   const tags = [];
   if (h.stealth) tags.push('Tàng hình');
   if (skills.includes('BERSERK')) tags.push('Berserk');
+  if (h.class === 'HEXER' || skills.includes('HEAL_CUT')) tags.push('Giảm hồi');
   if (skills.includes('TAUNT_SELF')) tags.push('Khiêu khích');
   if (skills.includes('SHIELD')) tags.push('Khiên');
   if (skills.includes('HEAL_ALLY')) tags.push('Hồi máu');

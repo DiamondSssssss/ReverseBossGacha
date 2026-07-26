@@ -1,5 +1,5 @@
-import { REDEEM_CODES, normalizeRedeemCode } from '../data/redeemCodes.js?v=64';
-import { saveState } from './storage.js?v=64';
+import { REDEEM_CODES, normalizeRedeemCode } from '../data/redeemCodes.js?v=67';
+import { saveState } from './storage.js?v=67';
 
 /**
  * @returns {{ ok: boolean, reason?: string, reward?: object, label?: string }}

@@ -1,18 +1,18 @@
-import { MONSTERS } from '../data/monsters.js?v=64';
+import { MONSTERS } from '../data/monsters.js?v=67';
 import {
   RARITY_COLORS,
   RARITY_LABELS,
   INVENTORY_CAP,
   MONSTER_UPGRADE,
-} from '../data/constants.js?v=64';
-import { monsterDisplayUrl } from '../render/sprites.js?v=64';
+} from '../data/constants.js?v=67';
+import { monsterDisplayUrl } from '../render/sprites.js?v=67';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,
   tryUpgradeMonster,
   upgradeMonsterCost,
-} from '../core/monsterUpgrade.js?v=64';
-import { evaluateAchievements } from '../core/achievements.js?v=64';
+} from '../core/monsterUpgrade.js?v=67';
+import { evaluateAchievements } from '../core/achievements.js?v=67';
 
 const filters = {
   q: '',
@@ -31,6 +31,8 @@ const ROLE_OPTIONS = [
   { id: 'trap', label: 'Bẫy' },
   { id: 'tank', label: 'Tank' },
   { id: 'dps', label: 'DPS' },
+  { id: 'heal', label: 'Heal' },
+  { id: 'anti_heal', label: 'Giảm hồi' },
   { id: 'silence', label: 'Silence' },
   { id: 'anti_rogue', label: 'Anti-Rogue' },
   { id: 'boss', label: 'Boss' },

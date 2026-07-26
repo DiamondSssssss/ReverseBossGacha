@@ -1,21 +1,21 @@
-import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=64';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=64';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=64';
-import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=64';
-import { mapUsedCost } from './dungeon.js?v=64';
-import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=64';
-import { ParticleSystem } from '../render/particles.js?v=64';
+import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=67';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=67';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=67';
+import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=67';
+import { mapUsedCost } from './dungeon.js?v=67';
+import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=67';
+import { ParticleSystem } from '../render/particles.js?v=67';
 import {
   getMonsterSprite,
   getHeroSprite,
   drawSpriteAt,
-} from '../render/sprites.js?v=64';
-import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=64';
-import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=64';
-import { computeHeroAttackDamage, applyIncomingDamage } from './ai/skills.js?v=64';
-import { getTileModifiers, spawnMonsterStats } from './ai/tileModifiers.js?v=64';
-import { dist } from './ai/targeting.js?v=64';
-import { getHeroProfile } from './ai/profiles.js?v=64';
+} from '../render/sprites.js?v=67';
+import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=67';
+import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=67';
+import { computeHeroAttackDamage, applyIncomingDamage, applyHealCutOnHit } from './ai/skills.js?v=67';
+import { getTileModifiers, spawnMonsterStats } from './ai/tileModifiers.js?v=67';
+import { dist } from './ai/targeting.js?v=67';
+import { getHeroProfile } from './ai/profiles.js?v=67';
 import {
   patternForHero,
   patternForMonster,
@@ -23,7 +23,7 @@ import {
   tickAttack,
   ensureAttackState,
   resolveDisplayAnim,
-} from './ai/attackPatterns.js?v=64';
+} from './ai/attackPatterns.js?v=67';
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
@@ -394,7 +394,7 @@ export class CombatEngine {
     } else if (kind === 'heal') {
       this.monsters.forEach((m) => {
         if (!m.alive) return;
-        m.hp = Math.min(m.maxHp, m.hp + m.maxHp * spell.healRatio);
+        this._applyHealTo(m, m.maxHp * spell.healRatio, { quiet: true });
         this.particles.heal(m.x, m.y - 8);
       });
       this._float(bannerX, 30, `${spell.name}!`, '#ef9a9a');
@@ -521,6 +521,7 @@ export class CombatEngine {
     for (const m of this.monsters) if (m.flash > 0) m.flash -= dt;
     for (const h of this.heroes) if (h.flash > 0) h.flash -= dt;
 
+    this._refreshHealRecvMuls();
     this._applyTileModifiers(dt);
     for (const h of this.heroes) {
       if (!h.alive) continue;
@@ -568,7 +569,9 @@ export class CombatEngine {
       const mod = getTileModifiers(this.map, col, row, 'hero', h);
       h.tileSpeedMul = mod.speedMul;
       h.effectiveRange = Math.max(this.CELL * 0.8, h.range + mod.rangeAdd * this.CELL);
-      if (mod.healPerSec > 0) h.hp = Math.min(h.maxHp, h.hp + mod.healPerSec * dt);
+      if (mod.healPerSec > 0) {
+        this._applyHealTo(h, mod.healPerSec * dt, { quiet: true });
+      }
       if (mod.reveal) h.revealed = true;
       if (mod.silence) h.silenced = true;
       if (mod.defMul !== 1) h.tileDefMul = mod.defMul;
@@ -592,7 +595,9 @@ export class CombatEngine {
       if (this.time < this.monsterRageUntil) atkMul *= this.monsterRageMul;
       m.atk = Math.round((m.baseAtk || m.atk) * atkMul);
       if (m._baseAtkSpeed) m.atkSpeed = m._baseAtkSpeed;
-      if (mod.healPerSec > 0) m.hp = Math.min(m.maxHp, m.hp + mod.healPerSec * dt);
+      if (mod.healPerSec > 0) {
+        this._applyHealTo(m, mod.healPerSec * dt, { quiet: true });
+      }
     }
 
     // Ally slow from mythic doom bell
@@ -935,6 +940,91 @@ export class CombatEngine {
         this._onMonsterDeath(target, hero);
       }
     }
+    applyHealCutOnHit(hero, target, this.time);
+    if (hero.skills?.includes('HEAL_CUT_HIT') && target.alive) {
+      this._float(target.x, target.y + 10, 'Vết!', '#7e57c2');
+    }
+  }
+
+  _refreshHealRecvMuls() {
+    for (const h of this.heroes) {
+      if (!h.alive) continue;
+      h.healRecvMul = 1;
+    }
+    for (const m of this.monsters) {
+      if (!m.alive) continue;
+      m.healRecvMul = 1;
+    }
+
+    // Quái aura giảm hồi Hero
+    for (const m of this.monsters) {
+      if (!m.alive || m.passive !== 'ANTI_HEAL_AURA') continue;
+      const radius = (m.range || 2) * this.CELL * 1.05;
+      const factor =
+        m.rarity >= 5 ? 0.22 : m.rarity >= 4 ? 0.32 : m.rarity >= 3 ? 0.42 : 0.55;
+      for (const h of this.heroes) {
+        if (!h.alive) continue;
+        if (dist(h, m) > radius) continue;
+        h.healRecvMul *= factor;
+      }
+    }
+
+    // Hero Diệt hồi — aura giảm hồi quái
+    for (const h of this.heroes) {
+      if (!h.alive) continue;
+      const profile = getHeroProfile(h.templateId, h.class);
+      const hasCut =
+        h.skills?.includes('HEAL_CUT') ||
+        profile.antiHeal ||
+        h.class === 'HEXER';
+      if (!hasCut || h.silenced) continue;
+      const radius = (h.range || 2.5) * this.CELL * 1.05;
+      const factor =
+        h.templateId === 'hero_hex_05'
+          ? 0.2
+          : h.templateId === 'hero_hex_04'
+            ? 0.3
+            : h.templateId === 'hero_hex_03'
+              ? 0.4
+              : 0.5;
+      for (const m of this.monsters) {
+        if (!m.alive || m.isTrap) continue;
+        if (dist(h, m) > radius) continue;
+        m.healRecvMul *= factor;
+      }
+    }
+
+    // Debuff vết thương (từ hit)
+    for (const h of this.heroes) {
+      if (!h.alive) continue;
+      if (h.healCutUntil && this.time < h.healCutUntil) {
+        h.healRecvMul *= h.healCutFactor ?? 0.4;
+      }
+    }
+    for (const m of this.monsters) {
+      if (!m.alive) continue;
+      if (m.healCutUntil && this.time < m.healCutUntil) {
+        m.healRecvMul *= m.healCutFactor ?? 0.4;
+      }
+    }
+  }
+
+  /**
+   * Hồi máu có tính healRecvMul (giảm hồi / anti-heal).
+   * @returns {number} lượng thực sự hồi
+   */
+  _applyHealTo(unit, rawAmount, { quiet = false } = {}) {
+    if (!unit?.alive) return 0;
+    const mul = Math.max(0, Number(unit.healRecvMul) ?? 1);
+    const amount = Math.max(0, Math.round(Number(rawAmount) * mul));
+    if (amount <= 0) {
+      if (!quiet && mul < 0.99 && Math.random() < 0.15) {
+        this._float(unit.x, unit.y - 8, 'Giảm hồi!', '#a1887f');
+      }
+      return 0;
+    }
+    unit.hp = Math.min(unit.maxHp, unit.hp + amount);
+    return amount;
   }
 
   _tickMonsterHeal(m, dt) {
@@ -945,7 +1035,6 @@ export class CombatEngine {
       m._healPulseT = 0;
     }
     const radius = (m.range || 2) * this.CELL * (pulse ? 1.15 : 1);
-    // Heal rate: rarity scales — pulse heals more but less often
     const base =
       m.rarity >= 5 ? 0.09 : m.rarity >= 4 ? 0.07 : m.rarity >= 3 ? 0.055 : m.rarity >= 2 ? 0.04 : 0.028;
     const ratio = pulse ? base * 2.2 : base * dt * 1.15;
@@ -954,12 +1043,16 @@ export class CombatEngine {
       if (!ally.alive || ally === m || ally.isTrap) continue;
       if (ally.hp >= ally.maxHp) continue;
       if (dist(ally, m) > radius) continue;
-      const amount = Math.max(1, Math.round(ally.maxHp * ratio));
-      ally.hp = Math.min(ally.maxHp, ally.hp + amount);
+      const raw = Math.max(1, Math.round(ally.maxHp * ratio));
+      const amount = this._applyHealTo(ally, raw, { quiet: !pulse });
+      if (amount <= 0) continue;
       if (pulse || Math.random() < dt * 2.5) {
         this.particles.heal(ally.x, ally.y - 6);
       }
-      if (pulse) this._float(ally.x, ally.y - 8, `+${amount}`, '#81c784');
+      if (pulse) {
+        const cut = (ally.healRecvMul ?? 1) < 0.99;
+        this._float(ally.x, ally.y - 8, cut ? `+${amount}↓` : `+${amount}`, cut ? '#a1887f' : '#81c784');
+      }
     }
   }
 
@@ -1126,6 +1219,14 @@ export class CombatEngine {
     hero.hp -= dmg;
     hero.flash = 0.22;
     this._float(hero.x, hero.y - 8, `-${dmg}`, m.color);
+    if (m.passive === 'HEAL_CUT_ON_HIT') {
+      applyHealCutOnHit(
+        { skills: ['HEAL_CUT_HIT'], rarity: m.rarity, passive: 'HEAL_CUT_ON_HIT' },
+        hero,
+        this.time
+      );
+      this._float(hero.x, hero.y + 10, 'Giảm hồi!', '#a1887f');
+    }
   }
 
   _checkEnd() {

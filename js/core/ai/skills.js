@@ -122,10 +122,31 @@ export function tryHealAlly(hero, allies, time, floatFn, particles) {
 
   const eliteHeal = ['hero_healer_04', 'hero_healer_05'].includes(hero.templateId || hero.id);
   const ratio = hero.class === 'HEALER' ? (eliteHeal ? 0.28 : 0.18) : 0.12;
-  const amount = Math.round(best.maxHp * ratio);
-  best.hp = Math.min(best.maxHp, best.hp + amount);
+  const raw = Math.round(best.maxHp * ratio);
+  const mul = Math.max(0, Number(best.healRecvMul) ?? 1);
+  const amount = Math.max(0, Math.round(raw * mul));
   hero.healCdUntil = time + (eliteHeal ? 2.6 : 3.2);
-  floatFn?.(best.x, best.y - 10, `+${amount}`, '#81c784');
+  if (amount <= 0) {
+    floatFn?.(best.x, best.y - 10, 'Giảm hồi!', '#a1887f');
+    return true;
+  }
+  best.hp = Math.min(best.maxHp, best.hp + amount);
+  floatFn?.(best.x, best.y - 10, mul < 0.99 ? `+${amount}↓` : `+${amount}`, mul < 0.99 ? '#a1887f' : '#81c784');
   particles?.heal?.(best.x, best.y - 8);
   return true;
+}
+
+/** Hero HEAL_CUT_HIT — đánh trúng quái → giảm hồi nhận. */
+export function applyHealCutOnHit(attacker, target, time) {
+  const skills = attacker.skills || [];
+  if (!skills.includes('HEAL_CUT_HIT') && attacker.passive !== 'HEAL_CUT_ON_HIT') return;
+  const dur = attacker.rarity >= 5 || attacker.class === 'HEXER' ? 5.5 : 4;
+  const factor =
+    attacker.rarity >= 5 || attacker.id?.includes('hex_05') || attacker.templateId === 'hero_hex_05'
+      ? 0.2
+      : attacker.rarity >= 4 || attacker.templateId === 'hero_hex_04'
+        ? 0.3
+        : 0.4;
+  target.healCutUntil = Math.max(target.healCutUntil || 0, time + dur);
+  target.healCutFactor = Math.min(target.healCutFactor ?? 1, factor);
 }

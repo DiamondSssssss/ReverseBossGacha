@@ -1,8 +1,8 @@
-import { MONSTERS } from '../data/monsters.js?v=64';
-import { RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=64';
-import { monsterDisplayUrl } from '../render/sprites.js?v=64';
-import { fetchLeaderboard, fetchPlayerProfile } from '../core/leaderboard.js?v=64';
-import { getUser } from '../core/auth.js?v=64';
+import { MONSTERS } from '../data/monsters.js?v=67';
+import { RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=67';
+import { monsterDisplayUrl } from '../render/sprites.js?v=67';
+import { fetchLeaderboard, fetchPlayerProfile } from '../core/leaderboard.js?v=67';
+import { getUser } from '../core/auth.js?v=67';
 
 function escapeHtml(str) {
   return String(str ?? '')

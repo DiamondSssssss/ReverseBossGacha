@@ -1,8 +1,8 @@
-import { getStageMap, isPlaceable } from '../data/maps.js?v=64';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=64';
-import { MAP_UPGRADE } from '../data/constants.js?v=64';
-import { buildWave, getWavePlan, assignHeroFormation } from '../data/heroes.js?v=64';
-import { sanitizeLoadout, suggestLoadout, placeMaxCost } from './loadout.js?v=64';
+import { getStageMap, isPlaceable } from '../data/maps.js?v=67';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=67';
+import { MAP_UPGRADE } from '../data/constants.js?v=67';
+import { buildWave, getWavePlan, assignHeroFormation } from '../data/heroes.js?v=67';
+import { sanitizeLoadout, suggestLoadout, placeMaxCost } from './loadout.js?v=67';
 
 export function createRunState(playerState) {
   const level = playerState.dungeonLevel || 1;

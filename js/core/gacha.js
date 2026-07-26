@@ -1,6 +1,6 @@
-import { GACHA } from '../data/constants.js?v=64';
-import { monstersByRarityBucket } from '../data/monsters.js?v=64';
-import { addToInventory, saveState } from './storage.js?v=64';
+import { GACHA } from '../data/constants.js?v=67';
+import { monstersByRarityBucket } from '../data/monsters.js?v=67';
+import { addToInventory, saveState } from './storage.js?v=67';
 
 function rand() {
   return Math.random();

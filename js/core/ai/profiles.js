@@ -321,6 +321,41 @@ export const HERO_PROFILES = {
     preferLowHp: true,
     siege: true,
   },
+  hero_hex_01: {
+    archetype: 'hexer',
+    idealRange: 2.2,
+    kiteBelow: 1.2,
+    engageBias: 0.7,
+    antiHeal: true,
+  },
+  hero_hex_02: {
+    archetype: 'hexer',
+    idealRange: 2.4,
+    kiteBelow: 1.3,
+    engageBias: 0.75,
+    antiHeal: true,
+  },
+  hero_hex_03: {
+    archetype: 'hexer',
+    idealRange: 2.5,
+    kiteBelow: 1.3,
+    engageBias: 0.85,
+    antiHeal: true,
+  },
+  hero_hex_04: {
+    archetype: 'hexer',
+    idealRange: 2.8,
+    kiteBelow: 1.4,
+    engageBias: 0.9,
+    antiHeal: true,
+  },
+  hero_hex_05: {
+    archetype: 'hexer',
+    idealRange: 3.0,
+    kiteBelow: 1.5,
+    engageBias: 1.0,
+    antiHeal: true,
+  },
 };
 
 export function getHeroProfile(heroId, heroClass) {
@@ -342,6 +377,9 @@ export function getHeroProfile(heroId, heroClass) {
   }
   if (heroClass === 'BERSERKER') {
     return { archetype: 'berserker', engageBias: 1.7, holdFight: true, preferLowHp: true };
+  }
+  if (heroClass === 'HEXER') {
+    return { archetype: 'hexer', idealRange: 2.5, kiteBelow: 1.3, engageBias: 0.8, antiHeal: true };
   }
   return { archetype: 'warrior', engageBias: 1.1, holdFight: true };
 }
