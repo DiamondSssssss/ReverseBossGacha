@@ -1802,6 +1802,38 @@ body.play-fit .setup-layout.setup-v2 .board-hero {
   opacity: 0.95;
 }
 
+.grid-cell.no-place-cell {
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 4px,
+      rgba(90, 78, 64, 0.12) 4px,
+      rgba(90, 78, 64, 0.12) 8px
+    ),
+    color-mix(in srgb, var(--setup-floor, #e4d9c6) 85%, #8a7a68);
+  cursor: not-allowed;
+}
+
+.grid-cell.no-place-cell .cell-mark.noplace {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: color-mix(in srgb, var(--ink) 45%, transparent);
+  opacity: 0.7;
+}
+
+.board-hero .grid-cell.no-place-cell {
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 3px,
+      rgba(70, 60, 50, 0.2) 3px,
+      rgba(70, 60, 50, 0.2) 6px
+    ),
+    #2a241e;
+}
+
 .grid-cell.terrain-WATER {
   background: color-mix(in srgb, var(--setup-water, #7ea8a0) 70%, var(--setup-floor, #e4d9c6));
 }
@@ -2008,6 +2040,17 @@ body.play-fit .setup-layout.setup-v2 .board-hero {
 .scout-cell.wall { background: var(--setup-wall, #5c5346); }
 .scout-cell.gate { background: color-mix(in srgb, var(--moss) 40%, var(--setup-floor, #e4d9c6)); }
 .scout-cell.treasure { background: color-mix(in srgb, var(--brass) 40%, var(--setup-floor, #e4d9c6)); }
+.scout-cell.no-place {
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 3px,
+      rgba(90, 78, 64, 0.18) 3px,
+      rgba(90, 78, 64, 0.18) 6px
+    ),
+    color-mix(in srgb, var(--setup-floor, #e4d9c6) 80%, #7a6b5a);
+}
 .scout-cell.terrain-WATER { background: var(--setup-water-deep, #5a8a82); }
 .scout-cell.terrain-DARK { background: var(--setup-dark, #9a9080); }
 .scout-cell.terrain-LOW_CEILING { background: var(--setup-low, #c4a896); }

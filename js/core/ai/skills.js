@@ -111,10 +111,11 @@ export function tryHealAlly(hero, allies, time, floatFn, particles) {
   }
   if (!best) return false;
 
-  const ratio = hero.class === 'HEALER' ? 0.18 : 0.12;
+  const eliteHeal = ['hero_healer_04', 'hero_healer_05'].includes(hero.templateId || hero.id);
+  const ratio = hero.class === 'HEALER' ? (eliteHeal ? 0.28 : 0.18) : 0.12;
   const amount = Math.round(best.maxHp * ratio);
   best.hp = Math.min(best.maxHp, best.hp + amount);
-  hero.healCdUntil = time + 3.2;
+  hero.healCdUntil = time + (eliteHeal ? 2.6 : 3.2);
   floatFn?.(best.x, best.y - 10, `+${amount}`, '#81c784');
   particles?.heal?.(best.x, best.y - 8);
   return true;

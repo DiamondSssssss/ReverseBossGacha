@@ -149,7 +149,7 @@ export const TOUR_STEPS = [
   {
     id: 'economy',
     title: 'Ba nguyên liệu',
-    body: '<ul class="tut-list"><li><strong>Linh Hồn</strong> — thắng/thua → Gacha</li><li><strong>Vàng</strong> — nâng quái trong Kho</li><li><strong>Gem</strong> — nâng Cap hầm ở Sảnh</li></ul>Xong hướng dẫn — giữ kho &amp; phá đảo ải 30!',
+    body: '<ul class="tut-list"><li><strong>Linh Hồn</strong> — thắng/thua → Gacha</li><li><strong>Vàng</strong> — nâng quái trong Kho</li><li><strong>Gem</strong> — nâng Cap hầm ở Sảnh</li></ul>Xong hướng dẫn — giữ kho &amp; phá đảo ải 40!',
     target: '#resources, .combat-hud',
     advance: 'next',
     allowNext: true,

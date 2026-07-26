@@ -55,7 +55,7 @@ function migrateLeaderboardColumns() {
 export function computeLeaderboardStats(saveData) {
   const data = saveData && typeof saveData === 'object' ? saveData : {};
   const dungeonLevel = Number(data.dungeonLevel) || 1;
-  const stagesCleared = Math.min(Math.max(dungeonLevel - 1, 0), 30);
+  const stagesCleared = Math.min(Math.max(dungeonLevel - 1, 0), 40);
 
 
   const owned = new Set();

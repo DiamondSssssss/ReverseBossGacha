@@ -153,6 +153,7 @@ export const TILE_LABELS = {
   HIGH: 'Trần cao',
   OBSTACLE: 'Chướng ngại',
   HAZARD: 'Nguy hiểm',
+  NOPLACE: 'Hành lang (không đặt)',
 };
 
 export const REWARDS = {

@@ -47,13 +47,23 @@ function cellTooltip(map, col, row, ch) {
   if (ch === '#' || ch === 'o') return ch === 'o' ? 'Chướng ngại' : 'Tường';
   if (ch === 'G') return 'Cổng — Hero vào đây';
   if (ch === 'T') return 'Kho báu';
+  if (ch === 'x' || map.noPlace?.has(`${col},${row}`)) {
+    const buffs = map.buffIndex[`${col},${row}`] || [];
+    const parts = ['Hành lang — không đặt quái'];
+    for (const b of buffs) {
+      if (b.side === 'monster') parts.push('Buff quái');
+      else if (b.side === 'hero') parts.push(`Buff hero: ${b.kind}`);
+      else parts.push('Buff chung');
+    }
+    return parts.join(' · ');
+  }
   const terrain = terrainAt(map, col, row);
   const buffs = map.buffIndex[`${col},${row}`] || [];
   const parts = [TERRAIN_LABELS[terrain] || TERRAIN_HINTS[terrain] || 'Sàn'];
   for (const b of buffs) {
-    if (b.side === 'monster') parts.push('Buff quái');
-    else if (b.side === 'hero') parts.push('Buff hero (nguy)');
-    else parts.push('Buff chung');
+    if (b.side === 'monster') parts.push(`Buff quái: ${b.kind}`);
+    else if (b.side === 'hero') parts.push(`Buff hero: ${b.kind}`);
+    else parts.push(`Buff chung: ${b.kind}`);
   }
   return parts.join(' · ');
 }
@@ -120,12 +130,16 @@ function scoutMapPreviewHtml(map, wave, pathHint) {
       const key = `${col},${row}`;
       const terrain = terrainAt(map, col, row);
       const isWall = ch === '#' || ch === 'o';
+      const isNoPlace = ch === 'x' || map.noPlace?.has(key);
       const heroesHere = heroesByCell[key] || [];
       let cls = 'scout-cell';
       if (isWall) cls += ' wall';
       else if (ch === 'G') cls += ' gate';
       else if (ch === 'T') cls += ' treasure';
-      else cls += ` terrain-${terrain}`;
+      else {
+        cls += ` terrain-${terrain}`;
+        if (isNoPlace) cls += ' no-place';
+      }
       if (pathSet.has(key) && !isWall) cls += ' path';
       if (heroesHere.length) cls += ' has-hero';
 
@@ -141,7 +155,9 @@ function scoutMapPreviewHtml(map, wave, pathHint) {
             ? '<span class="scout-mark">G</span>'
             : ch === 'T'
               ? '<span class="scout-mark">T</span>'
-              : '';
+              : isNoPlace
+                ? '<span class="scout-mark noplace">×</span>'
+                : '';
 
       cells.push(`<div class="${cls}" style="grid-column:${col + 1};grid-row:${row + 1}">${marks}</div>`);
     }
@@ -601,18 +617,21 @@ export function renderSetup(root, ctx) {
             </button>`);
         } else {
           const locked = isGate || isTreasure;
+          const noPlace = ch === 'x' || map.noPlace?.has(key);
           const placeable = !locked && isPlaceable(map, col, row);
           const canDrop =
             selected && placeable ? 'can-drop' : selected && !placeable ? 'no-drop' : '';
           const dim = selected && !placeable && !locked ? 'dim-cell' : '';
           cells.push(`
-            <button type="button" class="grid-cell empty terrain-${terrain} ${buffClass} ${pathCls} ${canDrop} ${dim} ${isGate ? 'edge-in' : ''} ${isTreasure ? 'edge-out' : ''} ${locked ? 'locked-cell' : ''}" data-col="${col}" data-row="${row}" data-placeable="${placeable ? 1 : 0}" title="${tip}" aria-label="Ô ${col},${row}" ${locked ? 'disabled' : ''}>
+            <button type="button" class="grid-cell empty terrain-${terrain} ${buffClass} ${pathCls} ${canDrop} ${dim} ${isGate ? 'edge-in' : ''} ${isTreasure ? 'edge-out' : ''} ${locked ? 'locked-cell' : ''} ${noPlace ? 'no-place-cell' : ''}" data-col="${col}" data-row="${row}" data-placeable="${placeable ? 1 : 0}" title="${tip}" aria-label="Ô ${col},${row}" ${locked ? 'disabled' : ''}>
               ${pathOrd}
               ${
                 isGate
                   ? '<span class="cell-mark">G</span>'
                   : isTreasure
                     ? '<span class="cell-mark">T</span>'
+                    : noPlace
+                      ? '<span class="cell-mark noplace">×</span>'
                     : selected && placeable
                       ? `<img class="ghost-sprite" src="${ghostSrc}" alt="" width="32" height="32" draggable="false" />`
                       : placeable
@@ -621,6 +640,7 @@ export function renderSetup(root, ctx) {
               }
               ${buffClass === 'buff-monster' ? '<span class="buff-ico mon" title="Buff quái">▲</span>' : ''}
               ${buffClass === 'buff-hero' ? '<span class="buff-ico hero" title="Buff hero">!</span>' : ''}
+              ${buffClass === 'buff-both' ? '<span class="buff-ico both" title="Buff chung">◆</span>' : ''}
             </button>`);
         }
       }

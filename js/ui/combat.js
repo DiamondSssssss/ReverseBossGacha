@@ -359,7 +359,7 @@ export function renderReward(root, ctx) {
   const r = lastReward || { result: 'win', souls: 0, gold: 0 };
   const win = r.result === 'win';
   const stageClass = r.clearedJustNow ? 'clear' : win ? '' : 'lose';
-  const mark = r.clearedJustNow ? '30' : win ? 'OK' : '…';
+  const mark = r.clearedJustNow ? '40' : win ? 'OK' : '…';
   const replayLabel = win ? 'Vào ải tiếp' : 'Chơi lại';
 
   root.innerHTML = `
@@ -368,9 +368,9 @@ export function renderReward(root, ctx) {
       <h2>${r.clearedJustNow ? 'Phá đảo' : win ? 'Chiến thắng' : 'Thất thủ'}</h2>
       <p class="muted">${
         r.clearedJustNow
-          ? 'Thắng ải 30. Tiếp tục sưu tầm ấn chương còn lại.'
+          ? 'Thắng ải 40. Tiếp tục sưu tầm ấn chương còn lại.'
           : win
-            ? `Tiến độ: ải ${Math.min(state.dungeonLevel, 30)}/30`
+            ? `Tiến độ: ải ${Math.min(state.dungeonLevel, 40)}/40`
             : r.heroesDefeated
               ? `Kho báu bị rút — nhưng đã hạ/đẩy ${r.heroesDefeated} Hero.`
               : 'Kho báu bị rút — nhận Linh Hồn an ủi.'

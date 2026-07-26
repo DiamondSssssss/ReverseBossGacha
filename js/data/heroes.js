@@ -1,4 +1,4 @@
-/** Hero AI catalog — mỗi ải 1–30 có tổ hợp hero riêng */
+/** Hero AI catalog — mỗi ải 1–40 có tổ hợp hero riêng */
 
 import { COMBAT } from './constants.js';
 
@@ -43,6 +43,22 @@ export const HEROES = [
     hp: 220, atk: 70, speed: 2.0, range: 3.6, atkSpeed: 0.6, aoeRadius: 2.0,
     target: 'TREASURE', color: '#b39ddb', skills: ['AOE_FIRE', 'FREEZE'],
     description: 'Burst phép cực mạnh — cực sợ Silence.',
+  },
+  {
+    id: 'hero_mage_06',
+    name: 'Diệt Long Sư',
+    class: 'MAGE',
+    hp: 780, atk: 175, speed: 1.85, range: 3.8, atkSpeed: 0.82, aoeRadius: 2.5,
+    target: 'TREASURE', color: '#ea80fc', skills: ['AOE_FIRE', 'FREEZE'],
+    description: 'AoE ngang Rồng 7 cost — cần Silence / burst ngay.',
+  },
+  {
+    id: 'hero_mage_07',
+    name: 'Hắc Tinh Quân',
+    class: 'MAGE',
+    hp: 920, atk: 210, speed: 1.7, range: 4.0, atkSpeed: 0.78, aoeRadius: 2.8,
+    target: 'TREASURE', color: '#7e57c2', skills: ['AOE_FROST', 'FREEZE', 'AOE_FIRE'],
+    description: 'Pháp sư ngang Hydra/Leviathan — free cast là xóa tuyến.',
   },
 
   // ——— WARRIOR ———
@@ -110,6 +126,30 @@ export const HEROES = [
     target: 'TREASURE', color: '#c62828', skills: ['SHIELD', 'TAUNT_SELF'],
     description: 'Elite chiến binh — vừa tank vừa cày kho.',
   },
+  {
+    id: 'hero_warrior_09',
+    name: 'Thiết Giáp Titan',
+    class: 'WARRIOR',
+    hp: 2200, atk: 145, speed: 1.15, range: 1.45, atkSpeed: 0.95, aoeRadius: 0,
+    target: 'TREASURE', color: '#ff8a65', skills: ['TAUNT_SELF', 'SHIELD'],
+    description: 'Tank ngang Behemoth 7 cost — cần DoT / Boss burst.',
+  },
+  {
+    id: 'hero_warrior_10',
+    name: 'Đại Tướng Huyết',
+    class: 'WARRIOR',
+    hp: 1850, atk: 190, speed: 1.5, range: 1.6, atkSpeed: 1.2, aoeRadius: 0,
+    target: 'TREASURE', color: '#e53935', skills: ['SHIELD', 'TAUNT_SELF'],
+    description: 'DPS ngang Rồng 7 cost — đe dọa cả hàng Boss.',
+  },
+  {
+    id: 'hero_warrior_11',
+    name: 'Hoàng Đế Phá Thành',
+    class: 'WARRIOR',
+    hp: 2800, atk: 170, speed: 1.2, range: 1.65, atkSpeed: 1.05, aoeRadius: 0,
+    target: 'TREASURE', color: '#b71c1c', skills: ['TAUNT_SELF', 'SHIELD'],
+    description: 'Siêu tank ngang Hydra/Behemoth 8 cost — bỏ sót mất kho.',
+  },
 
   // ——— HEALER ———
   {
@@ -135,6 +175,22 @@ export const HEROES = [
     hp: 450, atk: 36, speed: 1.45, range: 3.2, atkSpeed: 0.85, aoeRadius: 0,
     target: 'TREASURE', color: '#ffecb3', skills: ['HEAL_ALLY'],
     description: 'Heal elite hậu kỳ — bỏ sót là thua kéo dài.',
+  },
+  {
+    id: 'hero_healer_04',
+    name: 'Đại Tư Tế Ánh',
+    class: 'HEALER',
+    hp: 950, atk: 72, speed: 1.55, range: 3.5, atkSpeed: 0.95, aoeRadius: 0,
+    target: 'TREASURE', color: '#fff59d', skills: ['HEAL_ALLY', 'SHIELD'],
+    description: 'Heal ngang Thiên Sứ 7 cost — giữ wall chiến binh sống dai.',
+  },
+  {
+    id: 'hero_healer_05',
+    name: 'Thiên Sứ Hồi Sinh',
+    class: 'HEALER',
+    hp: 1200, atk: 90, speed: 1.4, range: 3.8, atkSpeed: 1.0, aoeRadius: 0,
+    target: 'TREASURE', color: '#ffe57f', skills: ['HEAL_ALLY', 'SHIELD'],
+    description: 'Healer Boss-tier — không hạ sớm thì wave không chết.',
   },
 
   // ——— ROGUE ———
@@ -177,6 +233,22 @@ export const HEROES = [
     hp: 240, atk: 52, speed: 2.2, range: 2.8, atkSpeed: 1.1, aoeRadius: 0,
     stealth: true, target: 'TREASURE', color: '#81c784', skills: ['STEALTH'],
     description: 'Tàng hình bắn xa — Mắt thần + áp sát.',
+  },
+  {
+    id: 'hero_rogue_06',
+    name: 'Sát Thủ Huyết Ảnh',
+    class: 'ROGUE',
+    hp: 580, atk: 165, speed: 3.2, range: 1.3, atkSpeed: 1.6, aoeRadius: 0,
+    stealth: true, target: 'TREASURE', color: '#26a69a', skills: ['STEALTH', 'BACKSTAB'],
+    description: 'Rogue ngang Wraith/Rồng — bắt buộc Mắt thần.',
+  },
+  {
+    id: 'hero_rogue_07',
+    name: 'Ma Ảnh Độc Vương',
+    class: 'ROGUE',
+    hp: 680, atk: 185, speed: 2.95, range: 2.8, atkSpeed: 1.4, aoeRadius: 0,
+    stealth: true, target: 'TREASURE', color: '#00897b', skills: ['STEALTH', 'BACKSTAB'],
+    description: 'Rogue Boss-tier — lướt qua tuyến nếu thiếu anti-stealth.',
   },
 ];
 
@@ -446,27 +518,122 @@ export const WAVE_PLANS = {
     ],
   },
   30: {
-    theme: 'Phá đảo tối thượng',
-    tip: 'Full war + healer waves — đội hình đa dụng + spell timing.',
+    theme: 'Sảnh tối thượng',
+    tip: 'Full war + healer waves — cửa ngõ ải 31.',
     waves: [
       { delay: 0.5, ids: ['hero_warrior_06', 'hero_healer_01', 'hero_rogue_04', 'hero_mage_05'] },
       { delay: 12, ids: ['hero_warrior_07', 'hero_warrior_08', 'hero_healer_02', 'hero_warrior_05', 'hero_mage_03'] },
       { delay: 24, ids: ['hero_healer_03', 'hero_warrior_08', 'hero_warrior_07', 'hero_rogue_05', 'hero_mage_05', 'hero_warrior_06'] },
     ],
   },
+
+  // ——— Ải 31–40: hero elite ngang quái 7–8 cost / Boss ———
+  31: {
+    theme: 'Bước vào vực sâu',
+    tip: 'Elite war + mage ngang Boss 7–8 cost.',
+    waves: [
+      { delay: 0.5, ids: ['hero_warrior_09', 'hero_warrior_10', 'hero_healer_04'] },
+      { delay: 14, ids: ['hero_mage_06', 'hero_warrior_08', 'hero_rogue_06'] },
+      { delay: 26, ids: ['hero_warrior_09', 'hero_healer_03', 'hero_mage_06'] },
+    ],
+  },
+  32: {
+    theme: 'Phalanx titan',
+    tip: 'Toàn chiến binh Boss-tier — DoT / Hydra / Behemoth.',
+    waves: [
+      { delay: 0.4, ids: ['hero_warrior_09', 'hero_warrior_07', 'hero_warrior_10'] },
+      { delay: 12, ids: ['hero_warrior_11', 'hero_healer_04', 'hero_warrior_08'] },
+      { delay: 24, ids: ['hero_warrior_10', 'hero_warrior_09', 'hero_healer_04', 'hero_mage_05'] },
+    ],
+  },
+  33: {
+    theme: 'Pháp trận diệt long',
+    tip: 'Mage ngang Rồng/Hydra — Silence / áp sát ngay.',
+    waves: [
+      { delay: 0.5, ids: ['hero_mage_06', 'hero_mage_07', 'hero_healer_04'] },
+      { delay: 13, ids: ['hero_warrior_10', 'hero_mage_06', 'hero_rogue_06', 'hero_healer_02'] },
+      { delay: 25, ids: ['hero_mage_07', 'hero_warrior_09', 'hero_healer_05'] },
+    ],
+  },
+  34: {
+    theme: 'Đêm sát thủ',
+    tip: 'Rogue Boss-tier dày đặc — Mắt thần bắt buộc.',
+    waves: [
+      { delay: 0.4, ids: ['hero_rogue_06', 'hero_rogue_07', 'hero_rogue_04', 'hero_rogue_05'] },
+      { delay: 12, ids: ['hero_warrior_10', 'hero_healer_04', 'hero_rogue_06'] },
+      { delay: 24, ids: ['hero_rogue_07', 'hero_warrior_09', 'hero_healer_05', 'hero_mage_06'] },
+    ],
+  },
+  35: {
+    theme: 'Thánh chiến titan',
+    tip: 'Healer 7 cost-tier giữ wall — hạ healer trước.',
+    waves: [
+      { delay: 0.5, ids: ['hero_healer_05', 'hero_warrior_11', 'hero_warrior_09'] },
+      { delay: 11, ids: ['hero_warrior_10', 'hero_healer_04', 'hero_mage_06', 'hero_rogue_06'] },
+      { delay: 22, ids: ['hero_healer_05', 'hero_warrior_11', 'hero_warrior_10', 'hero_mage_07'] },
+    ],
+  },
+  36: {
+    theme: 'Bão hủy diệt',
+    tip: 'Ba wave Boss-tier dồn dập — giữ spell đợt cuối.',
+    waves: [
+      { delay: 0.4, ids: ['hero_warrior_10', 'hero_mage_06', 'hero_rogue_06', 'hero_healer_04'] },
+      { delay: 10, ids: ['hero_warrior_09', 'hero_warrior_11', 'hero_mage_07', 'hero_healer_04'] },
+      { delay: 21, ids: ['hero_warrior_10', 'hero_rogue_07', 'hero_healer_05', 'hero_mage_07', 'hero_warrior_08'] },
+    ],
+  },
+  37: {
+    theme: 'Vách sắt bất diệt',
+    tip: 'Tank + healer ngang 7–8 cost — cần Boss / DoT.',
+    waves: [
+      { delay: 0.5, ids: ['hero_warrior_11', 'hero_healer_05', 'hero_warrior_09'] },
+      { delay: 12, ids: ['hero_warrior_10', 'hero_healer_04', 'hero_warrior_11', 'hero_mage_06'] },
+      { delay: 24, ids: ['hero_warrior_11', 'hero_healer_05', 'hero_warrior_10', 'hero_rogue_07', 'hero_mage_07'] },
+    ],
+  },
+  38: {
+    theme: 'Song diệt thần',
+    tip: 'Mage + rogue Boss-tier — đội hình 7–8 cost hoặc thua.',
+    waves: [
+      { delay: 0.4, ids: ['hero_mage_07', 'hero_rogue_07', 'hero_warrior_10'] },
+      { delay: 11, ids: ['hero_healer_05', 'hero_mage_06', 'hero_rogue_06', 'hero_warrior_09'] },
+      { delay: 22, ids: ['hero_mage_07', 'hero_rogue_07', 'hero_warrior_11', 'hero_healer_05', 'hero_mage_06'] },
+    ],
+  },
+  39: {
+    theme: 'Đêm trước tận thế II',
+    tip: 'Bốn wave Boss-tier — giữ spell cho đợt cuối.',
+    waves: [
+      { delay: 0.35, ids: ['hero_rogue_06', 'hero_mage_06', 'hero_warrior_09'] },
+      { delay: 9, ids: ['hero_warrior_10', 'hero_healer_04', 'hero_rogue_07', 'hero_mage_07'] },
+      { delay: 18, ids: ['hero_warrior_11', 'hero_healer_05', 'hero_warrior_10', 'hero_mage_06'] },
+      { delay: 28, ids: ['hero_warrior_11', 'hero_mage_07', 'hero_healer_05', 'hero_rogue_07', 'hero_warrior_10'] },
+    ],
+  },
+  40: {
+    theme: 'Phá đảo tối thượng',
+    tip: 'Full elite ngang 7–8 cost — Boss + spell timing.',
+    waves: [
+      { delay: 0.4, ids: ['hero_warrior_09', 'hero_healer_04', 'hero_mage_06', 'hero_rogue_06'] },
+      { delay: 11, ids: ['hero_warrior_10', 'hero_warrior_11', 'hero_healer_05', 'hero_mage_07', 'hero_rogue_07'] },
+      { delay: 22, ids: ['hero_healer_05', 'hero_warrior_11', 'hero_mage_07', 'hero_rogue_07', 'hero_warrior_10', 'hero_mage_06'] },
+      { delay: 34, ids: ['hero_warrior_11', 'hero_healer_05', 'hero_mage_07', 'hero_warrior_10', 'hero_rogue_07'] },
+    ],
+  },
 };
 
 /**
- * @param {number} level 1–30
+ * @param {number} level 1–40
  */
 export function getWavePlan(level = 1) {
-  const lv = Math.max(1, Math.min(30, level | 0));
+  const lv = Math.max(1, Math.min(40, level | 0));
   return WAVE_PLANS[lv] || WAVE_PLANS[1];
 }
 
 function heroScaleForLevel(level) {
   if (level <= 20) return 0.9 + (level - 1) * 0.095;
-  return 0.9 + 19 * 0.095 + (level - 20) * 0.16;
+  if (level <= 30) return 0.9 + 19 * 0.095 + (level - 20) * 0.16;
+  return 0.9 + 19 * 0.095 + 10 * 0.16 + (level - 30) * 0.2;
 }
 
 /** Flatten plan.ids hoặc plan.waves → danh sách { id, spawnDelay, waveIndex } */

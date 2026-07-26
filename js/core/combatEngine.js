@@ -1149,6 +1149,14 @@ export class CombatEngine {
           ctx.fillStyle = 'rgba(255,213,79,0.35)';
           ctx.fillRect(x, y, CELL, CELL);
         }
+        if (ch === 'x' || this.map.noPlace?.has(key)) {
+          ctx.fillStyle = 'rgba(90, 80, 70, 0.35)';
+          ctx.fillRect(x, y, CELL, CELL);
+          ctx.strokeStyle = 'rgba(200,180,150,0.2)';
+          ctx.setLineDash([3, 3]);
+          ctx.strokeRect(x + 3, y + 3, CELL - 6, CELL - 6);
+          ctx.setLineDash([]);
+        }
 
         ctx.strokeStyle = 'rgba(255,255,255,0.05)';
         ctx.strokeRect(x + 0.5, y + 0.5, CELL - 1, CELL - 1);

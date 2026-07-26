@@ -57,7 +57,7 @@ export function renderAchievements(root, ctx) {
         </div>
         <button type="button" class="ghost" id="btn-replay-tut">Hướng dẫn</button>
       </div>
-      <p class="muted">Phá đảo khi thắng ải 30. Thưởng cộng ngay khi mở khóa.</p>
+      <p class="muted">Phá đảo khi thắng ải 40. Thưởng cộng ngay khi mở khóa.</p>
     </div>
     <div class="ach-summary">
       <div class="row spread">
@@ -65,7 +65,7 @@ export function renderAchievements(root, ctx) {
           <strong style="font-family:var(--font-display);font-size:1.3rem">${prog.done}/${prog.total}</strong>
           <span class="muted"> ấn</span>
         </div>
-        <div class="${cleared ? 'cleared-badge' : 'muted'}">${cleared ? 'Phá đảo' : 'Mốc: ải 30'}</div>
+        <div class="${cleared ? 'cleared-badge' : 'muted'}">${cleared ? 'Phá đảo' : 'Mốc: ải 40'}</div>
       </div>
       <div class="pity-bar" style="margin-top:10px"><span style="width:${prog.pct}%"></span></div>
     </div>
