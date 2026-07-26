@@ -1,5 +1,5 @@
-import { tryRedeemCode, formatRedeemReward } from '../core/redeem.js';
-import { saveState } from '../core/storage.js';
+import { tryRedeemCode, formatRedeemReward } from '../core/redeem.js?v=44';
+import { saveState } from '../core/storage.js?v=44';
 
 export function showRedeemModal(modalEl, { state, toast, refreshChrome }) {
   if (!modalEl) return;
@@ -8,11 +8,11 @@ export function showRedeemModal(modalEl, { state, toast, refreshChrome }) {
   modalEl.innerHTML = `
     <div class="modal auth-modal redeem-modal">
       <h2>Nhập mã quà</h2>
-      <p class="muted">Nhập mã nhận thưởng. Mỗi mã chỉ dùng một lần trên save này.</p>
+      <p class="muted">Ai cũng nhập được. Mỗi mã chỉ dùng <strong>một lần</strong> trên save này.</p>
       <form id="redeem-form" class="auth-form">
         <label>Mã quà
           <input type="text" id="redeem-code" maxlength="32" autocomplete="off"
-            placeholder="VD: SEPTONGMOI" spellcheck="false" />
+            placeholder="VD: BOSSGACHA" spellcheck="false" />
         </label>
         <p class="auth-error muted" id="redeem-error" hidden></p>
         <button type="submit" class="primary" id="redeem-submit" style="width:100%">Nhận thưởng</button>

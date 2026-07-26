@@ -6,6 +6,11 @@ export const REDEEM_CODES = {
     label: 'Quà SEPTONGMOI',
     reward: { souls: 1000 },
   },
+  BOSSGACHA: {
+    id: 'BOSSGACHA',
+    label: 'Quà BOSSGACHA',
+    reward: { souls: 1000 },
+  },
 };
 
 export function normalizeRedeemCode(raw) {
