@@ -1,9 +1,9 @@
-import { RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=54';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=54';
+import { RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=56';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=56';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,
-} from '../core/monsterUpgrade.js';
+} from '../core/monsterUpgrade.js?v=56';
 
 function escapeHtml(str) {
   return String(str ?? '')

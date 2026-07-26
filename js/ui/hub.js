@@ -1,16 +1,16 @@
-import { MAP_UPGRADE, SPELLS } from '../data/constants.js';
+import { MAP_UPGRADE, SPELLS } from '../data/constants.js?v=56';
 import {
   DUNGEON_BOSSES,
   getBoss,
   isBossUnlocked,
   unlockHint,
   syncUnlockedBosses,
-} from '../data/dungeonBosses.js';
-import { tryUpgradeMap, upgradeMapCost } from '../core/dungeon.js';
-import { saveState } from '../core/storage.js';
-import { achievementProgress, isGameCleared, evaluateAchievements } from '../core/achievements.js';
-import { showTutorial } from './tutorial.js';
-import { showRedeemModal } from './redeemUI.js?v=44';
+} from '../data/dungeonBosses.js?v=56';
+import { tryUpgradeMap, upgradeMapCost } from '../core/dungeon.js?v=56';
+import { saveState } from '../core/storage.js?v=56';
+import { achievementProgress, isGameCleared, evaluateAchievements } from '../core/achievements.js?v=56';
+import { showTutorial } from './tutorial.js?v=56';
+import { showRedeemModal } from './redeemUI.js?v=56';
 
 const GATE_SVG = `
 <svg viewBox="0 0 200 250" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">

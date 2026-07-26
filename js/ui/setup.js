@@ -3,16 +3,16 @@ import {
   TERRAIN_LABELS,
   RARITY_COLORS,
   HERO_CLASS_LABELS,
-} from '../data/constants.js';
-import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=54';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=54';
-import { findPath, buildBlockedFromMap } from '../core/pathfinding.js';
+} from '../data/constants.js?v=56';
+import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=56';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=56';
+import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=56';
 import {
   mapUsedCost,
   placeMonster,
   removePlacement,
   totalPlacements,
-} from '../core/dungeon.js';
+} from '../core/dungeon.js?v=56';
 import {
   loadoutMaxPoolCost,
   loadoutPoolCost,
@@ -22,19 +22,19 @@ import {
   suggestLoadout,
   tryAddToLoadout,
   tryRemoveFromLoadout,
-} from '../core/loadout.js';
-import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js';
-import { attachSetupBoardFx } from './setupBoardFx.js';
-import { playGhostWalk } from './setupPreview.js';
-import { saveState } from '../core/storage.js';
+} from '../core/loadout.js?v=56';
+import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=56';
+import { attachSetupBoardFx } from './setupBoardFx.js?v=56';
+import { playGhostWalk } from './setupPreview.js?v=56';
+import { saveState } from '../core/storage.js?v=56';
 import {
   hideMonsterTip,
   monsterTipHtml,
-} from './monsterTip.js';
+} from './monsterTip.js?v=56';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,
-} from '../core/monsterUpgrade.js';
+} from '../core/monsterUpgrade.js?v=56';
 
 function shortName(name) {
   if (!name) return '?';
