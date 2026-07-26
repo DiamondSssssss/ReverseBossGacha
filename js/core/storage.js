@@ -4,11 +4,11 @@ import {
   SPELLS,
   INVENTORY_CAP,
   DUPLICATE_SOUL_REFUND,
-} from '../data/constants.js?v=59';
-import { DEFAULT_BOSS_ID, syncUnlockedBosses } from '../data/dungeonBosses.js?v=59';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=59';
-import { isLoggedIn } from './auth.js?v=59';
-import { pushCloudSave } from './cloudSave.js?v=59';
+} from '../data/constants.js?v=64';
+import { DEFAULT_BOSS_ID, syncUnlockedBosses } from '../data/dungeonBosses.js?v=64';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=64';
+import { isLoggedIn } from './auth.js?v=64';
+import { pushCloudSave } from './cloudSave.js?v=64';
 
 const LEGACY_KEYS = ['rbg_save_v1'];
 
@@ -104,6 +104,7 @@ export function loadState() {
       lastLoadout: parsed.lastLoadout || {},
       redeemedCodes: Array.isArray(parsed.redeemedCodes) ? [...parsed.redeemedCodes] : [],
       tutorialDone: !!parsed.tutorialDone,
+      achievementGemRev: Number(parsed.achievementGemRev) || 0,
       updatedAt: parsed.updatedAt || Date.now(),
     };
     clampInventoryToCap(merged);
@@ -145,6 +146,7 @@ export function applySaveData(state, data) {
     gems: Number(data.gems) || 0,
     pityCounter: Math.max(0, Number(data.pityCounter) || 0),
     mythicPityCounter: Math.max(0, Number(data.mythicPityCounter) || 0),
+    achievementGemRev: Number(data.achievementGemRev) || 0,
     updatedAt: data.updatedAt || Date.now(),
   });
   clampInventoryToCap(state);

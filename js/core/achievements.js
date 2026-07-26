@@ -1,7 +1,10 @@
-import { ACHIEVEMENTS } from '../data/achievements.js?v=59';
-import { MONSTERS } from '../data/monsters.js?v=59';
-import { MAX_STAGE } from '../data/constants.js?v=59';
-import { saveState } from './storage.js?v=59';
+import {
+  ACHIEVEMENTS,
+  backfillAchievementGems,
+} from '../data/achievements.js?v=64';
+import { MONSTERS } from '../data/monsters.js?v=64';
+import { MAX_STAGE } from '../data/constants.js?v=64';
+import { saveState } from './storage.js?v=64';
 
 function checkCtx() {
   return {
@@ -21,12 +24,16 @@ export function trackOwned(state, monsterId) {
 
 /**
  * Evaluate all achievements; unlock new ones, grant rewards.
+ * Backfill Gem tăng thưởng cho ấn đã mở trước đó.
  * @returns {object[]} newly unlocked achievement defs
  */
 export function evaluateAchievements(state) {
   if (!state.achievements) state.achievements = {};
   const ctx = checkCtx();
   const unlocked = [];
+
+  // Trước: cộng chênh Gem cho ấn cũ (tránh cộng đúp với unlock mới bên dưới)
+  const gemBackfill = backfillAchievementGems(state);
 
   for (const ach of ACHIEVEMENTS) {
     if (state.achievements[ach.id]?.unlocked) continue;
@@ -50,7 +57,7 @@ export function evaluateAchievements(state) {
     unlocked.push(ach);
   }
 
-  if (unlocked.length) saveState(state);
+  if (unlocked.length || gemBackfill > 0) saveState(state);
   return unlocked;
 }
 

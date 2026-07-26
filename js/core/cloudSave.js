@@ -1,4 +1,4 @@
-import { api, isLoggedIn } from './auth.js?v=59';
+import { api, isLoggedIn } from './auth.js?v=64';
 
 function sanitize(state) {
   const {
@@ -22,6 +22,7 @@ function sanitize(state) {
     ownedEver,
     lastLoadout,
     redeemedCodes,
+    achievementGemRev,
   } = state;
   return {
     souls,
@@ -44,6 +45,7 @@ function sanitize(state) {
     ownedEver,
     lastLoadout: lastLoadout || {},
     redeemedCodes: redeemedCodes || [],
+    achievementGemRev: achievementGemRev || 0,
     updatedAt: Date.now(),
   };
 }

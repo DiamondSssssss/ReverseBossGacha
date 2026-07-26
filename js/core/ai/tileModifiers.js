@@ -1,6 +1,6 @@
-import { TERRAIN } from '../../data/rooms.js?v=59';
-import { COMBAT, MONSTER_UPGRADE } from '../../data/constants.js?v=59';
-import { monsterStatMul } from '../monsterUpgrade.js?v=59';
+import { TERRAIN } from '../../data/rooms.js?v=64';
+import { COMBAT, MONSTER_UPGRADE } from '../../data/constants.js?v=64';
+import { monsterStatMul } from '../monsterUpgrade.js?v=64';
 
 /**
  * Continuous tile modifiers for a unit standing on a cell.

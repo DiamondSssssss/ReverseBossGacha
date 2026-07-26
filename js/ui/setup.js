@@ -3,16 +3,16 @@ import {
   TERRAIN_LABELS,
   RARITY_COLORS,
   HERO_CLASS_LABELS,
-} from '../data/constants.js?v=59';
-import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=59';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=59';
-import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=59';
+} from '../data/constants.js?v=64';
+import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=64';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=64';
+import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=64';
 import {
   mapUsedCost,
   placeMonster,
   removePlacement,
   totalPlacements,
-} from '../core/dungeon.js?v=59';
+} from '../core/dungeon.js?v=64';
 import {
   loadoutMaxPoolCost,
   loadoutPoolCost,
@@ -22,24 +22,29 @@ import {
   suggestLoadout,
   tryAddToLoadout,
   tryRemoveFromLoadout,
-} from '../core/loadout.js?v=59';
-import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=59';
-import { attachSetupBoardFx } from './setupBoardFx.js?v=59';
-import { playGhostWalk } from './setupPreview.js?v=59';
-import { saveState } from '../core/storage.js?v=59';
+} from '../core/loadout.js?v=64';
+import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=64';
+import { attachSetupBoardFx } from './setupBoardFx.js?v=64';
+import { playGhostWalk } from './setupPreview.js?v=64';
+import { saveState } from '../core/storage.js?v=64';
 import {
   hideMonsterTip,
   monsterTipHtml,
-} from './monsterTip.js?v=59';
+} from './monsterTip.js?v=64';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,
-} from '../core/monsterUpgrade.js?v=59';
+} from '../core/monsterUpgrade.js?v=64';
 
 function shortName(name) {
   if (!name) return '?';
   const parts = name.split(/\s+/);
   return parts.slice(-2).join(' ');
+}
+
+/** Cap gốc cho pool loadout (map.costCap là Cap sân = 3×). */
+function loadoutRefCap(map) {
+  return Math.max(1, Number(map.refCostCap) || Number(map.costCap) || 1);
 }
 
 function cellTooltip(map, col, row, ch) {
@@ -189,12 +194,12 @@ export function renderScout(root, ctx) {
   const vault = state.inventory || {};
 
   if (!run.loadout) {
-    run.loadout = sanitizeLoadout(state.lastLoadout, vault, map.costCap);
+    run.loadout = sanitizeLoadout(state.lastLoadout, vault, loadoutRefCap(map));
     if (!loadoutUnitCount(run.loadout)) {
-      run.loadout = suggestLoadout(vault, map.costCap);
+      run.loadout = suggestLoadout(vault, loadoutRefCap(map));
     }
   } else {
-    run.loadout = sanitizeLoadout(run.loadout, vault, map.costCap);
+    run.loadout = sanitizeLoadout(run.loadout, vault, loadoutRefCap(map));
   }
 
   let filterRole = 'all';
@@ -220,9 +225,10 @@ export function renderScout(root, ctx) {
   function loadoutPanelHtml() {
     const loadout = run.loadout || {};
     const pool = loadoutPoolCost(loadout);
-    const maxPool = loadoutMaxPoolCost(map.costCap);
+    const maxPool = loadoutMaxPoolCost(loadoutRefCap(map));
     const units = loadoutUnitCount(loadout);
     const types = loadoutTypeCount(loadout);
+    const placeCap = map.costCap;
     const owned = ownedList(vault).filter((m) => {
       if (filterRole === 'all') return true;
       const tags = m.tags || [];
@@ -284,13 +290,12 @@ export function renderScout(root, ctx) {
             <h3 style="margin:2px 0 0;font-size:1.05rem">Chọn quái mang vào xếp trận</h3>
             <p class="muted" style="margin:4px 0 0;font-size:0.75rem">
               Pool mang theo <strong>${pool}/${maxPool}</strong>
-              · Cap xếp/trận <strong>${map.costCap}</strong>
+              · Cap sân <strong>${placeCap}</strong>
               · <strong>${types}</strong> loại
               · ${units} quái
             </p>
             <p class="muted" style="margin:4px 0 0;font-size:0.72rem">
-              Mang bao nhiêu loại cũng được — chỉ không vượt pool Cost.
-              Xếp trận ≤ Cap ${map.costCap}. Phần còn lại thả thêm trong trận khi có slot.
+              Pool mang 3× Cap gốc — trên sân chỉ ≤ Cap ${placeCap}; phần dư thả khi có slot.
             </p>
           </div>
           <div class="loadout-tools">
@@ -370,7 +375,7 @@ export function renderScout(root, ctx) {
         }
         showPickInfo(btn);
         const id = btn.getAttribute('data-add');
-        const res = tryAddToLoadout(run.loadout, vault, id, map.costCap);
+        const res = tryAddToLoadout(run.loadout, vault, id, loadoutRefCap(map));
         if (!res.ok) {
           toast(res.reason);
           return;
@@ -406,7 +411,7 @@ export function renderScout(root, ctx) {
 
     panel.querySelector('#btn-loadout-suggest').onclick = (e) => {
       e.preventDefault();
-      run.loadout = suggestLoadout(vault, map.costCap);
+      run.loadout = suggestLoadout(vault, loadoutRefCap(map));
       refreshLoadout();
       toast('Đã gợi ý loadout');
     };
@@ -485,7 +490,7 @@ export function renderScout(root, ctx) {
 
   root.querySelector('#btn-to-setup').onclick = () => {
     hideMonsterTip(true);
-    const clean = sanitizeLoadout(run.loadout, vault, map.costCap);
+    const clean = sanitizeLoadout(run.loadout, vault, loadoutRefCap(map));
     if (!loadoutUnitCount(clean)) {
       toast('Chọn ít nhất 1 quái vào loadout');
       return;

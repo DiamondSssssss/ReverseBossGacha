@@ -3,24 +3,26 @@ import {
   saveState,
   resetState,
   inventoryCopy,
-} from './core/storage.js?v=59';
-import { createRunState } from './core/dungeon.js?v=59';
-import { loadoutFingerprint } from './core/loadout.js?v=59';
-import { evaluateAchievements } from './core/achievements.js?v=59';
-import { initAuth, onAuthChange } from './core/auth.js?v=59';
-import { renderHub } from './ui/hub.js?v=59';
-import { renderGacha } from './ui/gachaUI.js?v=59';
-import { renderCollection } from './ui/collection.js?v=59';
-import { renderHeroes } from './ui/heroesUI.js?v=59';
-import { renderScout, renderSetup } from './ui/setup.js?v=59';
-import { renderCombat, renderReward, stopCombatIfAny, getCombatEngine } from './ui/combat.js?v=59';
-import { renderAchievements, announceUnlocks } from './ui/achievementsUI.js?v=59';
-import { renderLeaderboard } from './ui/leaderboardUI.js?v=59';
-import { startGuidedTour, showTipBanner } from './ui/tutorial.js?v=59';
-import { renderAccountBar } from './ui/authUI.js?v=59';
-import { hideMonsterTip } from './ui/monsterTip.js?v=59';
+} from './core/storage.js?v=64';
+import { createRunState } from './core/dungeon.js?v=64';
+import { loadoutFingerprint } from './core/loadout.js?v=64';
+import { evaluateAchievements } from './core/achievements.js?v=64';
+import { initAuth, onAuthChange } from './core/auth.js?v=64';
+import { renderHub } from './ui/hub.js?v=64';
+import { renderGacha } from './ui/gachaUI.js?v=64';
+import { renderCollection } from './ui/collection.js?v=64';
+import { renderHeroes } from './ui/heroesUI.js?v=64';
+import { renderScout, renderSetup } from './ui/setup.js?v=64';
+import { renderCombat, renderReward, stopCombatIfAny, getCombatEngine } from './ui/combat.js?v=64';
+import { renderAchievements, announceUnlocks } from './ui/achievementsUI.js?v=64';
+import { renderLeaderboard } from './ui/leaderboardUI.js?v=64';
+import { startGuidedTour, showTipBanner } from './ui/tutorial.js?v=64';
+import { renderAccountBar } from './ui/authUI.js?v=64';
+import { hideMonsterTip } from './ui/monsterTip.js?v=64';
 
 const state = loadState();
+// Mở ấn đủ điều kiện + backfill Gem cho ấn đã mở (bảng thưởng mới)
+evaluateAchievements(state);
 let run = null;
 let inventory = null;
 let lastReward = null;
@@ -72,6 +74,7 @@ function refreshAccount() {
     toast,
     refreshChrome,
     onSaveLoaded: () => {
+      evaluateAchievements(state);
       run = null;
       inventory = null;
       refreshChrome();

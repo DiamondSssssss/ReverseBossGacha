@@ -1,16 +1,16 @@
-import { MAP_UPGRADE, SPELLS, MAX_STAGE } from '../data/constants.js?v=59';
+import { MAP_UPGRADE, SPELLS, MAX_STAGE } from '../data/constants.js?v=64';
 import {
   DUNGEON_BOSSES,
   getBoss,
   isBossUnlocked,
   unlockHint,
   syncUnlockedBosses,
-} from '../data/dungeonBosses.js?v=59';
-import { tryUpgradeMap, upgradeMapCost } from '../core/dungeon.js?v=59';
-import { saveState } from '../core/storage.js?v=59';
-import { achievementProgress, isGameCleared, evaluateAchievements } from '../core/achievements.js?v=59';
-import { showTutorial } from './tutorial.js?v=59';
-import { showRedeemModal } from './redeemUI.js?v=59';
+} from '../data/dungeonBosses.js?v=64';
+import { tryUpgradeMap, upgradeMapCost } from '../core/dungeon.js?v=64';
+import { saveState } from '../core/storage.js?v=64';
+import { achievementProgress, isGameCleared, evaluateAchievements } from '../core/achievements.js?v=64';
+import { showTutorial } from './tutorial.js?v=64';
+import { showRedeemModal } from './redeemUI.js?v=64';
 
 const GATE_SVG = `
 <svg viewBox="0 0 200 250" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -95,7 +95,7 @@ export function renderHub(root, ctx) {
             <li><strong>Linh Hồn</strong> — thắng/thua ải → quay Gacha (trùng tối đa ×3 → hoàn LH)</li>
             <li><strong>Vàng</strong> — thắng ải → nâng cấp quái (Kho)</li>
             <li><strong>Gem</strong> — Ấn chương → cải tạo hầm (tăng Cost)</li>
-            <li><strong>Tay bài</strong> — mang pool ~2× Cap; xếp ≤ Cap, thả thêm trong trận khi có slot</li>
+            <li><strong>Tay bài</strong> — pool mang ~3× Cap; xếp sân ≤ Cap, thả thêm trong trận khi có slot</li>
           </ul>
           <p class="muted" style="margin:8px 0 0;font-size:0.78rem">
             Cap map gốc ~5–6. Muốn xếp nhiều hơn phải nâng hầm bằng Gem.

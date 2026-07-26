@@ -1,19 +1,27 @@
-import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=59';
+import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=64';
 
 /**
- * Pool mang vào ải = bội số Cap map (Clash-style).
- * Cap 5 → mang tối đa 10; xếp trận + thả trong trận không bao giờ vượt Cap cùng lúc.
- * Số loại quái không giới hạn — chỉ bị chặn bởi pool Cost.
+ * Pool mang vào ải = bội số Cap map.
+ * Cap 5 → mang tối đa 15; trên sân chỉ đặt ≤ Cap gốc (1×) — phần dư thả khi có slot.
  */
-export const LOADOUT_POOL_MULT = 2;
+export const LOADOUT_POOL_MULT = 3;
+
+/** Cap đặt trên sân / trong trận = Cap gốc (1×), không theo pool mang. */
+export const PLACE_COST_MULT = 1;
 
 /** @deprecated Không còn giới hạn loại — giữ export để tương thích cũ */
 export const LOADOUT_MAX_TYPES = Infinity;
 
-/** Pool cost tối đa mang vào ải (thường 2× Cap map). */
+/** Pool cost tối đa mang vào ải (3× Cap map). */
 export function loadoutMaxPoolCost(costCap) {
   const cap = Math.max(1, Number(costCap) || 1);
   return Math.max(cap, Math.floor(cap * LOADOUT_POOL_MULT));
+}
+
+/** Cost tối đa xếp trên sân cùng lúc (1× Cap gốc). */
+export function placeMaxCost(costCap) {
+  const cap = Math.max(1, Number(costCap) || 1);
+  return Math.max(cap, Math.floor(cap * PLACE_COST_MULT));
 }
 
 export function loadoutPoolCost(loadout) {

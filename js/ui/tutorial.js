@@ -3,8 +3,8 @@
  * Người chơi bấm / thả / chọn đúng chỗ mới sang bước tiếp.
  */
 
-import { totalPlacements } from '../core/dungeon.js?v=59';
-import { loadoutUnitCount } from '../core/loadout.js?v=59';
+import { totalPlacements } from '../core/dungeon.js?v=64';
+import { loadoutUnitCount } from '../core/loadout.js?v=64';
 
 /** @typedef {'click' | 'condition' | 'next' | 'either'} AdvanceMode */
 
@@ -59,7 +59,7 @@ export const TOUR_STEPS = [
     id: 'scout_loadout',
     screen: 'scout',
     title: 'Chọn loadout',
-    body: 'Chạm một quái trong kho để <strong>thêm vào loadout</strong> (hoặc bấm Gợi ý). Có thể mang dư ≈2× Cap — phần dư thả trong trận.',
+    body: 'Chạm một quái trong kho để <strong>thêm vào loadout</strong> (hoặc bấm Gợi ý). Pool mang ≈3× Cap — trên sân chỉ ≤ Cap; phần dư thả trong trận.',
     target: () =>
       document.querySelector('.loadout-pick:not([disabled])')
         ? '.loadout-pick:not([disabled])'
