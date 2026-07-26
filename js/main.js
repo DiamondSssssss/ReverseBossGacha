@@ -3,21 +3,21 @@ import {
   saveState,
   resetState,
   inventoryCopy,
-} from './core/storage.js?v=40';
-import { createRunState } from './core/dungeon.js?v=40';
-import { loadoutFingerprint } from './core/loadout.js?v=40';
-import { evaluateAchievements } from './core/achievements.js?v=40';
-import { initAuth, onAuthChange } from './core/auth.js?v=40';
-import { renderHub } from './ui/hub.js?v=40';
-import { renderGacha } from './ui/gachaUI.js?v=40';
-import { renderCollection } from './ui/collection.js?v=40';
-import { renderScout, renderSetup } from './ui/setup.js?v=40';
-import { renderCombat, renderReward, stopCombatIfAny, getCombatEngine } from './ui/combat.js?v=41';
-import { renderAchievements, announceUnlocks } from './ui/achievementsUI.js?v=40';
-import { renderLeaderboard } from './ui/leaderboardUI.js?v=40';
-import { startGuidedTour, showTipBanner } from './ui/tutorial.js?v=40';
-import { renderAccountBar } from './ui/authUI.js?v=40';
-import { hideMonsterTip } from './ui/monsterTip.js?v=40';
+} from './core/storage.js?v=42';
+import { createRunState } from './core/dungeon.js?v=42';
+import { loadoutFingerprint } from './core/loadout.js?v=42';
+import { evaluateAchievements } from './core/achievements.js?v=42';
+import { initAuth, onAuthChange } from './core/auth.js?v=42';
+import { renderHub } from './ui/hub.js?v=42';
+import { renderGacha } from './ui/gachaUI.js?v=42';
+import { renderCollection } from './ui/collection.js?v=42';
+import { renderScout, renderSetup } from './ui/setup.js?v=42';
+import { renderCombat, renderReward, stopCombatIfAny, getCombatEngine } from './ui/combat.js?v=42';
+import { renderAchievements, announceUnlocks } from './ui/achievementsUI.js?v=42';
+import { renderLeaderboard } from './ui/leaderboardUI.js?v=42';
+import { startGuidedTour, showTipBanner } from './ui/tutorial.js?v=42';
+import { renderAccountBar } from './ui/authUI.js?v=42';
+import { hideMonsterTip } from './ui/monsterTip.js?v=42';
 
 const state = loadState();
 let run = null;

@@ -39,6 +39,7 @@ function defaultState() {
     achievements: {},
     ownedEver: Object.keys(STARTING.starterMonsters),
     lastLoadout: {},
+    redeemedCodes: [],
     updatedAt: Date.now(),
   };
 }
@@ -98,6 +99,7 @@ export function loadState() {
         new Set([...(parsed.ownedEver || []), ...Object.keys(parsed.inventory || {})])
       ),
       lastLoadout: parsed.lastLoadout || {},
+      redeemedCodes: Array.isArray(parsed.redeemedCodes) ? [...parsed.redeemedCodes] : [],
       tutorialDone: !!parsed.tutorialDone,
       updatedAt: parsed.updatedAt || Date.now(),
     };
@@ -133,6 +135,7 @@ export function applySaveData(state, data) {
       new Set([...(data.ownedEver || []), ...Object.keys(data.inventory || {})])
     ),
     lastLoadout: data.lastLoadout || {},
+    redeemedCodes: Array.isArray(data.redeemedCodes) ? [...data.redeemedCodes] : [],
     tutorialDone: !!data.tutorialDone,
     souls: Number(data.souls) || 0,
     gold: Number(data.gold) || 0,

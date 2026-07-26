@@ -1,6 +1,7 @@
 import { signIn, signUp, signOut, getUser } from '../core/auth.js';
 import { pullCloudSave, pushCloudSave, pickBetterSave } from '../core/cloudSave.js';
 import { applySaveData, saveState, saveStateNow } from '../core/storage.js';
+import { showRedeemModal } from './redeemUI.js';
 
 export function renderAccountBar({ accountEl, modalEl, state, toast, onSaveLoaded, refreshChrome }) {
   const user = getUser();
@@ -144,6 +145,7 @@ function showAccountMenu(modalEl, ctx) {
       <div class="auth-form">
         <button type="button" class="primary" id="btn-sync-now">Đồng bộ ngay</button>
         <button type="button" id="btn-pull">Tải save từ server</button>
+        <button type="button" id="btn-redeem-code">Nhập mã quà</button>
         <button type="button" id="btn-logout">Đăng xuất</button>
         <button type="button" class="ghost" id="auth-close">Đóng</button>
       </div>
@@ -152,6 +154,13 @@ function showAccountMenu(modalEl, ctx) {
   modalEl.querySelector('#auth-close').onclick = () => {
     modalEl.classList.remove('show');
     modalEl.innerHTML = '';
+  };
+  modalEl.querySelector('#btn-redeem-code').onclick = () => {
+    showRedeemModal(modalEl, {
+      state: ctx.state,
+      toast: ctx.toast,
+      refreshChrome: ctx.refreshChrome,
+    });
   };
   modalEl.querySelector('#btn-sync-now').onclick = async () => {
     const r = await saveStateNow(ctx.state);

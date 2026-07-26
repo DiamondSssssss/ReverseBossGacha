@@ -10,6 +10,7 @@ import { tryUpgradeMap, upgradeMapCost } from '../core/dungeon.js';
 import { saveState } from '../core/storage.js';
 import { achievementProgress, isGameCleared, evaluateAchievements } from '../core/achievements.js';
 import { showTutorial } from './tutorial.js';
+import { showRedeemModal } from './redeemUI.js';
 
 const GATE_SVG = `
 <svg viewBox="0 0 200 250" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -71,6 +72,7 @@ export function renderHub(root, ctx) {
           <button type="button" class="primary big" id="btn-play">Mở cổng ải</button>
           <div class="hub-secondary">
             <button type="button" id="btn-gacha">Quay Gacha</button>
+            <button type="button" id="btn-redeem">Nhập mã</button>
             <button type="button" id="btn-ach">Ấn chương</button>
           </div>
         </div>
@@ -138,6 +140,13 @@ export function renderHub(root, ctx) {
     go('scout');
   };
   root.querySelector('#btn-gacha').onclick = () => go('gacha');
+  root.querySelector('#btn-redeem').onclick = () => {
+    showRedeemModal(document.getElementById('modal'), {
+      state,
+      toast,
+      refreshChrome,
+    });
+  };
   root.querySelector('#btn-collection').onclick = () => go('collection');
   root.querySelector('#btn-ach').onclick = () => go('achievements');
   root.querySelector('#btn-help').onclick = () => {

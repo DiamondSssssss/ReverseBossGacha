@@ -20,6 +20,7 @@ function sanitize(state) {
     achievements,
     ownedEver,
     lastLoadout,
+    redeemedCodes,
   } = state;
   return {
     souls,
@@ -40,6 +41,7 @@ function sanitize(state) {
     achievements,
     ownedEver,
     lastLoadout: lastLoadout || {},
+    redeemedCodes: redeemedCodes || [],
     updatedAt: Date.now(),
   };
 }
