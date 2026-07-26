@@ -1397,6 +1397,22 @@ body.play-fit .screen.active > .combat-wrap {
   display: none !important;
 }
 
+.loadout-stat-panel {
+  margin: 8px 0 10px;
+  min-height: 72px;
+}
+
+.loadout-stat-panel.has-unit {
+  border-color: var(--seal, #c43c28);
+  background: #fffaf0;
+}
+
+.loadout-pick:hover:not(:disabled):not([aria-disabled="true"]),
+.loadout-chip:hover {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+
 .board-hero .board-stage.single-map {
   flex: 1 1 0;
   min-height: 0;

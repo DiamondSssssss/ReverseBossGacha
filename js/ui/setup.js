@@ -29,9 +29,7 @@ import { attachSetupBoardFx } from './setupBoardFx.js';
 import { playGhostWalk } from './setupPreview.js';
 import { saveState } from '../core/storage.js';
 import {
-  bindMonsterTips,
   hideMonsterTip,
-  hideMonsterTipOnScroll,
   showMonsterTip,
   monsterTipLine,
   monsterTipHtml,
@@ -223,7 +221,7 @@ export function renderScout(root, ctx) {
         const m = MONSTER_BY_ID[id];
         if (!m) return '';
         return `
-          <button type="button" class="loadout-chip" data-remove="${id}" data-mid="${id}" title="Bớt 1 · ${m.name}">
+          <button type="button" class="loadout-chip" data-remove="${id}" data-mid="${id}">
             <img src="${monsterSpriteUrl(id, m.color, m.rarity)}" alt="" width="36" height="36" />
             <span class="loadout-chip-meta">
               <strong>${shortName(m.name)}</strong>
@@ -242,7 +240,7 @@ export function renderScout(root, ctx) {
         const blockedNew = inLoad <= 0 && typesFull;
         const full = left <= 0 || blockedNew;
         return `
-          <button type="button" class="loadout-pick ${full ? 'is-full' : ''}" data-add="${m.id}" data-mid="${m.id}" ${full ? 'aria-disabled="true"' : ''} title="${m.name}${blockedNew ? ' · Đủ 5 loại' : ''}">
+          <button type="button" class="loadout-pick ${full ? 'is-full' : ''}" data-add="${m.id}" data-mid="${m.id}" ${full ? 'aria-disabled="true"' : ''}>
             <img src="${monsterSpriteUrl(m.id, m.color, m.rarity)}" alt="" width="44" height="44" />
             <span class="stars" style="color:${RARITY_COLORS[m.rarity]}">${'★'.repeat(m.rarity)}</span>
             <strong>${shortName(m.name)}</strong>
@@ -286,6 +284,10 @@ export function renderScout(root, ctx) {
           <button type="button" class="filter-chip ${filterRole === 'dps' ? 'active' : ''}" data-lrole="dps">DPS</button>
         </div>
 
+        <div class="unit-stat-panel loadout-stat-panel" id="loadout-stat-panel">
+          <p class="muted" style="margin:0;font-size:0.75rem">Hover thẻ quái bên dưới để xem HP / ATK / mô tả.</p>
+        </div>
+
         <div class="loadout-pool">
           ${poolCards || '<p class="muted">Kho trống — quay Gacha trước.</p>'}
         </div>
@@ -296,6 +298,26 @@ export function renderScout(root, ctx) {
   function bindLoadout() {
     const panel = root.querySelector('#loadout-panel');
     if (!panel) return;
+    const statPanel = panel.querySelector('#loadout-stat-panel');
+
+    function showPickInfo(el) {
+      const id = el.getAttribute('data-mid');
+      if (!id) return;
+      if (statPanel) {
+        statPanel.innerHTML = monsterTipHtml(id, state);
+        statPanel.classList.add('has-unit');
+      }
+      showMonsterTip(el, id, state);
+    }
+
+    function clearPickInfo() {
+      if (statPanel) {
+        statPanel.classList.remove('has-unit');
+        statPanel.innerHTML =
+          '<p class="muted" style="margin:0;font-size:0.75rem">Hover thẻ quái bên dưới để xem HP / ATK / mô tả.</p>';
+      }
+      hideMonsterTip();
+    }
 
     panel.querySelectorAll('[data-add]').forEach((btn) => {
       btn.onclick = (e) => {
@@ -313,6 +335,10 @@ export function renderScout(root, ctx) {
         run.loadout = res.loadout;
         refreshLoadout();
       };
+      btn.onpointerenter = () => showPickInfo(btn);
+      btn.onmouseenter = () => showPickInfo(btn);
+      btn.onpointerleave = () => clearPickInfo();
+      btn.onmouseleave = () => clearPickInfo();
     });
 
     panel.querySelectorAll('[data-remove]').forEach((btn) => {
@@ -326,6 +352,10 @@ export function renderScout(root, ctx) {
           refreshLoadout();
         }
       };
+      btn.onpointerenter = () => showPickInfo(btn);
+      btn.onmouseenter = () => showPickInfo(btn);
+      btn.onpointerleave = () => clearPickInfo();
+      btn.onmouseleave = () => clearPickInfo();
     });
 
     panel.querySelectorAll('[data-lrole]').forEach((btn) => {
@@ -348,8 +378,6 @@ export function renderScout(root, ctx) {
       run.loadout = {};
       refreshLoadout();
     };
-
-    bindMonsterTips(panel, '[data-mid]', (el) => el.getAttribute('data-mid'), state);
   }
 
   function refreshLoadout() {
@@ -413,7 +441,6 @@ export function renderScout(root, ctx) {
   `;
 
   bindLoadout();
-  hideMonsterTipOnScroll(root.querySelector('.scout-page'));
   root._cleanup = () => hideMonsterTip(true);
 
   root.querySelector('#btn-to-setup').onclick = () => {
@@ -895,7 +922,6 @@ export function renderSetup(root, ctx) {
   }
 
   paint();
-  hideMonsterTipOnScroll(root);
 
   root._cleanup = () => {
     hideMonsterTip(true);
