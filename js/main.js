@@ -39,6 +39,7 @@ const screens = {
 const navDock = document.getElementById('nav-dock');
 const resourcesEl = document.getElementById('resources');
 const accountEl = document.getElementById('account-slot');
+const topLbBtn = document.getElementById('btn-top-lb');
 const toastEl = document.getElementById('toast');
 const tipSlot = document.getElementById('tip-slot');
 const modalEl = document.getElementById('modal');
@@ -226,6 +227,10 @@ function go(name) {
     );
   });
 
+  if (topLbBtn) {
+    topLbBtn.classList.toggle('active', name === 'leaderboard');
+  }
+
   navDock.style.display =
     name === 'combat' || name === 'reward' || name === 'setup' ? 'none' : '';
 
@@ -297,6 +302,8 @@ navDock.addEventListener('click', (e) => {
   if (name === 'scout') startRun();
   go(name);
 });
+
+topLbBtn?.addEventListener('click', () => go('leaderboard'));
 
 if (!state.ownedEver?.length) {
   state.ownedEver = Object.keys(state.inventory || {});

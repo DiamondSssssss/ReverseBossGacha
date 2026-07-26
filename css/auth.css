@@ -16,6 +16,42 @@
   flex: 1;
 }
 
+.topbar-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.topbar-lb-btn {
+  flex-shrink: 0;
+  min-height: 100%;
+  min-width: 56px;
+  padding: 8px 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: var(--ink);
+  color: var(--bone);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius, 6px);
+  box-shadow: var(--shadow-stamp);
+  cursor: pointer;
+}
+
+.topbar-lb-btn:hover,
+.topbar-lb-btn:focus-visible {
+  background: var(--seal);
+  border-color: var(--seal-deep);
+}
+
+.topbar-lb-btn.active {
+  background: var(--seal);
+  border-color: var(--seal-deep);
+  color: var(--bone);
+}
+
 .account-btn {
   flex-shrink: 0;
   min-height: 100%;

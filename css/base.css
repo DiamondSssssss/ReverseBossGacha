@@ -312,11 +312,11 @@ h3 { font-size: 1.05rem; }
   align-items: center;
   justify-content: center;
   gap: 4px;
-  font-size: 0.58rem;
+  font-size: 0.62rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
-  padding: 8px 1px;
+  letter-spacing: 0.04em;
+  padding: 8px 2px;
   min-height: 58px;
   box-shadow: none;
   border-width: 1.5px;

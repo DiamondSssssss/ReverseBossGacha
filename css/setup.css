@@ -838,6 +838,17 @@ body.play-fit .account-btn {
   font-size: 0.58rem;
 }
 
+body.play-fit .topbar-lb-btn {
+  min-height: 36px;
+  min-width: 40px;
+  padding: 2px 6px;
+  font-size: 0.58rem;
+}
+
+body.play-fit .topbar-actions {
+  gap: 4px;
+}
+
 body.play-fit #tip-slot {
   display: none !important;
   height: 0 !important;
