@@ -336,11 +336,12 @@ export function renderCombat(root, ctx) {
 }
 
 export function renderReward(root, ctx) {
-  const { lastReward, go, state } = ctx;
+  const { lastReward, go, state, startRun } = ctx;
   const r = lastReward || { result: 'win', souls: 0, gold: 0 };
   const win = r.result === 'win';
   const stageClass = r.clearedJustNow ? 'clear' : win ? '' : 'lose';
   const mark = r.clearedJustNow ? '20' : win ? 'OK' : '…';
+  const replayLabel = win ? 'Vào ải tiếp' : 'Chơi lại';
 
   root.innerHTML = `
     <div class="reward-stage ${stageClass}">
@@ -356,13 +357,18 @@ export function renderReward(root, ctx) {
       <div class="big-num">+${r.souls} LH</div>
       ${r.gold ? `<div class="muted">+${r.gold} Vàng</div>` : ''}
       <div class="reward-actions">
-        <button type="button" class="primary" id="btn-to-gacha">Quay Gacha</button>
+        <button type="button" class="primary" id="btn-replay">${replayLabel}</button>
+        <button type="button" id="btn-to-gacha">Quay Gacha</button>
         <button type="button" id="btn-to-ach">Ấn chương</button>
         <button type="button" class="ghost" id="btn-to-hub">Về sảnh</button>
       </div>
     </div>
   `;
 
+  root.querySelector('#btn-replay').onclick = () => {
+    startRun();
+    go('scout');
+  };
   root.querySelector('#btn-to-gacha').onclick = () => go('gacha');
   root.querySelector('#btn-to-ach').onclick = () => go('achievements');
   root.querySelector('#btn-to-hub').onclick = () => go('hub');
