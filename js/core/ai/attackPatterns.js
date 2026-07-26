@@ -132,7 +132,12 @@ export function patternForHero(hero, profile) {
   if (profile?.archetype === 'mage' || hero.class === 'MAGE') {
     return { ...HERO_PATTERNS.aoe_cast };
   }
-  if (profile?.rangedStealth || (hero.class === 'ROGUE' && hero.range > 80)) {
+  if (
+    profile?.archetype === 'archer' ||
+    hero.class === 'ARCHER' ||
+    profile?.rangedStealth ||
+    (hero.class === 'ROGUE' && hero.range > 80)
+  ) {
     return { ...HERO_PATTERNS.ranged_poke };
   }
   if (

@@ -1,6 +1,7 @@
-import { ACHIEVEMENTS } from '../data/achievements.js?v=57';
-import { MONSTERS } from '../data/monsters.js?v=57';
-import { saveState } from './storage.js?v=57';
+import { ACHIEVEMENTS } from '../data/achievements.js?v=58';
+import { MONSTERS } from '../data/monsters.js?v=58';
+import { MAX_STAGE } from '../data/constants.js?v=58';
+import { saveState } from './storage.js?v=58';
 
 function checkCtx() {
   return {
@@ -60,6 +61,6 @@ export function achievementProgress(state) {
 }
 
 export function isGameCleared(state) {
-  // Beat stage 40 → dungeonLevel becomes 41
-  return (state.dungeonLevel || 1) > 40;
+  // Beat final stage → dungeonLevel becomes MAX_STAGE + 1
+  return (state.dungeonLevel || 1) > MAX_STAGE;
 }

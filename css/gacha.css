@@ -636,6 +636,10 @@ body.gacha-boss-flash::after {
 
 .collection-head {
   margin-bottom: 10px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .collection-head h2 {
@@ -860,4 +864,20 @@ body.gacha-boss-flash::after {
 .monster-card.locked .count,
 .monster-card .locked-count {
   color: var(--muted);
+}
+
+.hero-card .hero-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 6px 0 4px;
+}
+
+.hero-card .hero-tag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 2px 6px;
+  border: 1px solid var(--ink);
+  background: rgba(26, 22, 18, 0.06);
 }

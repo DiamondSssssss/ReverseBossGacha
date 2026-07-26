@@ -72,6 +72,15 @@ export function computeHeroAttackDamage(hero, target, time) {
     }
   }
 
+  // Berserk: càng thấp máu càng mạnh (dưới 50% HP)
+  if (skills.includes('BERSERK') || hero.class === 'BERSERKER') {
+    const ratio = Math.max(0, Math.min(1, hero.hp / Math.max(1, hero.maxHp)));
+    if (ratio < 0.5) {
+      const mul = 1.3 + (0.5 - ratio) * 1.4; // ~1.3 → 2.0
+      dmg = Math.round(dmg * mul);
+    }
+  }
+
   return { dmg, silenced: false, isAoe, freeze: skills.includes('FREEZE') };
 }
 

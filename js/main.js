@@ -3,21 +3,22 @@ import {
   saveState,
   resetState,
   inventoryCopy,
-} from './core/storage.js?v=57';
-import { createRunState } from './core/dungeon.js?v=57';
-import { loadoutFingerprint } from './core/loadout.js?v=57';
-import { evaluateAchievements } from './core/achievements.js?v=57';
-import { initAuth, onAuthChange } from './core/auth.js?v=57';
-import { renderHub } from './ui/hub.js?v=57';
-import { renderGacha } from './ui/gachaUI.js?v=57';
-import { renderCollection } from './ui/collection.js?v=57';
-import { renderScout, renderSetup } from './ui/setup.js?v=57';
-import { renderCombat, renderReward, stopCombatIfAny, getCombatEngine } from './ui/combat.js?v=57';
-import { renderAchievements, announceUnlocks } from './ui/achievementsUI.js?v=57';
-import { renderLeaderboard } from './ui/leaderboardUI.js?v=57';
-import { startGuidedTour, showTipBanner } from './ui/tutorial.js?v=57';
-import { renderAccountBar } from './ui/authUI.js?v=57';
-import { hideMonsterTip } from './ui/monsterTip.js?v=57';
+} from './core/storage.js?v=58';
+import { createRunState } from './core/dungeon.js?v=58';
+import { loadoutFingerprint } from './core/loadout.js?v=58';
+import { evaluateAchievements } from './core/achievements.js?v=58';
+import { initAuth, onAuthChange } from './core/auth.js?v=58';
+import { renderHub } from './ui/hub.js?v=58';
+import { renderGacha } from './ui/gachaUI.js?v=58';
+import { renderCollection } from './ui/collection.js?v=58';
+import { renderHeroes } from './ui/heroesUI.js?v=58';
+import { renderScout, renderSetup } from './ui/setup.js?v=58';
+import { renderCombat, renderReward, stopCombatIfAny, getCombatEngine } from './ui/combat.js?v=58';
+import { renderAchievements, announceUnlocks } from './ui/achievementsUI.js?v=58';
+import { renderLeaderboard } from './ui/leaderboardUI.js?v=58';
+import { startGuidedTour, showTipBanner } from './ui/tutorial.js?v=58';
+import { renderAccountBar } from './ui/authUI.js?v=58';
+import { hideMonsterTip } from './ui/monsterTip.js?v=58';
 
 const state = loadState();
 let run = null;
@@ -29,6 +30,7 @@ const screens = {
   hub: document.getElementById('screen-hub'),
   gacha: document.getElementById('screen-gacha'),
   collection: document.getElementById('screen-collection'),
+  heroes: document.getElementById('screen-heroes'),
   leaderboard: document.getElementById('screen-leaderboard'),
   achievements: document.getElementById('screen-achievements'),
   scout: document.getElementById('screen-scout'),
@@ -232,7 +234,8 @@ function go(name) {
       'active',
       n === name ||
         (name === 'setup' && n === 'scout') ||
-        (name === 'reward' && n === 'hub')
+        (name === 'reward' && n === 'hub') ||
+        (name === 'heroes' && n === 'collection')
     );
   });
 
@@ -276,6 +279,9 @@ function renderScreen(name) {
       break;
     case 'collection':
       renderCollection(root, bag);
+      break;
+    case 'heroes':
+      renderHeroes(root, bag);
       break;
     case 'leaderboard':
       renderLeaderboard(root, { ...bag, modalEl });

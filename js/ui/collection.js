@@ -1,18 +1,18 @@
-import { MONSTERS } from '../data/monsters.js?v=57';
+import { MONSTERS } from '../data/monsters.js?v=58';
 import {
   RARITY_COLORS,
   RARITY_LABELS,
   INVENTORY_CAP,
   MONSTER_UPGRADE,
-} from '../data/constants.js?v=57';
-import { monsterDisplayUrl } from '../render/sprites.js?v=57';
+} from '../data/constants.js?v=58';
+import { monsterDisplayUrl } from '../render/sprites.js?v=58';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,
   tryUpgradeMonster,
   upgradeMonsterCost,
-} from '../core/monsterUpgrade.js?v=57';
-import { evaluateAchievements } from '../core/achievements.js?v=57';
+} from '../core/monsterUpgrade.js?v=58';
+import { evaluateAchievements } from '../core/achievements.js?v=58';
 
 const filters = {
   q: '',
@@ -175,6 +175,7 @@ export function renderCollection(root, ctx) {
         <p class="muted" id="collection-meta">Đã mở <strong>${ownedCount}/${MONSTERS.length}</strong> · Cap ×${INVENTORY_CAP}/loại · Đang hiện ${count}</p>
         <p class="muted" style="font-size:0.78rem;margin:4px 0 0">Dùng <strong>Vàng</strong> nâng HP/ATK (+${Math.round(MONSTER_UPGRADE.STAT_PER_LEVEL * 100)}%/cấp · max Lv ${MONSTER_UPGRADE.MAX_LEVEL}).</p>
       </div>
+      <button type="button" class="ghost" id="btn-col-heroes">Catalog Hero</button>
     </div>
 
     <div class="collection-filters">
@@ -246,6 +247,8 @@ export function renderCollection(root, ctx) {
     filters.sort = e.target.value;
     updateGrid(root, ctx);
   };
+
+  root.querySelector('#btn-col-heroes')?.addEventListener('click', () => ctx.go('heroes'));
 
   bindUpgradeButtons(root, ctx);
 }

@@ -1,7 +1,7 @@
-import { GACHA, RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=57';
-import { tryPull } from '../core/gacha.js?v=57';
-import { evaluateAchievements } from '../core/achievements.js?v=57';
-import { monsterSpriteUrl, getLockedMonsterSprite, getSpriteDataUrl } from '../render/sprites.js?v=57';
+import { GACHA, RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=58';
+import { tryPull } from '../core/gacha.js?v=58';
+import { evaluateAchievements } from '../core/achievements.js?v=58';
+import { monsterSpriteUrl, getLockedMonsterSprite, getSpriteDataUrl } from '../render/sprites.js?v=58';
 
 const CHARGE_MS = {
   1: 700,

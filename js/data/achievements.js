@@ -1,6 +1,6 @@
 /** Achievement definitions — clear goals toward "clearing" the game */
 
-import { MAP_UPGRADE } from './constants.js?v=57';
+import { MAP_UPGRADE } from './constants.js?v=58';
 
 export const ACHIEVEMENTS = [
   // —— Onboarding / first steps ——
@@ -90,10 +90,19 @@ export const ACHIEVEMENTS = [
   {
     id: 'clear_game',
     title: 'Phá Đảo Hầm Ngục',
-    desc: 'Thắng ải 40 — phá đảo chế độ chính.',
+    desc: 'Thắng ải 50 — phá đảo chế độ chính.',
     icon: '👑',
     category: 'story',
     reward: { souls: 1000, gold: 500, gems: 10 },
+    check: (s) => (s.dungeonLevel || 1) > 50,
+  },
+  {
+    id: 'clear_40',
+    title: 'Ngai Tối Thượng',
+    desc: 'Thắng ải 40 — bước vào hành trình hỗn mang.',
+    icon: '⚔',
+    category: 'combat',
+    reward: { souls: 600, gold: 300, gems: 6 },
     check: (s) => (s.dungeonLevel || 1) > 40,
   },
 
@@ -213,7 +222,7 @@ export const ACHIEVEMENTS = [
   {
     id: 'master_collector',
     title: 'Sếp Tổng Hoàn Mỹ',
-    desc: 'Phá đảo (ải 40) + sưu tầm đủ catalog.',
+    desc: 'Phá đảo (ải 50) + sưu tầm đủ catalog.',
     icon: '💎',
     category: 'story',
     reward: { souls: 2000, gold: 1000, gems: 20 },
@@ -223,7 +232,7 @@ export const ACHIEVEMENTS = [
         ...Object.keys(s.inventory || {}).filter((id) => (s.inventory[id] || 0) > 0),
         ...(s.ownedEver || []),
       ]);
-      return (s.dungeonLevel || 1) > 40 && owned.size >= total;
+      return (s.dungeonLevel || 1) > 50 && owned.size >= total;
     },
   },
 ];

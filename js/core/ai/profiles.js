@@ -218,6 +218,109 @@ export const HERO_PROFILES = {
     engageBias: 0.45,
     skipFightIfClear: true,
   },
+  hero_archer_01: {
+    archetype: 'archer',
+    idealRange: 3.4,
+    kiteBelow: 1.8,
+    engageBias: 0.35,
+  },
+  hero_archer_02: {
+    archetype: 'archer',
+    idealRange: 3.6,
+    kiteBelow: 1.9,
+    engageBias: 0.4,
+  },
+  hero_archer_03: {
+    archetype: 'archer',
+    idealRange: 3.8,
+    kiteBelow: 2.0,
+    preferHighAtk: true,
+    engageBias: 0.45,
+  },
+  hero_archer_04: {
+    archetype: 'archer',
+    idealRange: 4.0,
+    kiteBelow: 2.1,
+    preferHighAtk: true,
+    engageBias: 0.5,
+  },
+  hero_archer_05: {
+    archetype: 'archer',
+    idealRange: 4.2,
+    kiteBelow: 2.2,
+    preferHighAtk: true,
+    engageBias: 0.55,
+  },
+  hero_tank_01: {
+    archetype: 'tank',
+    engageBias: 1.4,
+    holdFight: true,
+    tauntSelf: true,
+    shieldAt: 0.55,
+  },
+  hero_tank_02: {
+    archetype: 'tank',
+    engageBias: 1.5,
+    holdFight: true,
+    tauntSelf: true,
+    shieldAt: 0.5,
+  },
+  hero_tank_03: {
+    archetype: 'tank',
+    engageBias: 1.55,
+    holdFight: true,
+    tauntSelf: true,
+    siege: true,
+    shieldAt: 0.5,
+  },
+  hero_tank_04: {
+    archetype: 'tank',
+    engageBias: 1.65,
+    holdFight: true,
+    tauntSelf: true,
+    siege: true,
+    shieldAt: 0.55,
+  },
+  hero_tank_05: {
+    archetype: 'tank',
+    engageBias: 1.75,
+    holdFight: true,
+    tauntSelf: true,
+    siege: true,
+    shieldAt: 0.6,
+  },
+  hero_berserker_01: {
+    archetype: 'berserker',
+    engageBias: 1.6,
+    holdFight: true,
+    preferLowHp: true,
+  },
+  hero_berserker_02: {
+    archetype: 'berserker',
+    engageBias: 1.7,
+    holdFight: true,
+    preferLowHp: true,
+  },
+  hero_berserker_03: {
+    archetype: 'berserker',
+    engageBias: 1.8,
+    holdFight: true,
+    preferLowHp: true,
+  },
+  hero_berserker_04: {
+    archetype: 'berserker',
+    engageBias: 1.9,
+    holdFight: true,
+    preferLowHp: true,
+    siege: true,
+  },
+  hero_berserker_05: {
+    archetype: 'berserker',
+    engageBias: 2.0,
+    holdFight: true,
+    preferLowHp: true,
+    siege: true,
+  },
 };
 
 export function getHeroProfile(heroId, heroClass) {
@@ -225,11 +328,20 @@ export function getHeroProfile(heroId, heroClass) {
   if (heroClass === 'MAGE') {
     return { archetype: 'mage', idealRange: 3, kiteBelow: 1.5, engageBias: 0.4 };
   }
+  if (heroClass === 'ARCHER') {
+    return { archetype: 'archer', idealRange: 3.6, kiteBelow: 1.9, engageBias: 0.4 };
+  }
   if (heroClass === 'HEALER') {
     return { archetype: 'healer', idealRange: 2.8, kiteBelow: 1.5, engageBias: 0.2, healPriority: true };
   }
   if (heroClass === 'ROGUE') {
     return { archetype: 'rogue', stealthRush: true, engageBias: 0.3 };
+  }
+  if (heroClass === 'TANK') {
+    return { archetype: 'tank', engageBias: 1.5, holdFight: true, tauntSelf: true, shieldAt: 0.5 };
+  }
+  if (heroClass === 'BERSERKER') {
+    return { archetype: 'berserker', engageBias: 1.7, holdFight: true, preferLowHp: true };
   }
   return { archetype: 'warrior', engageBias: 1.1, holdFight: true };
 }

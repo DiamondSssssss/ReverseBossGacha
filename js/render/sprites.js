@@ -970,6 +970,99 @@ const KINDS = {
     eye(ctx, 28, 18, 1.8, '#fff');
     eye(ctx, 36, 18, 1.8, '#fff');
   },
+
+  heroArcher(ctx, c) {
+    ctx.fillStyle = c;
+    ctx.fillRect(24, 30, 16, 24);
+    outlineStroke(ctx);
+    ctx.strokeRect(24, 30, 16, 24);
+    ellipse(ctx, 32, 20, 8, 8, shade(c, 35));
+    ctx.stroke();
+    // hood/cap
+    ctx.fillStyle = shade(c, -25);
+    ctx.beginPath();
+    ctx.moveTo(22, 18);
+    ctx.quadraticCurveTo(32, 6, 42, 18);
+    ctx.fill();
+    // bow
+    ctx.strokeStyle = '#5d4037';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(50, 34, 14, -1.1, 1.1);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(48, 22);
+    ctx.lineTo(48, 46);
+    ctx.stroke();
+    // quiver
+    ctx.fillStyle = shade(c, -40);
+    ctx.fillRect(14, 32, 6, 16);
+    eye(ctx, 29, 20, 2);
+    eye(ctx, 35, 20, 2);
+  },
+
+  heroTank(ctx, c) {
+    ctx.fillStyle = c;
+    ctx.fillRect(20, 26, 24, 28);
+    outlineStroke(ctx);
+    ctx.strokeRect(20, 26, 24, 28);
+    ellipse(ctx, 32, 18, 10, 9, shade(c, 30));
+    ctx.stroke();
+    // big tower shield
+    ctx.fillStyle = shade(c, -20);
+    ctx.beginPath();
+    ctx.moveTo(8, 26);
+    ctx.lineTo(22, 26);
+    ctx.lineTo(22, 52);
+    ctx.lineTo(15, 56);
+    ctx.lineTo(8, 52);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#ffd54f';
+    ctx.fillRect(12, 36, 6, 6);
+    // mace
+    ctx.fillStyle = '#78909c';
+    ctx.fillRect(46, 20, 4, 26);
+    ellipse(ctx, 48, 18, 6, 6, '#90a4ae');
+    eye(ctx, 28, 18, 2);
+    eye(ctx, 36, 18, 2);
+  },
+
+  heroBerserker(ctx, c) {
+    ctx.fillStyle = c;
+    ctx.fillRect(22, 28, 20, 26);
+    outlineStroke(ctx);
+    ctx.strokeRect(22, 28, 20, 26);
+    ellipse(ctx, 32, 20, 9, 9, shade(c, 25));
+    ctx.stroke();
+    // wild hair
+    ctx.fillStyle = shade(c, -30);
+    ctx.beginPath();
+    ctx.moveTo(20, 16);
+    ctx.lineTo(24, 4);
+    ctx.lineTo(32, 12);
+    ctx.lineTo(40, 4);
+    ctx.lineTo(44, 16);
+    ctx.fill();
+    // dual axes
+    ctx.fillStyle = '#eceff1';
+    ctx.fillRect(10, 24, 3, 22);
+    ctx.fillRect(51, 24, 3, 22);
+    ctx.fillStyle = '#ef5350';
+    ctx.beginPath();
+    ctx.moveTo(6, 22);
+    ctx.lineTo(18, 22);
+    ctx.lineTo(12, 30);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(46, 22);
+    ctx.lineTo(58, 22);
+    ctx.lineTo(52, 30);
+    ctx.fill();
+    eye(ctx, 29, 20, 2, '#fff');
+    eye(ctx, 35, 20, 2, '#fff');
+  },
 };
 
 /** @type {Record<string, string>} */
@@ -1100,6 +1193,21 @@ const HERO_KIND = {
   hero_healer_03: 'heroMage',
   hero_healer_04: 'heroMage',
   hero_healer_05: 'heroMage',
+  hero_archer_01: 'heroArcher',
+  hero_archer_02: 'heroArcher',
+  hero_archer_03: 'heroArcher',
+  hero_archer_04: 'heroArcher',
+  hero_archer_05: 'heroArcher',
+  hero_tank_01: 'heroTank',
+  hero_tank_02: 'heroTank',
+  hero_tank_03: 'heroTank',
+  hero_tank_04: 'heroTank',
+  hero_tank_05: 'heroTank',
+  hero_berserker_01: 'heroBerserker',
+  hero_berserker_02: 'heroBerserker',
+  hero_berserker_03: 'heroBerserker',
+  hero_berserker_04: 'heroBerserker',
+  hero_berserker_05: 'heroBerserker',
 };
 
 function paintBackground(ctx, rarity) {
@@ -1204,7 +1312,17 @@ export function getHeroSprite(id, heroClass = 'WARRIOR', color = '#ef9a9a') {
   paintBackground(ctx, 3);
   const kind =
     HERO_KIND[id] ||
-    (heroClass === 'MAGE' ? 'heroMage' : heroClass === 'ROGUE' ? 'heroRogue' : 'heroWarrior');
+    (heroClass === 'MAGE' || heroClass === 'HEALER'
+      ? 'heroMage'
+      : heroClass === 'ROGUE'
+        ? 'heroRogue'
+        : heroClass === 'ARCHER'
+          ? 'heroArcher'
+          : heroClass === 'TANK'
+            ? 'heroTank'
+            : heroClass === 'BERSERKER'
+              ? 'heroBerserker'
+              : 'heroWarrior');
   const fn = KINDS[kind] || KINDS.heroWarrior;
   fn(ctx, color);
   cache.set(key, canvas);

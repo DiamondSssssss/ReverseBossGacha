@@ -3,16 +3,16 @@ import {
   TERRAIN_LABELS,
   RARITY_COLORS,
   HERO_CLASS_LABELS,
-} from '../data/constants.js?v=57';
-import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=57';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=57';
-import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=57';
+} from '../data/constants.js?v=58';
+import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=58';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=58';
+import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=58';
 import {
   mapUsedCost,
   placeMonster,
   removePlacement,
   totalPlacements,
-} from '../core/dungeon.js?v=57';
+} from '../core/dungeon.js?v=58';
 import {
   loadoutMaxPoolCost,
   loadoutPoolCost,
@@ -22,19 +22,19 @@ import {
   suggestLoadout,
   tryAddToLoadout,
   tryRemoveFromLoadout,
-} from '../core/loadout.js?v=57';
-import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=57';
-import { attachSetupBoardFx } from './setupBoardFx.js?v=57';
-import { playGhostWalk } from './setupPreview.js?v=57';
-import { saveState } from '../core/storage.js?v=57';
+} from '../core/loadout.js?v=58';
+import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=58';
+import { attachSetupBoardFx } from './setupBoardFx.js?v=58';
+import { playGhostWalk } from './setupPreview.js?v=58';
+import { saveState } from '../core/storage.js?v=58';
 import {
   hideMonsterTip,
   monsterTipHtml,
-} from './monsterTip.js?v=57';
+} from './monsterTip.js?v=58';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,
-} from '../core/monsterUpgrade.js?v=57';
+} from '../core/monsterUpgrade.js?v=58';
 
 function shortName(name) {
   if (!name) return '?';
@@ -205,6 +205,9 @@ export function renderScout(root, ctx) {
   if (map.tip) tips.push(map.tip);
   if (classes.includes('MAGE')) tips.push('Có Pháp sư → Silence / áp sát');
   if (classes.includes('WARRIOR')) tips.push('Có Chiến sĩ → Boss burst / DoT');
+  if (classes.includes('ARCHER')) tips.push('Có Cung thủ → gap-close / chase tầm xa');
+  if (classes.includes('TANK')) tips.push('Có Thuần tank → DoT / %HP / Boss');
+  if (classes.includes('BERSERKER')) tips.push('Có Berserker → burst sớm hoặc CC / slow');
   if (classes.includes('ROGUE')) {
     tips.push(
       run.wave.some((h) => h.stealth)
@@ -212,6 +215,7 @@ export function renderScout(root, ctx) {
         : 'Có Đạo tặc → focus DPS / chậm'
     );
   }
+  if (classes.includes('HEALER')) tips.push('Có Healer → ưu tiên hạ hồi máu');
 
   function loadoutPanelHtml() {
     const loadout = run.loadout || {};

@@ -201,11 +201,17 @@ export const TERRAIN_HINTS = {
   HIGH: 'Trần cao — quái trần thấp yếu đi',
 };
 
+/** Ải cuối chế độ chính (thắng → dungeonLevel = MAX_STAGE + 1). */
+export const MAX_STAGE = 50;
+
 export const HERO_CLASS_LABELS = {
   MAGE: 'Pháp sư',
   WARRIOR: 'Chiến sĩ',
   ROGUE: 'Đạo tặc',
   HEALER: 'Hồi máu',
+  ARCHER: 'Cung thủ',
+  TANK: 'Thuần tank',
+  BERSERKER: 'Berserker',
 };
 
 export const LANE_LABELS = ['Trên', 'Giữa', 'Dưới'];

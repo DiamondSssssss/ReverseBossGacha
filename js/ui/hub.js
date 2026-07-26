@@ -1,16 +1,16 @@
-import { MAP_UPGRADE, SPELLS } from '../data/constants.js?v=57';
+import { MAP_UPGRADE, SPELLS, MAX_STAGE } from '../data/constants.js?v=58';
 import {
   DUNGEON_BOSSES,
   getBoss,
   isBossUnlocked,
   unlockHint,
   syncUnlockedBosses,
-} from '../data/dungeonBosses.js?v=57';
-import { tryUpgradeMap, upgradeMapCost } from '../core/dungeon.js?v=57';
-import { saveState } from '../core/storage.js?v=57';
-import { achievementProgress, isGameCleared, evaluateAchievements } from '../core/achievements.js?v=57';
-import { showTutorial } from './tutorial.js?v=57';
-import { showRedeemModal } from './redeemUI.js?v=57';
+} from '../data/dungeonBosses.js?v=58';
+import { tryUpgradeMap, upgradeMapCost } from '../core/dungeon.js?v=58';
+import { saveState } from '../core/storage.js?v=58';
+import { achievementProgress, isGameCleared, evaluateAchievements } from '../core/achievements.js?v=58';
+import { showTutorial } from './tutorial.js?v=58';
+import { showRedeemModal } from './redeemUI.js?v=58';
 
 const GATE_SVG = `
 <svg viewBox="0 0 200 250" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -51,7 +51,7 @@ export function renderHub(root, ctx) {
   syncUnlockedBosses(state);
   const prog = achievementProgress(state);
   const cleared = isGameCleared(state);
-  const stageLabel = cleared ? 'Phá đảo' : `Ải ${Math.min(state.dungeonLevel, 40)}/40`;
+  const stageLabel = cleared ? 'Phá đảo' : `Ải ${Math.min(state.dungeonLevel, MAX_STAGE)}/${MAX_STAGE}`;
   const activeBoss = getBoss(state.selectedBossId);
 
   const lvl = state.mapUpgrade || 0;
@@ -129,6 +129,8 @@ export function renderHub(root, ctx) {
           ·
           <button type="button" class="ghost" id="btn-collection">Kho quái</button>
           ·
+          <button type="button" class="ghost" id="btn-heroes">Catalog Hero</button>
+          ·
           <button type="button" class="ghost" id="btn-reset">Reset</button>
         </p>
       </div>
@@ -148,6 +150,7 @@ export function renderHub(root, ctx) {
     });
   };
   root.querySelector('#btn-collection').onclick = () => go('collection');
+  root.querySelector('#btn-heroes').onclick = () => go('heroes');
   root.querySelector('#btn-ach').onclick = () => go('achievements');
   root.querySelector('#btn-help').onclick = () => {
     if (ctx.startTutorial) ctx.startTutorial();

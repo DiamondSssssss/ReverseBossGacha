@@ -1,11 +1,11 @@
-import { SPELLS, REWARDS, RARITY_COLORS } from '../data/constants.js?v=57';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=57';
-import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=57';
-import { CombatEngine } from '../core/combatEngine.js?v=57';
-import { saveState } from '../core/storage.js?v=57';
-import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=57';
-import { monsterSpriteUrl } from '../render/sprites.js?v=57';
-import { bindMonsterTips, hideMonsterTip } from './monsterTip.js?v=57';
+import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=58';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=58';
+import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=58';
+import { CombatEngine } from '../core/combatEngine.js?v=58';
+import { saveState } from '../core/storage.js?v=58';
+import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=58';
+import { monsterSpriteUrl } from '../render/sprites.js?v=58';
+import { bindMonsterTips, hideMonsterTip } from './monsterTip.js?v=58';
 
 let engine = null;
 
@@ -359,7 +359,7 @@ export function renderReward(root, ctx) {
   const r = lastReward || { result: 'win', souls: 0, gold: 0 };
   const win = r.result === 'win';
   const stageClass = r.clearedJustNow ? 'clear' : win ? '' : 'lose';
-  const mark = r.clearedJustNow ? '40' : win ? 'OK' : '…';
+  const mark = r.clearedJustNow ? String(MAX_STAGE) : win ? 'OK' : '…';
   const replayLabel = win ? 'Vào ải tiếp' : 'Chơi lại';
 
   root.innerHTML = `
@@ -368,9 +368,9 @@ export function renderReward(root, ctx) {
       <h2>${r.clearedJustNow ? 'Phá đảo' : win ? 'Chiến thắng' : 'Thất thủ'}</h2>
       <p class="muted">${
         r.clearedJustNow
-          ? 'Thắng ải 40. Tiếp tục sưu tầm ấn chương còn lại.'
+          ? `Thắng ải ${MAX_STAGE}. Tiếp tục sưu tầm ấn chương còn lại.`
           : win
-            ? `Tiến độ: ải ${Math.min(state.dungeonLevel, 40)}/40`
+            ? `Tiến độ: ải ${Math.min(state.dungeonLevel, MAX_STAGE)}/${MAX_STAGE}`
             : r.heroesDefeated
               ? `Kho báu bị rút — nhưng đã hạ/đẩy ${r.heroesDefeated} Hero.`
               : 'Kho báu bị rút — nhận Linh Hồn an ủi.'

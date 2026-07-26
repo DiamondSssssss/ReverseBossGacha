@@ -1,6 +1,6 @@
 /** Hero AI catalog — mỗi ải 1–40 có tổ hợp hero riêng */
 
-import { COMBAT } from './constants.js?v=57';
+import { COMBAT } from './constants.js?v=58';
 
 export const HEROES = [
   // ——— MAGE ———
@@ -249,6 +249,132 @@ export const HEROES = [
     hp: 680, atk: 185, speed: 2.95, range: 2.8, atkSpeed: 1.4, aoeRadius: 0,
     stealth: true, target: 'TREASURE', color: '#00897b', skills: ['STEALTH', 'BACKSTAB'],
     description: 'Rogue Boss-tier — lướt qua tuyến nếu thiếu anti-stealth.',
+  },
+
+  // ——— Cung thủ (ARCHER) ———
+  {
+    id: 'hero_archer_01',
+    name: 'Cung Thủ Đồng',
+    class: 'ARCHER',
+    hp: 210, atk: 48, speed: 2.0, range: 3.6, atkSpeed: 1.15, aoeRadius: 0,
+    target: 'TREASURE', color: '#a5d6a7', skills: [],
+    description: 'Bắn xa, máu mỏng — áp sát / gap-close.',
+  },
+  {
+    id: 'hero_archer_02',
+    name: 'Xạ Thủ Rừng',
+    class: 'ARCHER',
+    hp: 240, atk: 58, speed: 2.15, range: 3.8, atkSpeed: 1.25, aoeRadius: 0,
+    target: 'TREASURE', color: '#66bb6a', skills: [],
+    description: 'Tầm rất xa + tốc độ bắn — đừng để kite tự do.',
+  },
+  {
+    id: 'hero_archer_03',
+    name: 'Cung Bạc Săn',
+    class: 'ARCHER',
+    hp: 320, atk: 78, speed: 2.2, range: 4.0, atkSpeed: 1.35, aoeRadius: 0,
+    target: 'TREASURE', color: '#43a047', skills: [],
+    description: 'Cung thủ trung cấp — ưu tiên chase / silence vùng.',
+  },
+  {
+    id: 'hero_archer_04',
+    name: 'Cung Long Tiễn',
+    class: 'ARCHER',
+    hp: 620, atk: 155, speed: 2.35, range: 4.2, atkSpeed: 1.45, aoeRadius: 0,
+    target: 'TREASURE', color: '#2e7d32', skills: [],
+    description: 'Elite tầm xa ngang 7 cost — cần gap-close mạnh.',
+  },
+  {
+    id: 'hero_archer_05',
+    name: 'Thiên Tiễn Vương',
+    class: 'ARCHER',
+    hp: 780, atk: 195, speed: 2.4, range: 4.5, atkSpeed: 1.55, aoeRadius: 0,
+    target: 'TREASURE', color: '#1b5e20', skills: [],
+    description: 'Boss-tier cung — kite toàn map nếu thiếu áp sát.',
+  },
+
+  // ——— Thuần tank (TANK) ———
+  {
+    id: 'hero_tank_01',
+    name: 'Khiên Gỗ',
+    class: 'TANK',
+    hp: 520, atk: 22, speed: 1.35, range: 1.2, atkSpeed: 0.65, aoeRadius: 0,
+    target: 'TREASURE', color: '#90a4ae', skills: ['TAUNT_SELF', 'SHIELD'],
+    description: 'HP cao, dame thấp — khiêu khích + khiên.',
+  },
+  {
+    id: 'hero_tank_02',
+    name: 'Thành Đồng',
+    class: 'TANK',
+    hp: 680, atk: 28, speed: 1.25, range: 1.25, atkSpeed: 0.6, aoeRadius: 0,
+    target: 'TREASURE', color: '#78909c', skills: ['TAUNT_SELF', 'SHIELD'],
+    description: 'Tường sống — cần DoT / %HP / Boss.',
+  },
+  {
+    id: 'hero_tank_03',
+    name: 'Tháp Sắt',
+    class: 'TANK',
+    hp: 900, atk: 35, speed: 1.2, range: 1.3, atkSpeed: 0.55, aoeRadius: 0,
+    target: 'TREASURE', color: '#607d8b', skills: ['TAUNT_SELF', 'SHIELD'],
+    description: 'Siêu trâu, chậm — đừng đánh tay không.',
+  },
+  {
+    id: 'hero_tank_04',
+    name: 'Thành Bastion',
+    class: 'TANK',
+    hp: 1400, atk: 55, speed: 1.15, range: 1.35, atkSpeed: 0.55, aoeRadius: 0,
+    target: 'TREASURE', color: '#455a64', skills: ['TAUNT_SELF', 'SHIELD'],
+    description: 'Elite tank ngang Behemoth — DoT bắt buộc.',
+  },
+  {
+    id: 'hero_tank_05',
+    name: 'Pháo Đài Bất Diệt',
+    class: 'TANK',
+    hp: 1900, atk: 70, speed: 1.1, range: 1.4, atkSpeed: 0.5, aoeRadius: 0,
+    target: 'TREASURE', color: '#37474f', skills: ['TAUNT_SELF', 'SHIELD'],
+    description: 'Boss-tier thuần tank — wall + healer là ác mộng.',
+  },
+
+  // ——— Berserker ———
+  {
+    id: 'hero_berserker_01',
+    name: 'Cuồng Binh',
+    class: 'BERSERKER',
+    hp: 300, atk: 62, speed: 2.3, range: 1.25, atkSpeed: 1.35, aoeRadius: 0,
+    target: 'TREASURE', color: '#ef5350', skills: ['BERSERK'],
+    description: 'Máu càng thấp càng mạnh — burst sớm hoặc kite.',
+  },
+  {
+    id: 'hero_berserker_02',
+    name: 'Rìu Máu',
+    class: 'BERSERKER',
+    hp: 340, atk: 72, speed: 2.45, range: 1.3, atkSpeed: 1.4, aoeRadius: 0,
+    target: 'TREASURE', color: '#e53935', skills: ['BERSERK'],
+    description: 'Rush thẳng — đừng để vào vùng máu đỏ.',
+  },
+  {
+    id: 'hero_berserker_03',
+    name: 'Cuồng Chiến',
+    class: 'BERSERKER',
+    hp: 420, atk: 95, speed: 2.55, range: 1.35, atkSpeed: 1.5, aoeRadius: 0,
+    target: 'TREASURE', color: '#c62828', skills: ['BERSERK'],
+    description: 'Berserk mạnh khi <50% HP — CC / slow hữu ích.',
+  },
+  {
+    id: 'hero_berserker_04',
+    name: 'Huyết Cuồng',
+    class: 'BERSERKER',
+    hp: 720, atk: 175, speed: 2.7, range: 1.4, atkSpeed: 1.55, aoeRadius: 0,
+    target: 'TREASURE', color: '#b71c1c', skills: ['BERSERK'],
+    description: 'Elite berserk — càng đánh càng nguy hiểm nếu kéo dài.',
+  },
+  {
+    id: 'hero_berserker_05',
+    name: 'Thần Cuồng Hủy',
+    class: 'BERSERKER',
+    hp: 900, atk: 220, speed: 2.85, range: 1.45, atkSpeed: 1.65, aoeRadius: 0,
+    target: 'TREASURE', color: '#880e4f', skills: ['BERSERK'],
+    description: 'Boss-tier berserker — burst hoặc chết dưới rìu.',
   },
 ];
 
@@ -519,121 +645,220 @@ export const WAVE_PLANS = {
   },
   30: {
     theme: 'Sảnh tối thượng',
-    tip: 'Full war + healer waves — cửa ngõ ải 31.',
+    tip: 'Cửa ngõ ải 31 — xuất hiện Cung / Tank / Berserk.',
     waves: [
-      { delay: 0.5, ids: ['hero_warrior_06', 'hero_healer_01', 'hero_rogue_04', 'hero_mage_05'] },
-      { delay: 12, ids: ['hero_warrior_07', 'hero_warrior_08', 'hero_healer_02', 'hero_warrior_05', 'hero_mage_03'] },
-      { delay: 24, ids: ['hero_healer_03', 'hero_warrior_08', 'hero_warrior_07', 'hero_rogue_05', 'hero_mage_05', 'hero_warrior_06'] },
+      { delay: 0.5, ids: ['hero_warrior_06', 'hero_archer_01', 'hero_rogue_04', 'hero_mage_05'] },
+      { delay: 12, ids: ['hero_tank_01', 'hero_warrior_08', 'hero_healer_02', 'hero_berserker_01', 'hero_mage_03'] },
+      { delay: 24, ids: ['hero_healer_03', 'hero_berserker_02', 'hero_archer_02', 'hero_tank_02', 'hero_warrior_07', 'hero_rogue_05'] },
     ],
   },
 
-  // ——— Ải 31–40: hero elite ngang quái 7–8 cost / Boss ———
+  // ——— Ải 31–40: elite + class mới ———
   31: {
     theme: 'Bước vào vực sâu',
-    tip: 'Elite war + mage ngang Boss 7–8 cost.',
+    tip: 'Elite war + cung thủ — gap-close / DoT.',
     waves: [
-      { delay: 0.5, ids: ['hero_warrior_09', 'hero_warrior_10', 'hero_healer_04'] },
-      { delay: 14, ids: ['hero_mage_06', 'hero_warrior_08', 'hero_rogue_06'] },
-      { delay: 26, ids: ['hero_warrior_09', 'hero_healer_03', 'hero_mage_06'] },
+      { delay: 0.5, ids: ['hero_warrior_09', 'hero_archer_03', 'hero_healer_04'] },
+      { delay: 14, ids: ['hero_mage_06', 'hero_tank_03', 'hero_berserker_02'] },
+      { delay: 26, ids: ['hero_warrior_09', 'hero_healer_03', 'hero_archer_03'] },
     ],
   },
   32: {
     theme: 'Phalanx titan',
-    tip: 'Toàn chiến binh Boss-tier — DoT / Hydra / Behemoth.',
+    tip: 'Thuần tank + chiến binh — DoT / %HP.',
     waves: [
-      { delay: 0.4, ids: ['hero_warrior_09', 'hero_warrior_07', 'hero_warrior_10'] },
-      { delay: 12, ids: ['hero_warrior_11', 'hero_healer_04', 'hero_warrior_08'] },
-      { delay: 24, ids: ['hero_warrior_10', 'hero_warrior_09', 'hero_healer_04', 'hero_mage_05'] },
+      { delay: 0.4, ids: ['hero_tank_03', 'hero_warrior_09', 'hero_tank_02'] },
+      { delay: 12, ids: ['hero_warrior_11', 'hero_healer_04', 'hero_berserker_03'] },
+      { delay: 24, ids: ['hero_tank_04', 'hero_warrior_10', 'hero_healer_04', 'hero_archer_03'] },
     ],
   },
   33: {
     theme: 'Pháp trận diệt long',
-    tip: 'Mage ngang Rồng/Hydra — Silence / áp sát ngay.',
+    tip: 'Mage + cung xa — Silence / áp sát ngay.',
     waves: [
-      { delay: 0.5, ids: ['hero_mage_06', 'hero_mage_07', 'hero_healer_04'] },
-      { delay: 13, ids: ['hero_warrior_10', 'hero_mage_06', 'hero_rogue_06', 'hero_healer_02'] },
-      { delay: 25, ids: ['hero_mage_07', 'hero_warrior_09', 'hero_healer_05'] },
+      { delay: 0.5, ids: ['hero_mage_06', 'hero_archer_04', 'hero_healer_04'] },
+      { delay: 13, ids: ['hero_warrior_10', 'hero_mage_06', 'hero_berserker_03', 'hero_healer_02'] },
+      { delay: 25, ids: ['hero_mage_07', 'hero_archer_04', 'hero_healer_05'] },
     ],
   },
   34: {
     theme: 'Đêm sát thủ',
-    tip: 'Rogue Boss-tier dày đặc — Mắt thần bắt buộc.',
+    tip: 'Rogue + berserk rush — Mắt thần + CC.',
     waves: [
-      { delay: 0.4, ids: ['hero_rogue_06', 'hero_rogue_07', 'hero_rogue_04', 'hero_rogue_05'] },
-      { delay: 12, ids: ['hero_warrior_10', 'hero_healer_04', 'hero_rogue_06'] },
-      { delay: 24, ids: ['hero_rogue_07', 'hero_warrior_09', 'hero_healer_05', 'hero_mage_06'] },
+      { delay: 0.4, ids: ['hero_rogue_06', 'hero_berserker_03', 'hero_rogue_04', 'hero_archer_02'] },
+      { delay: 12, ids: ['hero_warrior_10', 'hero_healer_04', 'hero_berserker_04'] },
+      { delay: 24, ids: ['hero_rogue_07', 'hero_tank_03', 'hero_healer_05', 'hero_mage_06'] },
     ],
   },
   35: {
     theme: 'Thánh chiến titan',
-    tip: 'Healer 7 cost-tier giữ wall — hạ healer trước.',
+    tip: 'Tank + healer giữ wall — hạ healer trước.',
     waves: [
-      { delay: 0.5, ids: ['hero_healer_05', 'hero_warrior_11', 'hero_warrior_09'] },
-      { delay: 11, ids: ['hero_warrior_10', 'hero_healer_04', 'hero_mage_06', 'hero_rogue_06'] },
-      { delay: 22, ids: ['hero_healer_05', 'hero_warrior_11', 'hero_warrior_10', 'hero_mage_07'] },
+      { delay: 0.5, ids: ['hero_healer_05', 'hero_tank_04', 'hero_warrior_09'] },
+      { delay: 11, ids: ['hero_berserker_04', 'hero_healer_04', 'hero_archer_04', 'hero_rogue_06'] },
+      { delay: 22, ids: ['hero_healer_05', 'hero_tank_04', 'hero_warrior_10', 'hero_mage_07'] },
     ],
   },
   36: {
     theme: 'Bão hủy diệt',
-    tip: 'Ba wave Boss-tier dồn dập — giữ spell đợt cuối.',
+    tip: 'Ba class mới + Boss-tier dồn dập.',
     waves: [
-      { delay: 0.4, ids: ['hero_warrior_10', 'hero_mage_06', 'hero_rogue_06', 'hero_healer_04'] },
-      { delay: 10, ids: ['hero_warrior_09', 'hero_warrior_11', 'hero_mage_07', 'hero_healer_04'] },
-      { delay: 21, ids: ['hero_warrior_10', 'hero_rogue_07', 'hero_healer_05', 'hero_mage_07', 'hero_warrior_08'] },
+      { delay: 0.4, ids: ['hero_archer_04', 'hero_mage_06', 'hero_berserker_03', 'hero_healer_04'] },
+      { delay: 10, ids: ['hero_tank_04', 'hero_warrior_11', 'hero_mage_07', 'hero_berserker_04'] },
+      { delay: 21, ids: ['hero_archer_05', 'hero_rogue_07', 'hero_healer_05', 'hero_tank_04', 'hero_warrior_08'] },
     ],
   },
   37: {
     theme: 'Vách sắt bất diệt',
-    tip: 'Tank + healer ngang 7–8 cost — cần Boss / DoT.',
+    tip: 'Thuần tank dày — cần Boss / DoT / %HP.',
     waves: [
-      { delay: 0.5, ids: ['hero_warrior_11', 'hero_healer_05', 'hero_warrior_09'] },
-      { delay: 12, ids: ['hero_warrior_10', 'hero_healer_04', 'hero_warrior_11', 'hero_mage_06'] },
-      { delay: 24, ids: ['hero_warrior_11', 'hero_healer_05', 'hero_warrior_10', 'hero_rogue_07', 'hero_mage_07'] },
+      { delay: 0.5, ids: ['hero_tank_05', 'hero_healer_05', 'hero_tank_04'] },
+      { delay: 12, ids: ['hero_warrior_10', 'hero_healer_04', 'hero_tank_05', 'hero_archer_04'] },
+      { delay: 24, ids: ['hero_tank_05', 'hero_healer_05', 'hero_berserker_04', 'hero_rogue_07', 'hero_mage_07'] },
     ],
   },
   38: {
     theme: 'Song diệt thần',
-    tip: 'Mage + rogue Boss-tier — đội hình 7–8 cost hoặc thua.',
+    tip: 'Cung + berserk Boss-tier — đội hình 7–8 cost.',
     waves: [
-      { delay: 0.4, ids: ['hero_mage_07', 'hero_rogue_07', 'hero_warrior_10'] },
-      { delay: 11, ids: ['hero_healer_05', 'hero_mage_06', 'hero_rogue_06', 'hero_warrior_09'] },
-      { delay: 22, ids: ['hero_mage_07', 'hero_rogue_07', 'hero_warrior_11', 'hero_healer_05', 'hero_mage_06'] },
+      { delay: 0.4, ids: ['hero_archer_05', 'hero_berserker_05', 'hero_warrior_10'] },
+      { delay: 11, ids: ['hero_healer_05', 'hero_mage_06', 'hero_archer_04', 'hero_tank_04'] },
+      { delay: 22, ids: ['hero_archer_05', 'hero_berserker_05', 'hero_tank_05', 'hero_healer_05', 'hero_mage_07'] },
     ],
   },
   39: {
     theme: 'Đêm trước tận thế II',
-    tip: 'Bốn wave Boss-tier — giữ spell cho đợt cuối.',
+    tip: 'Bốn wave hỗn hợp class mới — giữ spell cuối.',
     waves: [
-      { delay: 0.35, ids: ['hero_rogue_06', 'hero_mage_06', 'hero_warrior_09'] },
-      { delay: 9, ids: ['hero_warrior_10', 'hero_healer_04', 'hero_rogue_07', 'hero_mage_07'] },
-      { delay: 18, ids: ['hero_warrior_11', 'hero_healer_05', 'hero_warrior_10', 'hero_mage_06'] },
-      { delay: 28, ids: ['hero_warrior_11', 'hero_mage_07', 'hero_healer_05', 'hero_rogue_07', 'hero_warrior_10'] },
+      { delay: 0.35, ids: ['hero_rogue_06', 'hero_archer_04', 'hero_berserker_03'] },
+      { delay: 9, ids: ['hero_tank_04', 'hero_healer_04', 'hero_berserker_04', 'hero_mage_07'] },
+      { delay: 18, ids: ['hero_warrior_11', 'hero_healer_05', 'hero_archer_05', 'hero_mage_06'] },
+      { delay: 28, ids: ['hero_tank_05', 'hero_mage_07', 'hero_healer_05', 'hero_berserker_05', 'hero_archer_05'] },
     ],
   },
   40: {
     theme: 'Phá đảo tối thượng',
-    tip: 'Full elite ngang 7–8 cost — Boss + spell timing.',
+    tip: 'Ải 40 — full elite + 3 class mới. Còn ải 41–50.',
     waves: [
-      { delay: 0.4, ids: ['hero_warrior_09', 'hero_healer_04', 'hero_mage_06', 'hero_rogue_06'] },
-      { delay: 11, ids: ['hero_warrior_10', 'hero_warrior_11', 'hero_healer_05', 'hero_mage_07', 'hero_rogue_07'] },
-      { delay: 22, ids: ['hero_healer_05', 'hero_warrior_11', 'hero_mage_07', 'hero_rogue_07', 'hero_warrior_10', 'hero_mage_06'] },
-      { delay: 34, ids: ['hero_warrior_11', 'hero_healer_05', 'hero_mage_07', 'hero_warrior_10', 'hero_rogue_07'] },
+      { delay: 0.4, ids: ['hero_warrior_09', 'hero_healer_04', 'hero_archer_04', 'hero_berserker_04'] },
+      { delay: 11, ids: ['hero_tank_05', 'hero_warrior_11', 'hero_healer_05', 'hero_mage_07', 'hero_rogue_07'] },
+      { delay: 22, ids: ['hero_healer_05', 'hero_berserker_05', 'hero_archer_05', 'hero_tank_04', 'hero_warrior_10', 'hero_mage_06'] },
+      { delay: 34, ids: ['hero_tank_05', 'hero_healer_05', 'hero_archer_05', 'hero_berserker_05', 'hero_rogue_07'] },
+    ],
+  },
+
+  // ——— Ải 41–50: đỉnh cao ———
+  41: {
+    theme: 'Cổng hỗn mang',
+    tip: 'Mở rộng sau ải 40 — cung + tank mở đầu.',
+    waves: [
+      { delay: 0.4, ids: ['hero_archer_05', 'hero_tank_04', 'hero_mage_07'] },
+      { delay: 12, ids: ['hero_berserker_05', 'hero_healer_05', 'hero_warrior_11', 'hero_rogue_07'] },
+      { delay: 24, ids: ['hero_tank_05', 'hero_archer_05', 'hero_healer_05', 'hero_mage_07'] },
+    ],
+  },
+  42: {
+    theme: 'Mưa tiễn',
+    tip: 'Toàn cung thủ elite — gap-close / teleport / rush.',
+    waves: [
+      { delay: 0.35, ids: ['hero_archer_04', 'hero_archer_05', 'hero_archer_03'] },
+      { delay: 11, ids: ['hero_archer_05', 'hero_healer_05', 'hero_archer_04', 'hero_mage_06'] },
+      { delay: 22, ids: ['hero_archer_05', 'hero_archer_05', 'hero_tank_03', 'hero_healer_04', 'hero_berserker_03'] },
+    ],
+  },
+  43: {
+    theme: 'Thành bất khả xâm',
+    tip: 'Thuần tank swarm — Boss / DoT / burn.',
+    waves: [
+      { delay: 0.5, ids: ['hero_tank_05', 'hero_tank_04', 'hero_healer_05'] },
+      { delay: 13, ids: ['hero_tank_05', 'hero_warrior_11', 'hero_healer_05', 'hero_tank_04'] },
+      { delay: 26, ids: ['hero_tank_05', 'hero_tank_05', 'hero_healer_05', 'hero_archer_04', 'hero_mage_07'] },
+    ],
+  },
+  44: {
+    theme: 'Cuồng huyết',
+    tip: 'Berserker dày — burst sớm, đừng kéo dài.',
+    waves: [
+      { delay: 0.35, ids: ['hero_berserker_04', 'hero_berserker_05', 'hero_berserker_03'] },
+      { delay: 10, ids: ['hero_berserker_05', 'hero_healer_04', 'hero_rogue_07', 'hero_berserker_04'] },
+      { delay: 21, ids: ['hero_berserker_05', 'hero_tank_04', 'hero_healer_05', 'hero_archer_05', 'hero_berserker_05'] },
+    ],
+  },
+  45: {
+    theme: 'Tam hình diệt',
+    tip: 'Cung + Tank + Berserk cùng wave.',
+    waves: [
+      { delay: 0.4, ids: ['hero_archer_05', 'hero_tank_05', 'hero_berserker_05'] },
+      { delay: 11, ids: ['hero_healer_05', 'hero_mage_07', 'hero_rogue_07', 'hero_warrior_11'] },
+      { delay: 22, ids: ['hero_archer_05', 'hero_tank_05', 'hero_berserker_05', 'hero_healer_05', 'hero_mage_07'] },
+      { delay: 34, ids: ['hero_tank_05', 'hero_archer_05', 'hero_berserker_05', 'hero_healer_05'] },
+    ],
+  },
+  46: {
+    theme: 'Bão class',
+    tip: 'Mọi class dồn — đội hình đa dụng.',
+    waves: [
+      { delay: 0.35, ids: ['hero_mage_07', 'hero_archer_05', 'hero_rogue_07'] },
+      { delay: 10, ids: ['hero_tank_05', 'hero_warrior_11', 'hero_healer_05', 'hero_berserker_04'] },
+      { delay: 20, ids: ['hero_archer_05', 'hero_mage_07', 'hero_berserker_05', 'hero_tank_04', 'hero_healer_05'] },
+      { delay: 32, ids: ['hero_tank_05', 'hero_archer_05', 'hero_warrior_11', 'hero_berserker_05', 'hero_rogue_07'] },
+    ],
+  },
+  47: {
+    theme: 'Vực không đáy',
+    tip: '4 wave liên hoàn — giữ spell đợt 3–4.',
+    waves: [
+      { delay: 0.3, ids: ['hero_rogue_07', 'hero_berserker_05', 'hero_archer_04'] },
+      { delay: 9, ids: ['hero_tank_05', 'hero_healer_05', 'hero_mage_07', 'hero_warrior_10'] },
+      { delay: 18, ids: ['hero_archer_05', 'hero_berserker_05', 'hero_healer_05', 'hero_tank_05'] },
+      { delay: 28, ids: ['hero_tank_05', 'hero_archer_05', 'hero_berserker_05', 'hero_mage_07', 'hero_healer_05', 'hero_rogue_07'] },
+    ],
+  },
+  48: {
+    theme: 'Thiên tiễn & thành',
+    tip: 'Cung kite + tank wall — 2 cực khó.',
+    waves: [
+      { delay: 0.35, ids: ['hero_archer_05', 'hero_archer_05', 'hero_tank_05'] },
+      { delay: 11, ids: ['hero_tank_05', 'hero_healer_05', 'hero_archer_05', 'hero_berserker_04'] },
+      { delay: 22, ids: ['hero_archer_05', 'hero_tank_05', 'hero_healer_05', 'hero_mage_07', 'hero_berserker_05'] },
+      { delay: 34, ids: ['hero_tank_05', 'hero_archer_05', 'hero_archer_05', 'hero_healer_05', 'hero_tank_05'] },
+    ],
+  },
+  49: {
+    theme: 'Đêm trước tận thế III',
+    tip: 'Gần phá đảo — 4 wave full elite.',
+    waves: [
+      { delay: 0.3, ids: ['hero_berserker_05', 'hero_mage_07', 'hero_rogue_07'] },
+      { delay: 9, ids: ['hero_tank_05', 'hero_healer_05', 'hero_archer_05', 'hero_warrior_11'] },
+      { delay: 18, ids: ['hero_berserker_05', 'hero_archer_05', 'hero_tank_05', 'hero_healer_05', 'hero_mage_07'] },
+      { delay: 28, ids: ['hero_tank_05', 'hero_berserker_05', 'hero_archer_05', 'hero_healer_05', 'hero_rogue_07', 'hero_mage_07'] },
+    ],
+  },
+  50: {
+    theme: 'Ngai hỗn mang tối thượng',
+    tip: 'Ải 50 — phá đảo mới. Full elite mọi class.',
+    waves: [
+      { delay: 0.3, ids: ['hero_archer_05', 'hero_tank_05', 'hero_berserker_05', 'hero_healer_05'] },
+      { delay: 10, ids: ['hero_mage_07', 'hero_warrior_11', 'hero_rogue_07', 'hero_archer_05', 'hero_tank_04'] },
+      { delay: 20, ids: ['hero_tank_05', 'hero_berserker_05', 'hero_archer_05', 'hero_healer_05', 'hero_mage_07', 'hero_warrior_11'] },
+      { delay: 32, ids: ['hero_tank_05', 'hero_archer_05', 'hero_berserker_05', 'hero_healer_05', 'hero_mage_07', 'hero_rogue_07', 'hero_warrior_11'] },
     ],
   },
 };
 
 /**
- * @param {number} level 1–40
+ * @param {number} level 1–50
  */
 export function getWavePlan(level = 1) {
-  const lv = Math.max(1, Math.min(40, level | 0));
+  const lv = Math.max(1, Math.min(50, level | 0));
   return WAVE_PLANS[lv] || WAVE_PLANS[1];
 }
 
 function heroScaleForLevel(level) {
   if (level <= 20) return 0.9 + (level - 1) * 0.095;
   if (level <= 30) return 0.9 + 19 * 0.095 + (level - 20) * 0.16;
-  return 0.9 + 19 * 0.095 + 10 * 0.16 + (level - 30) * 0.2;
+  if (level <= 40) return 0.9 + 19 * 0.095 + 10 * 0.16 + (level - 30) * 0.2;
+  return 0.9 + 19 * 0.095 + 10 * 0.16 + 10 * 0.2 + (level - 40) * 0.18;
 }
 
 /** Flatten plan.ids hoặc plan.waves → danh sách { id, spawnDelay, waveIndex } */
@@ -669,15 +894,17 @@ export function buildWave(level = 1) {
   spawns.forEach((slot, i) => {
     const template = HERO_BY_ID[slot.id] || HEROES[0];
     const roleLine =
-      template.class === 'WARRIOR'
+      template.class === 'WARRIOR' || template.class === 'TANK'
         ? 'Tuyến trước'
-        : template.class === 'HEALER'
-          ? 'Hỗ trợ / hồi máu'
-          : template.class === 'MAGE'
-            ? 'Tuyến sau / phép'
-            : template.stealth
-              ? 'Sườn / đột phá'
-              : 'Áp sát';
+        : template.class === 'BERSERKER'
+          ? 'Rush / cuồng chiến'
+          : template.class === 'HEALER'
+            ? 'Hỗ trợ / hồi máu'
+            : template.class === 'MAGE' || template.class === 'ARCHER'
+              ? 'Tuyến sau / tầm xa'
+              : template.stealth
+                ? 'Sườn / đột phá'
+                : 'Áp sát';
     waves.push({
       ...template,
       instanceId: `${template.id}_L${level}_${i}`,
@@ -704,7 +931,7 @@ export function buildWave(level = 1) {
 
 /**
  * Gán ô cổng / lane cố định theo đội hình — gọi khi có map.
- * Warrior → cổng giữa; Rogue → mép; Mage → spread.
+ * Warrior/Tank → cổng giữa; Rogue/Berserker → mép; Mage/Archer/Healer → spread.
  */
 export function assignHeroFormation(wave, map) {
   if (!wave?.length || !map?.gate?.length) return wave;
@@ -739,22 +966,24 @@ export function assignHeroFormation(wave, map) {
 
   wave.forEach((h, i) => {
     let g;
-    if (h.class === 'WARRIOR') g = pickSpread(centerFirst);
-    else if (h.class === 'ROGUE') g = pickSpread(edgeFirst);
-    else g = pickSpread(gates); // MAGE + HEALER backline/spread
+    if (h.class === 'WARRIOR' || h.class === 'TANK') g = pickSpread(centerFirst);
+    else if (h.class === 'ROGUE' || h.class === 'BERSERKER') g = pickSpread(edgeFirst);
+    else g = pickSpread(gates);
 
     h.formation = {
       order: i + 1,
       roleLine:
-        h.class === 'WARRIOR'
+        h.class === 'WARRIOR' || h.class === 'TANK'
           ? 'Tuyến trước'
-          : h.class === 'HEALER'
-            ? 'Hỗ trợ / hồi máu'
-            : h.class === 'MAGE'
-              ? 'Tuyến sau / phép'
-              : h.stealth
-                ? 'Sườn / đột phá'
-                : 'Áp sát',
+          : h.class === 'BERSERKER'
+            ? 'Rush / cuồng chiến'
+            : h.class === 'HEALER'
+              ? 'Hỗ trợ / hồi máu'
+              : h.class === 'MAGE' || h.class === 'ARCHER'
+                ? 'Tuyến sau / tầm xa'
+                : h.stealth
+                  ? 'Sườn / đột phá'
+                  : 'Áp sát',
       gateIndex: gates.findIndex((x) => x.col === g.col && x.row === g.row),
       col: g.col,
       row: g.row,

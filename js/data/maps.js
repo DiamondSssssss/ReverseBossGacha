@@ -1,6 +1,6 @@
 /** Per-stage continuous battle maps — 1 ải = 1 map */
 
-import { TERRAIN } from './rooms.js?v=57';
+import { TERRAIN } from './rooms.js?v=58';
 
 export const TILE = {
   WALL: '#',
@@ -1053,7 +1053,7 @@ const RAW_MAPS = {
       '##############',
     ],
     {
-      tip: 'Ải 40 — cổng trống, buff hero dày. Phá đảo tối thượng.',
+      tip: 'Ải 40 — cổng trống, buff hero dày. Còn hành trình 41–50.',
       buffs: [
         { cells: ['1,3', '2,3', '1,4', '2,4'], side: 'hero', kind: 'SPEED_UP', value: 1.45 },
         { cells: ['3,3', '3,4', '4,3'], side: 'hero', kind: 'ATK_UP', value: 1.3 },
@@ -1067,15 +1067,291 @@ const RAW_MAPS = {
       ],
     }
   ),
+  41: M(
+    'stage_41',
+    'Cổng Hỗn Mang',
+    11,
+    [
+      '##############',
+      '#xxxx~~..^^..#',
+      '#xxxx.##.....#',
+      'Gxxxx........T',
+      'Gxxxx........T',
+      '#xxxx.##.....#',
+      '#xxxx..^^..~~#',
+      '##############',
+    ],
+    {
+      tip: 'Cost 11 — sau ải 40. Cổng trống, đa địa hình.',
+      buffs: [
+        { cells: ['1,3', '2,4', '3,3'], side: 'hero', kind: 'SPEED_UP', value: 1.4 },
+        { cells: ['2,3', '3,4'], side: 'hero', kind: 'ATK_UP', value: 1.25 },
+        { cells: ['4,2', '4,5'], side: 'hero', kind: 'HEAL_TICK', value: 7 },
+        { cells: ['7,3', '8,4'], side: 'monster', kind: 'ATK_UP', value: 1.5 },
+        { cells: ['9,3', '10,4'], side: 'monster', kind: 'DEF_UP', value: 1.45 },
+        { cells: ['5,3', '5,4'], side: 'hero', kind: 'SILENCE_ZONE', value: 1 },
+        { cells: ['6,3', '6,4'], side: 'both', kind: 'HEAL_TICK', value: 6 },
+      ],
+    }
+  ),
+  42: M(
+    'stage_42',
+    'Thung Lũng Tiễn',
+    11,
+    [
+      '##############',
+      '#xxxxhhhh....#',
+      '#xxxx........#',
+      'Gxxxx..oo....T',
+      'Gxxxx....oo..T',
+      '#xxxx........#',
+      '#xxxx....hhhh#',
+      '##############',
+    ],
+    {
+      tip: 'Cao địa cho cung thủ địch — đặt gap-close giữa đường.',
+      buffs: [
+        { cells: ['1,3', '2,3', '1,4', '2,4'], side: 'hero', kind: 'SPEED_UP', value: 1.45 },
+        { cells: ['3,3', '4,4'], side: 'hero', kind: 'ATK_UP', value: 1.3 },
+        { cells: ['3,2', '4,5'], side: 'hero', kind: 'HEAL_TICK', value: 6 },
+        { cells: ['7,3', '8,4'], side: 'monster', kind: 'ATK_UP', value: 1.55 },
+        { cells: ['9,3', '10,4'], side: 'monster', kind: 'DEF_UP', value: 1.4 },
+        { cells: ['6,1', '6,6'], side: 'monster', kind: 'ATK_UP', value: 1.2 },
+        { cells: ['5,3', '5,4'], side: 'hero', kind: 'SILENCE_ZONE', value: 1 },
+      ],
+    }
+  ),
+  43: M(
+    'stage_43',
+    'Thành Bastion',
+    11,
+    [
+      '##############',
+      '#xxxxoooooooo#',
+      '#xxxx##.....##',
+      'Gxxxx..dd....T',
+      'Gxxxx....dd..T',
+      '#xxxx##.....##',
+      '#xxxxoooooooo#',
+      '##############',
+    ],
+    {
+      tip: 'Hành lang hẹp — tank địch chậm nhưng siêu trâu.',
+      buffs: [
+        { cells: ['1,3', '2,4', '3,3', '4,4'], side: 'hero', kind: 'SPEED_UP', value: 1.35 },
+        { cells: ['2,3', '3,4'], side: 'hero', kind: 'ATK_UP', value: 1.25 },
+        { cells: ['3,2', '3,5'], side: 'hero', kind: 'HEAL_TICK', value: 8 },
+        { cells: ['7,3', '8,3', '7,4', '8,4'], side: 'monster', kind: 'DEF_UP', value: 1.6 },
+        { cells: ['9,3', '10,4'], side: 'monster', kind: 'ATK_UP', value: 1.45 },
+        { cells: ['6,2', '6,5'], side: 'both', kind: 'HEAL_TICK', value: 7 },
+        { cells: ['5,3', '5,4'], side: 'hero', kind: 'DEF_UP', value: 1.15 },
+      ],
+    }
+  ),
+  44: M(
+    'stage_44',
+    'Đấu Trường Máu',
+    11,
+    [
+      '##############',
+      '#xxxx^^..^^..#',
+      '#xxxx........#',
+      'Gxxxx..~~~~..T',
+      'Gxxxx..~~~~..T',
+      '#xxxx........#',
+      '#xxxx..^^..^^#',
+      '##############',
+    ],
+    {
+      tip: 'Berserk thích không gian trống — CC / slow giữa sông.',
+      buffs: [
+        { cells: ['1,3', '2,3', '1,4', '2,4'], side: 'hero', kind: 'SPEED_UP', value: 1.5 },
+        { cells: ['3,3', '4,4'], side: 'hero', kind: 'ATK_UP', value: 1.35 },
+        { cells: ['3,2', '4,5'], side: 'hero', kind: 'HEAL_TICK', value: 5 },
+        { cells: ['7,3', '8,4'], side: 'monster', kind: 'ATK_UP', value: 1.55 },
+        { cells: ['9,3', '10,4'], side: 'monster', kind: 'DEF_UP', value: 1.4 },
+        { cells: ['6,3', '6,4'], side: 'both', kind: 'HEAL_TICK', value: 8 },
+        { cells: ['5,3', '5,4'], side: 'hero', kind: 'SILENCE_ZONE', value: 1 },
+      ],
+    }
+  ),
+  45: M(
+    'stage_45',
+    'Tam Hình Diệt',
+    12,
+    [
+      '##############',
+      '#xxxx~~dd##ll#',
+      '#xxxx.^^^^...#',
+      'Gxxxx........T',
+      'Gxxxx........T',
+      '#xxxx...^^^^.#',
+      '#xxxxll##dd~~#',
+      '##############',
+    ],
+    {
+      tip: 'Cost 12 — hỗn địa hình. Cung / tank / berserk cùng lúc.',
+      buffs: [
+        { cells: ['1,3', '2,4', '3,3', '4,4'], side: 'hero', kind: 'SPEED_UP', value: 1.45 },
+        { cells: ['2,3', '3,4'], side: 'hero', kind: 'ATK_UP', value: 1.3 },
+        { cells: ['4,2', '4,5'], side: 'hero', kind: 'HEAL_TICK', value: 8 },
+        { cells: ['7,3', '8,4'], side: 'monster', kind: 'ATK_UP', value: 1.6 },
+        { cells: ['9,3', '10,4'], side: 'monster', kind: 'DEF_UP', value: 1.5 },
+        { cells: ['6,3', '6,4'], side: 'both', kind: 'HEAL_TICK', value: 8 },
+        { cells: ['5,3', '5,4'], side: 'hero', kind: 'SILENCE_ZONE', value: 1 },
+        { cells: ['11,2', '11,5'], side: 'hero', kind: 'SPEED_UP', value: 1.2 },
+      ],
+    }
+  ),
+  46: M(
+    'stage_46',
+    'Bão Class',
+    12,
+    [
+      '##############',
+      '#xxxxl.oooo.l#',
+      '#xxxxl......l#',
+      'Gxxxx..ddhh..T',
+      'Gxxxx..hhdd..T',
+      '#xxxxl......l#',
+      '#xxxxl.oooo.l#',
+      '##############',
+    ],
+    {
+      tip: 'Mọi class — đặt đa dụng, giữ spell cuối.',
+      buffs: [
+        { cells: ['1,3', '2,3', '3,4', '4,4'], side: 'hero', kind: 'SPEED_UP', value: 1.4 },
+        { cells: ['2,4', '3,3'], side: 'hero', kind: 'ATK_UP', value: 1.3 },
+        { cells: ['4,2', '4,5'], side: 'hero', kind: 'HEAL_TICK', value: 7 },
+        { cells: ['7,3', '8,4'], side: 'monster', kind: 'ATK_UP', value: 1.55 },
+        { cells: ['9,3', '10,4'], side: 'monster', kind: 'DEF_UP', value: 1.5 },
+        { cells: ['6,1', '6,6'], side: 'hero', kind: 'SPEED_UP', value: 1.25 },
+        { cells: ['5,3', '5,4'], side: 'hero', kind: 'ATK_UP', value: 1.15 },
+      ],
+    }
+  ),
+  47: M(
+    'stage_47',
+    'Vực Không Đáy',
+    12,
+    [
+      '##############',
+      '#xxxx~~~~##~~#',
+      '#xxxx.oooo...#',
+      'Gxxxx..#..dd.T',
+      'Gxxxx...#.ll.T',
+      '#xxxx...oooo.#',
+      '#xxxx~~##~~~~#',
+      '##############',
+    ],
+    {
+      tip: '4 wave liên hoàn — không gatekeep.',
+      buffs: [
+        { cells: ['1,3', '2,3', '1,4', '2,4'], side: 'hero', kind: 'SPEED_UP', value: 1.5 },
+        { cells: ['3,3', '3,4', '4,3'], side: 'hero', kind: 'ATK_UP', value: 1.35 },
+        { cells: ['4,4', '3,2', '3,5'], side: 'hero', kind: 'HEAL_TICK', value: 8 },
+        { cells: ['7,3', '8,4'], side: 'monster', kind: 'ATK_UP', value: 1.6 },
+        { cells: ['9,3', '10,4'], side: 'monster', kind: 'DEF_UP', value: 1.55 },
+        { cells: ['6,3', '6,4'], side: 'both', kind: 'HEAL_TICK', value: 9 },
+        { cells: ['5,3', '5,4'], side: 'hero', kind: 'SILENCE_ZONE', value: 1 },
+      ],
+    }
+  ),
+  48: M(
+    'stage_48',
+    'Thiên Tiễn & Thành',
+    12,
+    [
+      '##############',
+      '#xxxxhhhh##oo#',
+      '#xxxx........#',
+      'Gxxxx..~~....T',
+      'Gxxxx....~~..T',
+      '#xxxx........#',
+      '#xxxxoo##hhhh#',
+      '##############',
+    ],
+    {
+      tip: 'Cực cung + cực tank — hai kiểu khắc chế khác nhau.',
+      buffs: [
+        { cells: ['1,3', '2,4', '3,3'], side: 'hero', kind: 'SPEED_UP', value: 1.45 },
+        { cells: ['2,3', '3,4'], side: 'hero', kind: 'ATK_UP', value: 1.3 },
+        { cells: ['4,2', '4,5'], side: 'hero', kind: 'HEAL_TICK', value: 8 },
+        { cells: ['7,3', '8,4'], side: 'monster', kind: 'ATK_UP', value: 1.55 },
+        { cells: ['9,3', '10,4'], side: 'monster', kind: 'DEF_UP', value: 1.55 },
+        { cells: ['6,3', '6,4'], side: 'both', kind: 'HEAL_TICK', value: 8 },
+        { cells: ['5,3', '5,4'], side: 'hero', kind: 'SILENCE_ZONE', value: 1 },
+        { cells: ['11,1', '11,6'], side: 'hero', kind: 'SPEED_UP', value: 1.2 },
+      ],
+    }
+  ),
+  49: M(
+    'stage_49',
+    'Tiền Đình Tận Thế',
+    12,
+    [
+      '##############',
+      '#xxxx~~dd##ll#',
+      '#xxxx.^^^^oo.#',
+      'Gxxxx........T',
+      'Gxxxx........T',
+      '#xxxx.oo^^^^.#',
+      '#xxxxll##dd~~#',
+      '##############',
+    ],
+    {
+      tip: 'Gần phá đảo — 4 wave full elite.',
+      buffs: [
+        { cells: ['1,3', '2,4', '3,3', '4,4'], side: 'hero', kind: 'SPEED_UP', value: 1.5 },
+        { cells: ['2,3', '3,4'], side: 'hero', kind: 'ATK_UP', value: 1.35 },
+        { cells: ['4,2', '4,5'], side: 'hero', kind: 'HEAL_TICK', value: 9 },
+        { cells: ['7,3', '8,4'], side: 'monster', kind: 'ATK_UP', value: 1.65 },
+        { cells: ['9,3', '10,4'], side: 'monster', kind: 'DEF_UP', value: 1.55 },
+        { cells: ['6,3', '6,4'], side: 'both', kind: 'HEAL_TICK', value: 9 },
+        { cells: ['5,3', '5,4'], side: 'hero', kind: 'SILENCE_ZONE', value: 1 },
+        { cells: ['8,2', '8,5'], side: 'hero', kind: 'SPEED_UP', value: 1.25 },
+      ],
+    }
+  ),
+  50: M(
+    'stage_50',
+    'Ngai Hỗn Mang',
+    12,
+    [
+      '##############',
+      '#xxxx~~~~##~~#',
+      '#xxxx.oooo^^.#',
+      'Gxxxx..#..dd.T',
+      'Gxxxx...#.ll.T',
+      '#xxxx.^^oooo.#',
+      '#xxxx~~##~~~~#',
+      '##############',
+    ],
+    {
+      tip: 'Ải 50 — phá đảo tối thượng. Cổng trống + buff hero cực dày.',
+      buffs: [
+        { cells: ['1,3', '2,3', '1,4', '2,4'], side: 'hero', kind: 'SPEED_UP', value: 1.55 },
+        { cells: ['3,3', '3,4', '4,3'], side: 'hero', kind: 'ATK_UP', value: 1.4 },
+        { cells: ['4,4', '3,2', '3,5'], side: 'hero', kind: 'HEAL_TICK', value: 10 },
+        { cells: ['2,2', '2,5'], side: 'hero', kind: 'DEF_UP', value: 1.25 },
+        { cells: ['7,3', '8,4'], side: 'monster', kind: 'ATK_UP', value: 1.65 },
+        { cells: ['9,3', '10,4'], side: 'monster', kind: 'DEF_UP', value: 1.6 },
+        { cells: ['6,3', '6,4'], side: 'both', kind: 'HEAL_TICK', value: 10 },
+        { cells: ['5,3', '5,4'], side: 'hero', kind: 'SILENCE_ZONE', value: 1 },
+        { cells: ['8,2', '8,5'], side: 'hero', kind: 'SPEED_UP', value: 1.3 },
+        { cells: ['11,3', '11,4'], side: 'monster', kind: 'ATK_UP', value: 1.2 },
+      ],
+    }
+  ),
 };
 
 export const STAGE_MAPS = {};
-for (let i = 1; i <= 40; i++) {
+for (let i = 1; i <= 50; i++) {
   STAGE_MAPS[i] = compileMap(RAW_MAPS[i]);
 }
 
 export function getStageMap(level) {
-  const lv = Math.max(1, Math.min(40, level | 0));
+  const lv = Math.max(1, Math.min(50, level | 0));
   const base = STAGE_MAPS[lv];
   return {
     ...base,
