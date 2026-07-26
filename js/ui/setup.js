@@ -350,7 +350,7 @@ export function renderScout(root, ctx) {
         if (btn.classList.contains('is-full') || btn.getAttribute('aria-disabled') === 'true') {
           return;
         }
-        showPickInfo(btn); // chạm cũng hiện tip (mobile)
+        showPickInfo(btn);
         const id = btn.getAttribute('data-add');
         const res = tryAddToLoadout(run.loadout, vault, id, map.costCap);
         if (!res.ok) {
@@ -358,6 +358,7 @@ export function renderScout(root, ctx) {
           return;
         }
         run.loadout = res.loadout;
+        btn.blur();
         refreshLoadout();
       };
     });
@@ -371,6 +372,7 @@ export function renderScout(root, ctx) {
         const res = tryRemoveFromLoadout(run.loadout, id);
         if (res.ok) {
           run.loadout = res.loadout;
+          btn.blur();
           refreshLoadout();
         }
       };
@@ -400,7 +402,9 @@ export function renderScout(root, ctx) {
 
   function refreshLoadout() {
     const page = root.querySelector('.scout-page');
-    const keepScroll = page ? page.scrollTop : 0;
+    const pool = root.querySelector('.loadout-pool');
+    const keepPageScroll = page ? page.scrollTop : 0;
+    const keepPoolScroll = pool ? pool.scrollTop : 0;
     const { html, units } = loadoutPanelHtml();
     const panel = root.querySelector('#loadout-panel');
     if (panel) panel.innerHTML = html;
@@ -410,12 +414,13 @@ export function renderScout(root, ctx) {
 
     bindLoadout();
 
-    if (page) {
-      page.scrollTop = keepScroll;
-      requestAnimationFrame(() => {
-        page.scrollTop = keepScroll;
-      });
-    }
+    const restore = () => {
+      if (page) page.scrollTop = keepPageScroll;
+      const nextPool = root.querySelector('.loadout-pool');
+      if (nextPool) nextPool.scrollTop = keepPoolScroll;
+    };
+    restore();
+    requestAnimationFrame(restore);
   }
 
   // Shell một lần — phần trên không bị vẽ lại khi chọn quái

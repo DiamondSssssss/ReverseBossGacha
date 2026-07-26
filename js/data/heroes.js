@@ -1,4 +1,4 @@
-/** Hero AI catalog — mỗi ải 1–20 có tổ hợp hero riêng */
+/** Hero AI catalog — mỗi ải 1–30 có tổ hợp hero riêng */
 
 import { COMBAT } from './constants.js';
 
@@ -85,6 +85,56 @@ export const HEROES = [
     hp: 980, atk: 30, speed: 0.95, range: 1.2, atkSpeed: 0.7, aoeRadius: 0,
     target: 'TREASURE', color: '#b0bec5', skills: ['TAUNT_SELF'],
     description: 'Siêu tank bò — chỉ Boss / DoT mới cắn nổi.',
+  },
+  {
+    id: 'hero_warrior_06',
+    name: 'Phá Thành Thương',
+    class: 'WARRIOR',
+    hp: 780, atk: 72, speed: 1.55, range: 1.4, atkSpeed: 1.05, aoeRadius: 0,
+    target: 'TREASURE', color: '#ff7043', skills: ['SHIELD'],
+    description: 'Chiến binh xung kích — máu dày + dame nặng.',
+  },
+  {
+    id: 'hero_warrior_07',
+    name: 'Hộ Vệ Hoàng Kim',
+    class: 'WARRIOR',
+    hp: 1100, atk: 40, speed: 1.05, range: 1.3, atkSpeed: 0.85, aoeRadius: 0,
+    target: 'TREASURE', color: '#ffd54f', skills: ['TAUNT_SELF', 'SHIELD'],
+    description: 'Tank hậu kỳ — khiên + taunt, cực khó hạ.',
+  },
+  {
+    id: 'hero_warrior_08',
+    name: 'Bạo Chúa Sắt',
+    class: 'WARRIOR',
+    hp: 900, atk: 88, speed: 1.65, range: 1.5, atkSpeed: 1.1, aoeRadius: 0,
+    target: 'TREASURE', color: '#c62828', skills: ['SHIELD', 'TAUNT_SELF'],
+    description: 'Elite chiến binh — vừa tank vừa cày kho.',
+  },
+
+  // ——— HEALER ———
+  {
+    id: 'hero_healer_01',
+    name: 'Tu Sĩ Hồi Sinh',
+    class: 'HEALER',
+    hp: 320, atk: 28, speed: 1.6, range: 2.8, atkSpeed: 0.75, aoeRadius: 0,
+    target: 'TREASURE', color: '#fff9c4', skills: ['HEAL_ALLY'],
+    description: 'Hồi máu đồng đội — ưu tiên hạ healer trước.',
+  },
+  {
+    id: 'hero_healer_02',
+    name: 'Nữ Tư Tế Ánh',
+    class: 'HEALER',
+    hp: 380, atk: 32, speed: 1.5, range: 3.0, atkSpeed: 0.8, aoeRadius: 0,
+    target: 'TREASURE', color: '#ffe082', skills: ['HEAL_ALLY', 'SHIELD'],
+    description: 'Heal mạnh + khiên — giữ cả wave sống lâu.',
+  },
+  {
+    id: 'hero_healer_03',
+    name: 'Thánh Giả Tận Thế',
+    class: 'HEALER',
+    hp: 450, atk: 36, speed: 1.45, range: 3.2, atkSpeed: 0.85, aoeRadius: 0,
+    target: 'TREASURE', color: '#ffecb3', skills: ['HEAL_ALLY'],
+    description: 'Heal elite hậu kỳ — bỏ sót là thua kéo dài.',
   },
 
   // ——— ROGUE ———
@@ -301,7 +351,7 @@ export const WAVE_PLANS = {
     ],
   },
   20: {
-    theme: 'Đột phá cuối — Phá đảo',
+    theme: 'Đột phá cuối — Phá đảo sơ cấp',
     tip: 'Full roster tinh nhuệ — đội hình cân 3 class + spell timing.',
     ids: [
       'hero_mage_05',
@@ -314,39 +364,162 @@ export const WAVE_PLANS = {
       'hero_warrior_03',
     ],
   },
+
+  // ——— Ải 21–30: khó hơn, nhiều chiến binh, đi theo wave ———
+  21: {
+    theme: 'Bước vào địa ngục',
+    tip: 'Hai wave chiến binh — mang heal quái + burst tank.',
+    waves: [
+      { delay: 0.6, ids: ['hero_warrior_06', 'hero_warrior_01', 'hero_warrior_03', 'hero_healer_01'] },
+      { delay: 16, ids: ['hero_warrior_02', 'hero_warrior_07', 'hero_mage_02'] },
+    ],
+  },
+  22: {
+    theme: 'Phalanx sắt',
+    tip: 'Toàn chiến binh dày đặc theo 3 đợt.',
+    waves: [
+      { delay: 0.5, ids: ['hero_warrior_05', 'hero_warrior_02', 'hero_warrior_04'] },
+      { delay: 12, ids: ['hero_warrior_06', 'hero_warrior_07', 'hero_healer_01'] },
+      { delay: 24, ids: ['hero_warrior_08', 'hero_warrior_03', 'hero_warrior_01'] },
+    ],
+  },
+  23: {
+    theme: 'Thánh chiến',
+    tip: 'Healer đi cùng tank — ưu tiên hạ healer trước.',
+    waves: [
+      { delay: 0.7, ids: ['hero_healer_02', 'hero_warrior_07', 'hero_warrior_04'] },
+      { delay: 14, ids: ['hero_warrior_06', 'hero_healer_01', 'hero_mage_04', 'hero_warrior_02'] },
+    ],
+  },
+  24: {
+    theme: 'Đột kích kép',
+    tip: 'Wave 1 rogue, wave 2 wall chiến binh.',
+    waves: [
+      { delay: 0.5, ids: ['hero_rogue_04', 'hero_rogue_02', 'hero_rogue_05', 'hero_rogue_01'] },
+      { delay: 15, ids: ['hero_warrior_08', 'hero_warrior_07', 'hero_warrior_06', 'hero_healer_02'] },
+    ],
+  },
+  25: {
+    theme: 'Thập tự quân',
+    tip: 'Ba wave: scout → phalanx → healer elite.',
+    waves: [
+      { delay: 0.5, ids: ['hero_warrior_03', 'hero_mage_03', 'hero_rogue_03'] },
+      { delay: 11, ids: ['hero_warrior_05', 'hero_warrior_06', 'hero_warrior_04', 'hero_warrior_01'] },
+      { delay: 23, ids: ['hero_healer_03', 'hero_warrior_07', 'hero_warrior_08'] },
+    ],
+  },
+  26: {
+    theme: 'Bão thép',
+    tip: 'Chiến binh dồn dập — đừng để kho bị cày.',
+    waves: [
+      { delay: 0.4, ids: ['hero_warrior_06', 'hero_warrior_08', 'hero_healer_01', 'hero_mage_01'] },
+      { delay: 10, ids: ['hero_warrior_07', 'hero_warrior_05', 'hero_warrior_02', 'hero_healer_02'] },
+      { delay: 22, ids: ['hero_warrior_08', 'hero_warrior_06', 'hero_warrior_04', 'hero_mage_05'] },
+    ],
+  },
+  27: {
+    theme: 'Đêm thánh chiến',
+    tip: 'Rogue mở đường + healer giữ wall sau.',
+    waves: [
+      { delay: 0.5, ids: ['hero_rogue_04', 'hero_rogue_05', 'hero_rogue_02'] },
+      { delay: 12, ids: ['hero_healer_02', 'hero_warrior_07', 'hero_warrior_06', 'hero_mage_04'] },
+      { delay: 24, ids: ['hero_healer_03', 'hero_warrior_08', 'hero_warrior_05', 'hero_rogue_04'] },
+    ],
+  },
+  28: {
+    theme: 'Thành trì bất diệt',
+    tip: 'Tank + healer liên tục — cần DoT / boss burst.',
+    waves: [
+      { delay: 0.6, ids: ['hero_warrior_07', 'hero_healer_02', 'hero_warrior_05', 'hero_warrior_02'] },
+      { delay: 13, ids: ['hero_warrior_08', 'hero_healer_03', 'hero_warrior_06', 'hero_warrior_04'] },
+      { delay: 26, ids: ['hero_warrior_07', 'hero_warrior_08', 'hero_healer_03', 'hero_mage_05', 'hero_warrior_01'] },
+    ],
+  },
+  29: {
+    theme: 'Đêm trước tận thế',
+    tip: 'Bốn wave liên hoàn — giữ spell cho đợt cuối.',
+    waves: [
+      { delay: 0.4, ids: ['hero_mage_05', 'hero_rogue_04', 'hero_warrior_03'] },
+      { delay: 10, ids: ['hero_warrior_06', 'hero_warrior_08', 'hero_healer_02', 'hero_rogue_05'] },
+      { delay: 20, ids: ['hero_warrior_07', 'hero_healer_03', 'hero_mage_03', 'hero_warrior_05'] },
+      { delay: 30, ids: ['hero_warrior_08', 'hero_warrior_07', 'hero_healer_03', 'hero_mage_05'] },
+    ],
+  },
+  30: {
+    theme: 'Phá đảo tối thượng',
+    tip: 'Full war + healer waves — đội hình đa dụng + spell timing.',
+    waves: [
+      { delay: 0.5, ids: ['hero_warrior_06', 'hero_healer_01', 'hero_rogue_04', 'hero_mage_05'] },
+      { delay: 12, ids: ['hero_warrior_07', 'hero_warrior_08', 'hero_healer_02', 'hero_warrior_05', 'hero_mage_03'] },
+      { delay: 24, ids: ['hero_healer_03', 'hero_warrior_08', 'hero_warrior_07', 'hero_rogue_05', 'hero_mage_05', 'hero_warrior_06'] },
+    ],
+  },
 };
 
 /**
- * @param {number} level 1–20
+ * @param {number} level 1–30
  */
 export function getWavePlan(level = 1) {
-  const lv = Math.max(1, Math.min(20, level | 0));
+  const lv = Math.max(1, Math.min(30, level | 0));
   return WAVE_PLANS[lv] || WAVE_PLANS[1];
+}
+
+function heroScaleForLevel(level) {
+  if (level <= 20) return 0.9 + (level - 1) * 0.095;
+  return 0.9 + 19 * 0.095 + (level - 20) * 0.16;
+}
+
+/** Flatten plan.ids hoặc plan.waves → danh sách { id, spawnDelay, waveIndex } */
+function expandPlanSpawns(plan) {
+  if (Array.isArray(plan.waves) && plan.waves.length) {
+    const out = [];
+    plan.waves.forEach((w, wi) => {
+      const base = Number(w.delay) || 0;
+      (w.ids || []).forEach((id, i) => {
+        out.push({
+          id,
+          spawnDelay: base + i * Math.min(COMBAT.HERO_SPAWN_INTERVAL, 2.4),
+          waveIndex: wi + 1,
+        });
+      });
+    });
+    return out;
+  }
+  return (plan.ids || []).map((id, i) => ({
+    id,
+    spawnDelay: 0.85 + i * COMBAT.HERO_SPAWN_INTERVAL,
+    waveIndex: 1,
+  }));
 }
 
 /** Build a wave list for dungeon level (1-based). */
 export function buildWave(level = 1) {
   const plan = getWavePlan(level);
-  const scale = 0.9 + (level - 1) * 0.095;
+  const scale = heroScaleForLevel(level);
+  const spawns = expandPlanSpawns(plan);
   const waves = [];
 
-  plan.ids.forEach((id, i) => {
-    const template = HERO_BY_ID[id] || HEROES[0];
+  spawns.forEach((slot, i) => {
+    const template = HERO_BY_ID[slot.id] || HEROES[0];
     const roleLine =
       template.class === 'WARRIOR'
         ? 'Tuyến trước'
-        : template.class === 'MAGE'
-          ? 'Tuyến sau / phép'
-          : template.stealth
-            ? 'Sườn / đột phá'
-            : 'Áp sát';
+        : template.class === 'HEALER'
+          ? 'Hỗ trợ / hồi máu'
+          : template.class === 'MAGE'
+            ? 'Tuyến sau / phép'
+            : template.stealth
+              ? 'Sườn / đột phá'
+              : 'Áp sát';
     waves.push({
       ...template,
       instanceId: `${template.id}_L${level}_${i}`,
+      templateId: template.id,
       hp: Math.round(template.hp * scale),
       maxHp: Math.round(template.hp * scale),
       atk: Math.round(template.atk * scale),
-      spawnDelay: 0.85 + i * COMBAT.HERO_SPAWN_INTERVAL,
+      spawnDelay: slot.spawnDelay,
+      waveIndex: slot.waveIndex,
       waveTheme: plan.theme,
       waveTip: plan.tip,
       formation: {
@@ -401,18 +574,20 @@ export function assignHeroFormation(wave, map) {
     let g;
     if (h.class === 'WARRIOR') g = pickSpread(centerFirst);
     else if (h.class === 'ROGUE') g = pickSpread(edgeFirst);
-    else g = pickSpread(gates);
+    else g = pickSpread(gates); // MAGE + HEALER backline/spread
 
     h.formation = {
       order: i + 1,
       roleLine:
         h.class === 'WARRIOR'
           ? 'Tuyến trước'
-          : h.class === 'MAGE'
-            ? 'Tuyến sau / phép'
-            : h.stealth
-              ? 'Sườn / đột phá'
-              : 'Áp sát',
+          : h.class === 'HEALER'
+            ? 'Hỗ trợ / hồi máu'
+            : h.class === 'MAGE'
+              ? 'Tuyến sau / phép'
+              : h.stealth
+                ? 'Sườn / đột phá'
+                : 'Áp sát',
       gateIndex: gates.findIndex((x) => x.col === g.col && x.row === g.row),
       col: g.col,
       row: g.row,

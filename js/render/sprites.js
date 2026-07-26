@@ -1024,6 +1024,11 @@ const MONSTER_KIND = {
   void_wraith: 'wraith',
   tide_leviathan: 'leviathan',
   crown_behemoth: 'behemoth',
+  moss_nurse: 'mushroom',
+  salve_sprite: 'pixie',
+  vita_toad: 'frog',
+  bloom_dryad: 'wisp',
+  sanctum_angel: 'monk',
 };
 
 const HERO_KIND = {
@@ -1037,11 +1042,17 @@ const HERO_KIND = {
   hero_warrior_03: 'heroWarrior',
   hero_warrior_04: 'heroWarrior',
   hero_warrior_05: 'heroWarrior',
+  hero_warrior_06: 'heroWarrior',
+  hero_warrior_07: 'heroWarrior',
+  hero_warrior_08: 'heroWarrior',
   hero_rogue_01: 'heroRogue',
   hero_rogue_02: 'heroRogue',
   hero_rogue_03: 'heroRogue',
   hero_rogue_04: 'heroRogue',
   hero_rogue_05: 'heroRogue',
+  hero_healer_01: 'heroMage',
+  hero_healer_02: 'heroMage',
+  hero_healer_03: 'heroMage',
 };
 
 function paintBackground(ctx, rarity) {

@@ -59,6 +59,6 @@ export function achievementProgress(state) {
 }
 
 export function isGameCleared(state) {
-  // Beat stage 20 → dungeonLevel becomes 21
-  return (state.dungeonLevel || 1) > 20;
+  // Beat stage 30 → dungeonLevel becomes 31
+  return (state.dungeonLevel || 1) > 30;
 }

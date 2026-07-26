@@ -120,7 +120,7 @@ function M(id, name, costCap, tiles, extras = {}) {
 }
 
 /**
- * 20 unique stage layouts. Legend:
+ * 30 unique stage layouts. Legend:
  * # wall  o obstacle  . floor  ~ water  d dark  l low  h high  ^ hazard  G gate  T treasure
  */
 const RAW_MAPS = {
@@ -543,15 +543,238 @@ const RAW_MAPS = {
       ],
     }
   ),
+  21: M(
+    'stage_21',
+    'Cổng Địa Ngục',
+    7,
+    [
+      '##############',
+      '#~~..........#',
+      '#~~.##..##...#',
+      'G............T',
+      'G............T',
+      '#...##..##.~~#',
+      '#..........~~#',
+      '##############',
+    ],
+    {
+      tip: 'Ải 21+ khó hơn — hai cánh nước, cost 7.',
+      buffs: [
+        { cells: ['5,3', '8,4'], side: 'monster', kind: 'ATK_UP', value: 1.25 },
+        { cells: ['3,3', '10,4'], side: 'hero', kind: 'SPEED_UP', value: 1.15 },
+      ],
+    }
+  ),
+  22: M(
+    'stage_22',
+    'Hành Lang Phalanx',
+    7,
+    [
+      '##############',
+      '#....oooo....#',
+      '#..##....##..#',
+      'G............T',
+      'G............T',
+      '#..##....##..#',
+      '#....oooo....#',
+      '##############',
+    ],
+    {
+      tip: 'Choke kép — chiến binh dễ giữ tuyến.',
+      buffs: [
+        { cells: ['4,3', '9,4'], side: 'monster', kind: 'DEF_UP', value: 1.3 },
+        { cells: ['6,3', '7,4'], side: 'hero', kind: 'ATK_UP', value: 1.2 },
+      ],
+    }
+  ),
+  23: M(
+    'stage_23',
+    'Thánh Địa Máu',
+    7,
+    [
+      '##############',
+      '#hh........hh#',
+      '#..d......d..#',
+      'G............T',
+      'G............T',
+      '#..d......d..#',
+      '#hh........hh#',
+      '##############',
+    ],
+    {
+      tip: 'Ô heal giữa — healer địch lợi hại nếu để sống.',
+      buffs: [
+        { cells: ['6,3', '7,4'], side: 'both', kind: 'HEAL_TICK', value: 5 },
+        { cells: ['3,3', '10,4'], side: 'monster', kind: 'ATK_UP', value: 1.3 },
+      ],
+    }
+  ),
+  24: M(
+    'stage_24',
+    'Song Đột Kích',
+    7,
+    [
+      '##############',
+      '#d...........#',
+      '#d..oooo.....#',
+      'G............T',
+      'G............T',
+      '#.....oooo..d#',
+      '#...........d#',
+      '##############',
+    ],
+    {
+      tip: 'Sườn tối + chướng ngại — anti-rogue trước.',
+      buffs: [
+        { cells: ['2,2', '11,5'], side: 'monster', kind: 'ATK_UP', value: 1.35 },
+        { cells: ['5,3', '8,4'], side: 'hero', kind: 'SPEED_UP', value: 1.2 },
+      ],
+    }
+  ),
+  25: M(
+    'stage_25',
+    'Thập Tự Đỏ',
+    8,
+    [
+      '##############',
+      '#~~..##..~~..#',
+      '#....##......#',
+      'G............T',
+      'G............T',
+      '#......##....#',
+      '#..~~..##..~~#',
+      '##############',
+    ],
+    {
+      tip: 'Cost 8 — xếp dày, đọc 3 wave.',
+      buffs: [
+        { cells: ['4,3', '9,4'], side: 'monster', kind: 'DEF_UP', value: 1.35 },
+        { cells: ['6,2', '7,5'], side: 'hero', kind: 'SPEED_UP', value: 1.25 },
+      ],
+    }
+  ),
+  26: M(
+    'stage_26',
+    'Lò Thép',
+    8,
+    [
+      '##############',
+      '#l...........#',
+      '#l..^^^^.....#',
+      'G............T',
+      'G............T',
+      '#.....^^^^..l#',
+      '#...........l#',
+      '##############',
+    ],
+    {
+      tip: 'Hazard giữa đường — đừng xếp sai ô.',
+      buffs: [
+        { cells: ['5,3', '8,4'], side: 'monster', kind: 'ATK_UP', value: 1.4 },
+        { cells: ['3,3', '10,4'], side: 'hero', kind: 'ATK_UP', value: 1.2 },
+      ],
+    }
+  ),
+  27: M(
+    'stage_27',
+    'Đêm Thánh',
+    8,
+    [
+      '##############',
+      '#dddd....dddd#',
+      '#............#',
+      'G............T',
+      'G............T',
+      '#............#',
+      '#dddd....dddd#',
+      '##############',
+    ],
+    {
+      tip: 'Tối hai cánh — Mắt thần + heal giữ tuyến giữa.',
+      buffs: [
+        { cells: ['6,3', '7,4'], side: 'monster', kind: 'ATK_UP', value: 1.4 },
+        { cells: ['1,1', '12,6'], side: 'both', kind: 'HEAL_TICK', value: 4 },
+      ],
+    }
+  ),
+  28: M(
+    'stage_28',
+    'Thành Bất Diệt',
+    8,
+    [
+      '##############',
+      '#..oooooooo..#',
+      '#..##....##..#',
+      'G............T',
+      'G............T',
+      '#..##....##..#',
+      '#..oooooooo..#',
+      '##############',
+    ],
+    {
+      tip: 'Phòng thủ dày — tank địch cực trâu.',
+      buffs: [
+        { cells: ['5,3', '8,3', '5,4', '8,4'], side: 'monster', kind: 'DEF_UP', value: 1.45 },
+        { cells: ['3,3', '10,4'], side: 'hero', kind: 'SPEED_UP', value: 1.3 },
+      ],
+    }
+  ),
+  29: M(
+    'stage_29',
+    'Tiền Đình Tận Thế',
+    8,
+    [
+      '##############',
+      '#~~dd##llhh~~#',
+      '#............#',
+      'G............T',
+      'G............T',
+      '#............#',
+      '#~~hh##lldd~~#',
+      '##############',
+    ],
+    {
+      tip: 'Hỗn địa hình + 4 wave — giữ spell.',
+      buffs: [
+        { cells: ['4,3', '9,4'], side: 'monster', kind: 'ATK_UP', value: 1.45 },
+        { cells: ['6,3', '7,4'], side: 'both', kind: 'HEAL_TICK', value: 6 },
+        { cells: ['2,2', '11,5'], side: 'hero', kind: 'SPEED_UP', value: 1.25 },
+      ],
+    }
+  ),
+  30: M(
+    'stage_30',
+    'Sảnh Tối Thượng',
+    8,
+    [
+      '##############',
+      '#d~~~~####~~~#',
+      '#d...........#',
+      'G.....#......T',
+      'G......#.....T',
+      '#...........d#',
+      '#~~~####~~~~d#',
+      '##############',
+    ],
+    {
+      tip: 'Ải 30 — full war + healer. Phá đảo tối thượng.',
+      buffs: [
+        { cells: ['5,3', '5,4'], side: 'monster', kind: 'ATK_UP', value: 1.5 },
+        { cells: ['10,2', '10,5'], side: 'hero', kind: 'SPEED_UP', value: 1.3 },
+        { cells: ['2,5', '3,5'], side: 'monster', kind: 'DEF_UP', value: 1.35 },
+        { cells: ['7,3', '8,4'], side: 'both', kind: 'HEAL_TICK', value: 5 },
+      ],
+    }
+  ),
 };
 
 export const STAGE_MAPS = {};
-for (let i = 1; i <= 20; i++) {
+for (let i = 1; i <= 30; i++) {
   STAGE_MAPS[i] = compileMap(RAW_MAPS[i]);
 }
 
 export function getStageMap(level) {
-  const lv = Math.max(1, Math.min(20, level | 0));
+  const lv = Math.max(1, Math.min(30, level | 0));
   const base = STAGE_MAPS[lv];
   return {
     ...base,

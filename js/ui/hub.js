@@ -51,7 +51,7 @@ export function renderHub(root, ctx) {
   syncUnlockedBosses(state);
   const prog = achievementProgress(state);
   const cleared = isGameCleared(state);
-  const stageLabel = cleared ? 'Phá đảo' : `Ải ${Math.min(state.dungeonLevel, 20)}/20`;
+  const stageLabel = cleared ? 'Phá đảo' : `Ải ${Math.min(state.dungeonLevel, 30)}/30`;
   const activeBoss = getBoss(state.selectedBossId);
 
   const lvl = state.mapUpgrade || 0;

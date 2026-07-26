@@ -5,6 +5,7 @@ import {
   tryActivateShield,
   tryTauntSelf,
   tickStealthRegen,
+  tryHealAlly,
 } from './skills.js';
 import { findPath, findPathAway, buildBlockedFromMap } from '../pathfinding.js';
 import { SPELLS } from '../../data/constants.js';
@@ -35,6 +36,18 @@ export function tickHeroBrain(hero, ctx) {
 
   if (hero.panicking) {
     return { action: 'flee' };
+  }
+
+  // Healer: ưu tiên hồi máu đồng minh trước khi đánh
+  if (profile.healPriority || hero.skills?.includes('HEAL_ALLY') || hero.class === 'HEALER') {
+    const allies = ctx.heroes || combat?.heroes || [];
+    tryHealAlly(
+      hero,
+      allies,
+      time,
+      combat?._float?.bind(combat),
+      combat?.particles
+    );
   }
 
   // Pick target

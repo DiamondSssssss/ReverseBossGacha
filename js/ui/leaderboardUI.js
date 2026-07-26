@@ -14,8 +14,8 @@ function escapeHtml(str) {
 
 function stageLabel(stagesCleared) {
   const n = Number(stagesCleared) || 0;
-  if (n >= 20) return 'Phá đảo';
-  return `${n}/20 ải`;
+  if (n >= 30) return 'Phá đảo';
+  return `${n}/30 ải`;
 }
 
 function medal(rank) {

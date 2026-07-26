@@ -85,3 +85,37 @@ export function tickStealthRegen(hero, profile, time, dt) {
     hero.revealed = false;
   }
 }
+
+/**
+ * Healer hồi máu hero đồng minh gần nhất (thiếu máu nhất).
+ * @returns {boolean} có heal không
+ */
+export function tryHealAlly(hero, allies, time, floatFn, particles) {
+  ensureHeroSkillState(hero, time);
+  if (!hero.skills?.includes('HEAL_ALLY') && hero.class !== 'HEALER') return false;
+  if (hero.silenced) return false;
+  if (hero.healCdUntil && time < hero.healCdUntil) return false;
+
+  let best = null;
+  let bestMissing = 0;
+  for (const a of allies) {
+    if (!a.alive || a === hero) continue;
+    const missing = a.maxHp - a.hp;
+    if (missing < a.maxHp * 0.12) continue;
+    const d = Math.hypot(a.x - hero.x, a.y - hero.y);
+    if (d > (hero.range || 2.8) * 44 * 1.15) continue;
+    if (missing > bestMissing) {
+      bestMissing = missing;
+      best = a;
+    }
+  }
+  if (!best) return false;
+
+  const ratio = hero.class === 'HEALER' ? 0.18 : 0.12;
+  const amount = Math.round(best.maxHp * ratio);
+  best.hp = Math.min(best.maxHp, best.hp + amount);
+  hero.healCdUntil = time + 3.2;
+  floatFn?.(best.x, best.y - 10, `+${amount}`, '#81c784');
+  particles?.heal?.(best.x, best.y - 8);
+  return true;
+}

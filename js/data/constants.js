@@ -198,6 +198,7 @@ export const HERO_CLASS_LABELS = {
   MAGE: 'Pháp sư',
   WARRIOR: 'Chiến sĩ',
   ROGUE: 'Đạo tặc',
+  HEALER: 'Hồi máu',
 };
 
 export const LANE_LABELS = ['Trên', 'Giữa', 'Dưới'];

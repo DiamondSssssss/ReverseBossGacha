@@ -70,6 +70,50 @@ export const HERO_PROFILES = {
     siege: true,
     tauntSelf: true,
   },
+  hero_warrior_06: {
+    archetype: 'warrior',
+    engageBias: 1.35,
+    holdFight: true,
+    preferLowHp: true,
+    shieldAt: 0.4,
+  },
+  hero_warrior_07: {
+    archetype: 'warrior',
+    engageBias: 1.55,
+    holdFight: true,
+    tauntSelf: true,
+    shieldAt: 0.5,
+  },
+  hero_warrior_08: {
+    archetype: 'warrior',
+    engageBias: 1.4,
+    holdFight: true,
+    preferLowHp: true,
+    tauntSelf: true,
+    shieldAt: 0.35,
+  },
+  hero_healer_01: {
+    archetype: 'healer',
+    idealRange: 2.6,
+    kiteBelow: 1.4,
+    engageBias: 0.25,
+    healPriority: true,
+  },
+  hero_healer_02: {
+    archetype: 'healer',
+    idealRange: 2.8,
+    kiteBelow: 1.5,
+    engageBias: 0.2,
+    healPriority: true,
+    shieldAt: 0.4,
+  },
+  hero_healer_03: {
+    archetype: 'healer',
+    idealRange: 3.0,
+    kiteBelow: 1.6,
+    engageBias: 0.15,
+    healPriority: true,
+  },
   hero_rogue_01: {
     archetype: 'rogue',
     stealthRush: true,
@@ -107,6 +151,9 @@ export function getHeroProfile(heroId, heroClass) {
   if (HERO_PROFILES[heroId]) return HERO_PROFILES[heroId];
   if (heroClass === 'MAGE') {
     return { archetype: 'mage', idealRange: 3, kiteBelow: 1.5, engageBias: 0.4 };
+  }
+  if (heroClass === 'HEALER') {
+    return { archetype: 'healer', idealRange: 2.8, kiteBelow: 1.5, engageBias: 0.2, healPriority: true };
   }
   if (heroClass === 'ROGUE') {
     return { archetype: 'rogue', stealthRush: true, engageBias: 0.3 };

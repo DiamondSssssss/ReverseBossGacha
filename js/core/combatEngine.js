@@ -538,6 +538,9 @@ export class CombatEngine {
       if (m.passive === 'SLOW_AURA' && Math.random() < dt * 1.2) {
         this.particles.frost(m.x + (Math.random() - 0.5) * 12, m.y);
       }
+      if (m.passive === 'HEAL_AURA' || m.passive === 'HEAL_PULSE') {
+        this._tickMonsterHeal(m, dt);
+      }
     }
     for (const h of this.heroes) {
       if (!h.alive) continue;
@@ -879,6 +882,32 @@ export class CombatEngine {
         target.alive = false;
         this._onMonsterDeath(target, hero);
       }
+    }
+  }
+
+  _tickMonsterHeal(m, dt) {
+    const pulse = m.passive === 'HEAL_PULSE';
+    if (pulse) {
+      m._healPulseT = (m._healPulseT || 0) + dt;
+      if (m._healPulseT < 2.4) return;
+      m._healPulseT = 0;
+    }
+    const radius = (m.range || 2) * this.CELL * (pulse ? 1.15 : 1);
+    // Heal rate: rarity scales — pulse heals more but less often
+    const base =
+      m.rarity >= 5 ? 0.09 : m.rarity >= 4 ? 0.07 : m.rarity >= 3 ? 0.055 : m.rarity >= 2 ? 0.04 : 0.028;
+    const ratio = pulse ? base * 2.2 : base * dt * 1.15;
+
+    for (const ally of this.monsters) {
+      if (!ally.alive || ally === m || ally.isTrap) continue;
+      if (ally.hp >= ally.maxHp) continue;
+      if (dist(ally, m) > radius) continue;
+      const amount = Math.max(1, Math.round(ally.maxHp * ratio));
+      ally.hp = Math.min(ally.maxHp, ally.hp + amount);
+      if (pulse || Math.random() < dt * 2.5) {
+        this.particles.heal(ally.x, ally.y - 6);
+      }
+      if (pulse) this._float(ally.x, ally.y - 8, `+${amount}`, '#81c784');
     }
   }
 

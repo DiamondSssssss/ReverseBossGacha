@@ -408,6 +408,48 @@ export const MONSTERS = [
     passive: 'ANTI_WARRIOR_BURST', tags: ['boss', 'tank'], color: '#bf360c',
     description: 'Tank boss — nghiền nát Chiến sĩ.',
   },
+
+  // ——— Heal support (đa rarity) ———
+  {
+    id: 'moss_nurse',
+    name: 'Rêu Hộ Mệnh',
+    rarity: 1, cost: 1,
+    stats: { hp: 90, atk: 6, speed: 1.1, range: 2.0, atkSpeed: 0.7 },
+    passive: 'HEAL_AURA', tags: ['utility', 'heal'], color: '#81c784',
+    description: 'Aura hồi máu nhẹ cho quái đồng minh gần đó.',
+  },
+  {
+    id: 'salve_sprite',
+    name: 'Tinh Linh Cao Dược',
+    rarity: 2, cost: 2,
+    stats: { hp: 140, atk: 12, speed: 1.3, range: 2.4, atkSpeed: 0.8 },
+    passive: 'HEAL_AURA', tags: ['utility', 'heal'], color: '#a5d6a7',
+    description: 'Hồi máu ổn định trong bán kính vừa.',
+  },
+  {
+    id: 'vita_toad',
+    name: 'Cóc Sinh Lực',
+    rarity: 3, cost: 3,
+    stats: { hp: 220, atk: 18, speed: 1.0, range: 2.6, atkSpeed: 0.75 },
+    passive: 'HEAL_PULSE', tags: ['utility', 'heal'], color: '#66bb6a',
+    description: 'Nhịp hồi máu theo đợt — cứu quái đang hấp hối.',
+  },
+  {
+    id: 'bloom_dryad',
+    name: 'Dryad Nở Hoa',
+    rarity: 4, cost: 5,
+    stats: { hp: 380, atk: 28, speed: 1.15, range: 3.0, atkSpeed: 0.85 },
+    passive: 'HEAL_AURA', tags: ['utility', 'heal', 'support'], color: '#43a047',
+    description: 'Aura hồi mạnh — giữ tuyến phòng thủ sống lâu.',
+  },
+  {
+    id: 'sanctum_angel',
+    name: 'Thiên Sứ Thánh Điện',
+    rarity: 5, cost: 7,
+    stats: { hp: 620, atk: 40, speed: 1.2, range: 3.4, atkSpeed: 0.9 },
+    passive: 'HEAL_PULSE', tags: ['boss', 'heal', 'utility'], color: '#fdd835',
+    description: 'Boss hỗ trợ — pulse hồi máu diện rộng cực mạnh.',
+  },
 ];
 
 /** Explicit AI roles (overrides inference defaults) */
@@ -462,6 +504,11 @@ const AI_OVERRIDES = {
   void_wraith: { role: 'boss_elite', leash: 6, blocksPath: true },
   tide_leviathan: { role: 'boss_elite', leash: 5, hold: true, blocksPath: true },
   crown_behemoth: { role: 'boss_elite', leash: 5, prefer: ['WARRIOR'], blocksPath: true },
+  moss_nurse: { role: 'aura_support', leash: 2, hold: true },
+  salve_sprite: { role: 'aura_support', leash: 2.5, hold: true },
+  vita_toad: { role: 'aura_support', leash: 2.5, hold: true },
+  bloom_dryad: { role: 'aura_support', leash: 3, hold: true },
+  sanctum_angel: { role: 'aura_support', leash: 3.5, hold: true },
 };
 
 for (const m of MONSTERS) {

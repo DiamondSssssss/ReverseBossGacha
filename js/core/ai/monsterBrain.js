@@ -110,6 +110,9 @@ export function inferMonsterAi(tpl) {
   if (passive === 'SLOW_AURA') {
     return { role: 'aura_support', leash: 2, hold: true };
   }
+  if (passive === 'HEAL_AURA' || passive === 'HEAL_PULSE' || tags.includes('heal')) {
+    return { role: 'aura_support', leash: 2.5, hold: true };
+  }
   if (tags.includes('ranged') || (tpl.stats.range >= 2.5 && tpl.stats.speed <= 1.1)) {
     return { role: 'ranged_guard', leash: 1.5, hold: true };
   }
