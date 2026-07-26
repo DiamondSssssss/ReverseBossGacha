@@ -1,4 +1,4 @@
-import { SPELLS, REWARDS, RARITY_COLORS } from '../data/constants.js';
+import { SPELLS, REWARDS, RARITY_COLORS } from '../data/constants.js?v=41';
 import { MONSTER_BY_ID } from '../data/monsters.js';
 import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js';
 import { CombatEngine } from '../core/combatEngine.js';
@@ -186,12 +186,20 @@ export function renderCombat(root, ctx) {
       go('reward');
     } else {
       souls = REWARDS.LOSE_SOULS;
+      const defeated = (engine?.heroes || []).filter((h) => !h.alive).length;
+      gold = defeated * (REWARDS.LOSE_PER_HERO_GOLD ?? REWARDS.PER_HERO_GOLD);
       state.souls += souls;
+      if (gold > 0) state.gold += gold;
       state.stats.losses += 1;
       saveState(state);
       evaluateAchievements(state);
       refreshChrome();
-      ctx.lastReward = { result: 'lose', souls, gold: 0 };
+      ctx.lastReward = {
+        result: 'lose',
+        souls,
+        gold,
+        heroesDefeated: defeated,
+      };
       go('reward');
     }
   }
@@ -363,7 +371,9 @@ export function renderReward(root, ctx) {
           ? 'Thắng ải 20. Tiếp tục sưu tầm ấn chương còn lại.'
           : win
             ? `Tiến độ: ải ${Math.min(state.dungeonLevel, 20)}/20`
-            : 'Kho báu bị rút — nhận Linh Hồn an ủi.'
+            : r.heroesDefeated
+              ? `Kho báu bị rút — nhưng đã hạ/đẩy ${r.heroesDefeated} Hero.`
+              : 'Kho báu bị rút — nhận Linh Hồn an ủi.'
       }</p>
       <div class="big-num">+${r.souls} LH</div>
       ${r.gold ? `<div class="muted">+${r.gold} Vàng</div>` : ''}

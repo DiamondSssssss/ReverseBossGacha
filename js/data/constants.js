@@ -161,6 +161,8 @@ export const REWARDS = {
   PER_HERO_SOULS: 25,
   PER_HERO_GOLD: 12,
   LOSE_SOULS: 60,
+  /** Thua nhưng vẫn thưởng vàng theo Hero đã hạ / bỏ chạy */
+  LOSE_PER_HERO_GOLD: 50,
 };
 
 export const STARTING = {
