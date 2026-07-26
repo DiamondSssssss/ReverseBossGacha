@@ -136,6 +136,18 @@ export const ACHIEVEMENTS = [
       return legendIds.some((id) => (s.inventory?.[id] || 0) > 0 || (s.ownedEver || []).includes(id));
     },
   },
+  {
+    id: 'own_mythic',
+    title: 'Ấn Mythic',
+    desc: 'Sở hữu ít nhất 1 quái Mythic 6★.',
+    icon: '🩸',
+    category: 'collect',
+    reward: { souls: 500, gold: 250, gems: 3 },
+    check: (s, ctx) => {
+      const ids = ctx?.mythicIds || [];
+      return ids.some((id) => (s.inventory?.[id] || 0) > 0 || (s.ownedEver || []).includes(id));
+    },
+  },
 
   // —— Gacha ——
   {
@@ -155,6 +167,15 @@ export const ACHIEVEMENTS = [
     category: 'gacha',
     reward: { souls: 150, gold: 80 },
     check: (s) => !!s.stats?.pityHits,
+  },
+  {
+    id: 'mythic_pity_hit',
+    title: 'Mythic Bảo Hiểm',
+    desc: 'Nhận Mythic nhờ pity 100.',
+    icon: '🔮',
+    category: 'gacha',
+    reward: { souls: 400, gold: 200, gems: 2 },
+    check: (s) => !!s.stats?.mythicPityHits,
   },
 
   // —— Meta / rooms ——

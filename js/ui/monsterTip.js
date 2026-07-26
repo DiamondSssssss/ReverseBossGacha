@@ -37,6 +37,7 @@ export function monsterTipHtml(monsterOrId, state, extra = {}) {
       <span><b>AS</b> ${st.atkSpeed}</span>
     </div>
     <div class="mtip-tags">${escapeHtml(tags)}</div>
+    ${m.drawback ? `<div class="mtip-drawback">⚠ ${escapeHtml(m.drawback)}</div>` : ''}
     <div class="mtip-desc">${escapeHtml(m.description || '')}</div>
     ${note}
   `;

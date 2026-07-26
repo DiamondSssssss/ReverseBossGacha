@@ -6,39 +6,71 @@ function rand() {
   return Math.random();
 }
 
-function pickBucket(forceLegendary = false) {
-  if (forceLegendary) return 'legendary';
+/**
+ * @param {'legendary'|'mythic'|false} force
+ */
+function pickBucket(force = false) {
+  if (force === 'mythic') return 'mythic';
+  if (force === 'legendary') return 'legendary';
   const r = rand();
-  const { common, rare, epic } = GACHA.RATES;
-  if (r < common) return 'common';
-  if (r < common + rare) return 'rare';
-  if (r < common + rare + epic) return 'epic';
+  const { common, rare, epic, legendary, mythic } = GACHA.RATES;
+  let t = 0;
+  t += common;
+  if (r < t) return 'common';
+  t += rare;
+  if (r < t) return 'rare';
+  t += epic;
+  if (r < t) return 'epic';
+  t += legendary;
+  if (r < t) return 'legendary';
+  t += mythic;
+  if (r < t) return 'mythic';
   return 'legendary';
 }
 
 function pickMonster(bucket) {
   const list = monstersByRarityBucket(bucket);
+  if (!list.length) {
+    return pickMonster(bucket === 'mythic' ? 'legendary' : 'common');
+  }
   return list[Math.floor(rand() * list.length)];
 }
 
 /**
- * Single pull. Mutates state, returns { monster, pityHit, bucket, isNew, refunded, soulsRefunded }.
+ * Single pull. Mutates state.
+ * @returns {{ monster, pityHit, mythicPityHit, bucket, isNew, refunded, soulsRefunded, atCap }}
  */
 export function pullOnce(state) {
-  const force = state.pityCounter >= GACHA.PITY_THRESHOLD;
+  if (state.mythicPityCounter == null) state.mythicPityCounter = 0;
+  if (state.pityCounter == null) state.pityCounter = 0;
+
+  const forceMythic = state.mythicPityCounter >= GACHA.MYTHIC_PITY_THRESHOLD;
+  const forceLegendary =
+    !forceMythic && state.pityCounter >= GACHA.PITY_THRESHOLD;
+  const force = forceMythic ? 'mythic' : forceLegendary ? 'legendary' : false;
+
   const bucket = pickBucket(force);
   const monster = pickMonster(bucket);
-  const pityHit = force;
+  const mythicPityHit = forceMythic;
+  const pityHit = forceLegendary || forceMythic;
   const prevCount = state.inventory[monster.id] || 0;
 
-  if (monster.rarity === 5) {
+  if (monster.rarity >= 6) {
+    state.mythicPityCounter = 0;
     state.pityCounter = 0;
+  } else if (monster.rarity === 5) {
+    state.pityCounter = 0;
+    state.mythicPityCounter = (state.mythicPityCounter || 0) + 1;
   } else {
     state.pityCounter = (state.pityCounter || 0) + 1;
+    state.mythicPityCounter = (state.mythicPityCounter || 0) + 1;
   }
 
   if (pityHit) {
     state.stats.pityHits = (state.stats.pityHits || 0) + 1;
+  }
+  if (mythicPityHit) {
+    state.stats.mythicPityHits = (state.stats.mythicPityHits || 0) + 1;
   }
 
   const add = addToInventory(state, monster.id, 1);
@@ -48,6 +80,7 @@ export function pullOnce(state) {
   return {
     monster,
     pityHit,
+    mythicPityHit,
     bucket,
     isNew: prevCount === 0 && add.added > 0,
     refunded: add.overflow > 0,

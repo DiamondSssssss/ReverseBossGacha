@@ -1372,6 +1372,21 @@ body.play-fit .screen.active > .combat-wrap {
   color: #3d3830;
 }
 
+.mtip-drawback {
+  font-size: 0.72rem;
+  line-height: 1.3;
+  color: #c62828;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.monster-card .desc.drawback-line {
+  color: #c62828;
+  font-weight: 700;
+  font-size: 0.78rem;
+  margin-bottom: 2px;
+}
+
 .mtip-note {
   margin-top: 8px;
   padding-top: 6px;

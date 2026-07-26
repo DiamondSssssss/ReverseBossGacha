@@ -31,6 +31,8 @@ const ROLE_OPTIONS = [
   { id: 'silence', label: 'Silence' },
   { id: 'anti_rogue', label: 'Anti-Rogue' },
   { id: 'boss', label: 'Boss' },
+  { id: 'mythic', label: 'Mythic' },
+  { id: 'drawback', label: 'Drawback' },
 ];
 
 function matchesRole(m, role) {
@@ -109,6 +111,7 @@ function renderCards(state) {
           <div class="stars" style="color:${RARITY_COLORS[m.rarity]}">${'★'.repeat(m.rarity)} <span class="rarity-tag">${RARITY_LABELS[m.rarity]}</span></div>
           <div class="name">${m.name}</div>
           <div class="muted" style="font-size:0.75rem;margin-top:2px">Cost ${m.cost} · HP ${st.hp} · ATK ${st.atk}${upLv ? ` · Lv↑${upLv}` : ''}</div>
+          ${m.drawback ? `<div class="desc drawback-line">⚠ ${m.drawback}</div>` : ''}
           <div class="desc">${m.description}</div>
           <div class="count">Sở hữu ×${count}/${INVENTORY_CAP}</div>
           <div class="upgrade-row">
@@ -185,7 +188,7 @@ export function renderCollection(root, ctx) {
 
       <div class="filter-row" data-group="rarity">
         ${chip(filters.rarity === 'all', 'data-rarity="all"', '★ Tất cả')}
-        ${[1, 2, 3, 4, 5]
+        ${[1, 2, 3, 4, 5, 6]
           .map((r) => chip(filters.rarity === String(r), `data-rarity="${r}"`, `${'★'.repeat(r)}`))
           .join('')}
       </div>

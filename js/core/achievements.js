@@ -6,6 +6,7 @@ function checkCtx() {
   return {
     monsterCount: MONSTERS.length,
     legendaryIds: MONSTERS.filter((m) => m.rarity === 5).map((m) => m.id),
+    mythicIds: MONSTERS.filter((m) => m.rarity === 6).map((m) => m.id),
   };
 }
 

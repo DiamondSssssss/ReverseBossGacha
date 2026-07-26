@@ -18,7 +18,6 @@ import {
   loadoutPoolCost,
   loadoutUnitCount,
   loadoutTypeCount,
-  LOADOUT_MAX_TYPES,
   sanitizeLoadout,
   suggestLoadout,
   tryAddToLoadout,
@@ -220,7 +219,6 @@ export function renderScout(root, ctx) {
     const maxPool = loadoutMaxPoolCost(map.costCap);
     const units = loadoutUnitCount(loadout);
     const types = loadoutTypeCount(loadout);
-    const typesFull = types >= LOADOUT_MAX_TYPES;
     const owned = ownedList(vault).filter((m) => {
       if (filterRole === 'all') return true;
       const tags = m.tags || [];
@@ -258,8 +256,7 @@ export function renderScout(root, ctx) {
         const have = vault[m.id] || 0;
         const inLoad = loadout[m.id] || 0;
         const left = have - inLoad;
-        const blockedNew = inLoad <= 0 && typesFull;
-        const full = left <= 0 || blockedNew;
+        const full = left <= 0;
         const upLv = getMonsterUpgradeLevel(state, m.id);
         const st = displayMonsterStats(m, upLv);
         return `
@@ -284,11 +281,12 @@ export function renderScout(root, ctx) {
             <p class="muted" style="margin:4px 0 0;font-size:0.75rem">
               Pool mang theo <strong>${pool}/${maxPool}</strong>
               · Cap xếp/trận <strong>${map.costCap}</strong>
-              · <strong>${types}/${LOADOUT_MAX_TYPES}</strong> loại
+              · <strong>${types}</strong> loại
               · ${units} quái
             </p>
             <p class="muted" style="margin:4px 0 0;font-size:0.72rem">
-              Xếp trận ≤ Cap ${map.costCap}. Phần còn lại thả thêm trong trận khi có slot (quái chết → mở Cost).
+              Mang bao nhiêu loại cũng được — chỉ không vượt pool Cost.
+              Xếp trận ≤ Cap ${map.costCap}. Phần còn lại thả thêm trong trận khi có slot.
             </p>
           </div>
           <div class="loadout-tools">
@@ -447,7 +445,7 @@ export function renderScout(root, ctx) {
         <div class="kicker">Ải ${run.level} · Trinh sát</div>
         <h2>${map.name}</h2>
         <p class="wave-theme"><strong>${run.waveTheme || 'Wave Hero'}</strong></p>
-        <p class="muted">Xem địch → chọn <b>loadout</b> (tối đa ${LOADOUT_MAX_TYPES} loại) → xếp trận.</p>
+        <p class="muted">Xem địch → chọn <b>loadout</b> (không giới hạn loại, chỉ giới hạn Cost) → xếp trận.</p>
       </div>
       <div class="flow-legend scout-flow">
         <span class="flow-gate">CỔNG</span>

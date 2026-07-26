@@ -9,6 +9,7 @@ const CHARGE_MS = {
   3: 1100,
   4: 1400,
   5: 1800,
+  6: 2200,
 };
 
 const REVEAL_STAGGER = {
@@ -17,6 +18,7 @@ const REVEAL_STAGGER = {
   3: 380,
   4: 520,
   5: 700,
+  6: 900,
 };
 
 function sleep(ms, signal) {
@@ -42,7 +44,8 @@ function maxRarity(results) {
 }
 
 function rarityTitle(r) {
-  if (r >= 5) return 'BOSS ẤN';
+  if (r >= 6) return 'MYTHIC';
+  if (r >= 5) return 'LEGENDARY';
   if (r >= 4) return 'EPIC';
   if (r >= 3) return 'RARE+';
   if (r >= 2) return 'RARE';
@@ -56,12 +59,23 @@ export function renderGacha(root, ctx) {
   let abortCtrl = null;
 
   function paintChrome() {
+    if (state.mythicPityCounter == null) state.mythicPityCounter = 0;
     const pityPct = Math.min(100, (state.pityCounter / GACHA.PITY_THRESHOLD) * 100);
+    const mythicPct = Math.min(
+      100,
+      (state.mythicPityCounter / GACHA.MYTHIC_PITY_THRESHOLD) * 100
+    );
     const pityEl = root.querySelector('#pity-count');
     const pityBar = root.querySelector('#pity-bar-fill');
+    const mythicEl = root.querySelector('#mythic-pity-count');
+    const mythicBar = root.querySelector('#mythic-pity-bar-fill');
     const soulsHint = root.querySelector('#souls-hint');
     if (pityEl) pityEl.textContent = `${state.pityCounter}/${GACHA.PITY_THRESHOLD}`;
     if (pityBar) pityBar.style.width = `${pityPct}%`;
+    if (mythicEl) {
+      mythicEl.textContent = `${state.mythicPityCounter}/${GACHA.MYTHIC_PITY_THRESHOLD}`;
+    }
+    if (mythicBar) mythicBar.style.width = `${mythicPct}%`;
     if (soulsHint) {
       soulsHint.innerHTML =
         state.souls < GACHA.PULL_COST_SOULS
@@ -74,7 +88,7 @@ export function renderGacha(root, ctx) {
     <div class="gacha-hero">
       <p class="section-label" style="margin-top:0">Gacha</p>
       <h2>Quay ấn quái</h2>
-      <p class="muted">Dùng <strong>Linh Hồn</strong> (thắng ải). Mỗi loại tối đa ×3 — dư hoàn LH. Pity ${GACHA.PITY_THRESHOLD} → chắc Boss 5★.</p>
+      <p class="muted">Dùng <strong>Linh Hồn</strong>. Pity ${GACHA.PITY_THRESHOLD} → 5★ · Pity Mythic ${GACHA.MYTHIC_PITY_THRESHOLD} → 6★ (mạnh nhưng có drawback).</p>
       <div id="souls-hint"></div>
     </div>
 
@@ -90,10 +104,15 @@ export function renderGacha(root, ctx) {
 
     <div class="pity-wrap">
       <div class="row spread">
-        <span><strong>Pity</strong> <span id="pity-count">${state.pityCounter}/${GACHA.PITY_THRESHOLD}</span></span>
+        <span><strong>Pity 5★</strong> <span id="pity-count">${state.pityCounter}/${GACHA.PITY_THRESHOLD}</span></span>
         <span class="muted">${GACHA.PULL_COST_SOULS} / lần · ${GACHA.PULL10_COST_SOULS} / ×10</span>
       </div>
-      <div class="pity-bar"><span id="pity-bar-fill" style="width:${Math.min(100, (state.pityCounter / GACHA.PITY_THRESHOLD) * 100)}%"></span></div>
+      <div class="pity-bar"><span id="pity-bar-fill" style="width:${Math.min(100, ((state.pityCounter || 0) / GACHA.PITY_THRESHOLD) * 100)}%"></span></div>
+      <div class="row spread" style="margin-top:8px">
+        <span><strong>Pity Mythic</strong> <span id="mythic-pity-count">${state.mythicPityCounter || 0}/${GACHA.MYTHIC_PITY_THRESHOLD}</span></span>
+        <span class="muted">6★ · có drawback</span>
+      </div>
+      <div class="pity-bar mythic"><span id="mythic-pity-bar-fill" style="width:${Math.min(100, ((state.mythicPityCounter || 0) / GACHA.MYTHIC_PITY_THRESHOLD) * 100)}%"></span></div>
     </div>
 
     <div class="pull-actions">
@@ -148,9 +167,9 @@ export function renderGacha(root, ctx) {
             ${r.isNew ? '<span class="new-badge">MỚI</span>' : ''}
             ${r.refunded ? `<span class="refund-badge">+${r.soulsRefunded} LH</span>` : ''}
             <img class="pull-sprite" src="${monsterSpriteUrl(m.id, m.color, m.rarity)}" alt="" width="52" height="52" />
-            <div class="stars" style="color:${m.rarity === 5 ? '#e6b84a' : RARITY_COLORS[m.rarity]}">${stars}</div>
+            <div class="stars" style="color:${m.rarity >= 5 ? (m.rarity >= 6 ? '#ef5350' : '#e6b84a') : RARITY_COLORS[m.rarity]}">${stars}</div>
             <div style="font-weight:700;font-family:var(--font-display)">${m.name}</div>
-            <div class="muted" style="font-size:0.75rem">${RARITY_LABELS[m.rarity]}${r.pityHit ? ' · Pity' : ''}${r.refunded ? ' · Trùng' : ''}</div>
+            <div class="muted" style="font-size:0.75rem">${RARITY_LABELS[m.rarity]}${r.mythicPityHit ? ' · Mythic Pity' : r.pityHit ? ' · Pity' : ''}${r.refunded ? ' · Trùng' : ''}${m.drawback ? ' · ⚠' : ''}</div>
           </div>`;
       })
       .join('');
@@ -169,13 +188,14 @@ export function renderGacha(root, ctx) {
           </div>
           <div class="reveal-face front" style="--rc:${RARITY_COLORS[m.rarity]}">
             ${r.isNew ? '<span class="new-badge">MỚI</span>' : ''}
-            ${r.pityHit ? '<span class="pity-badge">PITY</span>' : ''}
+            ${r.mythicPityHit ? '<span class="pity-badge mythic">MYTHIC PITY</span>' : r.pityHit ? '<span class="pity-badge">PITY</span>' : ''}
             ${r.refunded ? `<span class="refund-badge">+${r.soulsRefunded} LH</span>` : ''}
             <div class="reveal-rays" aria-hidden="true"></div>
             <img class="reveal-sprite" src="${openUrl}" alt="" width="88" height="88" />
-            <div class="reveal-stars" style="color:${m.rarity >= 5 ? '#ffd54f' : RARITY_COLORS[m.rarity]}">${'★'.repeat(m.rarity)}</div>
+            <div class="reveal-stars" style="color:${m.rarity >= 6 ? '#ef5350' : m.rarity >= 5 ? '#ffd54f' : RARITY_COLORS[m.rarity]}">${'★'.repeat(m.rarity)}</div>
             <strong class="reveal-name">${m.name}</strong>
             <span class="reveal-meta">${RARITY_LABELS[m.rarity]} · C${m.cost}${r.refunded ? ' · Trùng' : ''}</span>
+            ${m.drawback ? `<span class="reveal-drawback">⚠ ${m.drawback}</span>` : ''}
           </div>
         </div>
       </div>`;
@@ -204,7 +224,7 @@ export function renderGacha(root, ctx) {
 
       card.classList.add('pending');
       fx.burst(rarity);
-      if (rarity >= 4) fx.shake(stage, rarity >= 5 ? 18 : 10);
+      if (rarity >= 4) fx.shake(stage, rarity >= 6 ? 24 : rarity >= 5 ? 18 : 10);
       if (rarity >= 5) document.body.classList.add('gacha-boss-flash');
 
       await sleep(Math.min(280, REVEAL_STAGGER[rarity] * 0.45), signal).catch(() => {});
@@ -228,7 +248,7 @@ export function renderGacha(root, ctx) {
     btnSkip.hidden = true;
     btnClose.hidden = false;
     revealBanner.textContent =
-      top >= 5 ? 'Ấn Boss đã mở!' : top >= 4 ? 'Ấn Epic!' : 'Kết quả quay';
+      top >= 6 ? 'Ấn Mythic đã mở!' : top >= 5 ? 'Ấn Legendary!' : top >= 4 ? 'Ấn Epic!' : 'Kết quả quay';
   }
 
   async function doPull(count) {

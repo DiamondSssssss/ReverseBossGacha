@@ -634,6 +634,93 @@ export const MONSTERS = [
     passive: 'DARK_BUFF', tags: ['boss', 'dark', 'dps'], color: '#1a237e',
     description: 'Boss bóng tối — +100% ATK trên ô tối.',
   },
+  {
+    id: 'storm_colossus',
+    name: 'Khổng Lồ Bão',
+    rarity: 5, cost: 7,
+    stats: { hp: 1300, atk: 100, speed: 0.85, range: 1.8, atkSpeed: 0.8 },
+    passive: 'WATER_BUFF', tags: ['boss', 'tank', 'water'], color: '#0277bd',
+    description: 'Tank legendary — cực mạnh trên ô nước.',
+  },
+  {
+    id: 'venom_empress',
+    name: 'Nữ Hoàng Độc',
+    rarity: 5, cost: 7,
+    stats: { hp: 780, atk: 125, speed: 1.4, range: 2.5, atkSpeed: 1.1 },
+    passive: 'SLOW_AURA', tags: ['boss', 'slow', 'dps'], color: '#9ccc65',
+    description: 'Aura độc chậm + DPS cao.',
+  },
+  {
+    id: 'mirror_paladin',
+    name: 'Hiệp Sĩ Gương',
+    rarity: 5, cost: 7,
+    stats: { hp: 1100, atk: 90, speed: 1.1, range: 1.5, atkSpeed: 0.9 },
+    passive: 'REVEAL', tags: ['boss', 'tank', 'anti_rogue'], color: '#b0bec5',
+    description: 'Tank soi tàng hình — anti-rogue cứng.',
+  },
+  {
+    id: 'cinder_wyrm',
+    name: 'Wyrm Tro Than',
+    rarity: 5, cost: 8,
+    stats: { hp: 880, atk: 155, speed: 1.5, range: 2.2, atkSpeed: 1.05 },
+    passive: 'BURST_FIRST_HIT', tags: ['boss', 'dps'], color: '#e65100',
+    description: 'Đòn mở đầu hủy diệt — DPS legendary.',
+  },
+  {
+    id: 'night_oracle',
+    name: 'Tiên Tri Đêm',
+    rarity: 5, cost: 7,
+    stats: { hp: 720, atk: 115, speed: 1.3, range: 2.8, atkSpeed: 1.0 },
+    passive: 'SILENCE_ON_HIT', tags: ['boss', 'anti_mage', 'dark'], color: '#4a148c',
+    description: 'Silence mạnh — anti-mage legendary.',
+  },
+
+  // ——— 6★ Mythic (mạnh nhưng drawback rõ) ———
+  {
+    id: 'void_sovereign',
+    name: 'Quân Chủ Hư Không',
+    rarity: 6, cost: 9,
+    stats: { hp: 1100, atk: 220, speed: 1.55, range: 2.8, atkSpeed: 1.2 },
+    passive: 'MYTHIC_SELF_DRAIN', tags: ['mythic', 'dps', 'drawback'], color: '#311b92',
+    drawback: 'Tự mất ~4% HP/giây — phải kết thúc nhanh.',
+    description: 'Mythic DPS cực mạnh. Drawback: tự rút máu liên tục.',
+  },
+  {
+    id: 'blood_idol',
+    name: 'Thần Tượng Máu',
+    rarity: 6, cost: 9,
+    stats: { hp: 2000, atk: 95, speed: 0.9, range: 2.2, atkSpeed: 0.85 },
+    passive: 'MYTHIC_TREASURE_TAX', tags: ['mythic', 'tank', 'heal', 'drawback'], color: '#b71c1c',
+    drawback: 'Khi còn sống, kho mất ~3 HP/giây.',
+    description: 'Mythic tank siêu trâu + heal pulse. Drawback: rút máu Kho.',
+  },
+  {
+    id: 'doom_bell',
+    name: 'Chuông Tận Thế',
+    rarity: 6, cost: 9,
+    stats: { hp: 950, atk: 140, speed: 1.2, range: 3.0, atkSpeed: 1.05 },
+    passive: 'MYTHIC_ALLY_SLOW', tags: ['mythic', 'anti_mage', 'drawback'], color: '#6a1b9a',
+    drawback: 'Aura làm chậm quái đồng minh gần đó.',
+    description: 'Silence mạnh + chống mage. Drawback: chậm đồng đội.',
+  },
+  {
+    id: 'ash_apocalypse',
+    name: 'Tro Tàn Thế',
+    rarity: 6, cost: 10,
+    stats: { hp: 1600, atk: 180, speed: 1.25, range: 2.0, atkSpeed: 1.1 },
+    passive: 'MYTHIC_DEATH_CURSE', tags: ['mythic', 'anti_warrior', 'dps', 'drawback'], color: '#bf360c',
+    drawback: 'Chết gây nổ sát thương đồng minh quanh mình.',
+    description: 'Anti-warrior hủy diệt. Drawback: chết hại team.',
+  },
+  {
+    id: 'chronos_fang',
+    name: 'Nanh Thời Không',
+    rarity: 6, cost: 9,
+    stats: { hp: 900, atk: 200, speed: 2.0, range: 2.4, atkSpeed: 1.35 },
+    passive: 'MYTHIC_GLASS', tags: ['mythic', 'dps', 'drawback'], color: '#00bcd4',
+    drawback: 'Nhận ~1.8× sát thương — thủy tinh.',
+    description: 'Mythic tốc độ + dame. Drawback: máu mỏng thật sự.',
+  },
 
   // ——— Heal support (đa rarity) ———
   {
@@ -758,6 +845,16 @@ const AI_OVERRIDES = {
   frost_tyrant: { role: 'boss_elite', leash: 5, hold: true, blocksPath: true },
   chaos_chimera: { role: 'boss_elite', leash: 6, prefer: ['WARRIOR'], blocksPath: true },
   eclipse_serpent: { role: 'boss_elite', leash: 6, blocksPath: true },
+  storm_colossus: { role: 'boss_elite', leash: 5, hold: true, blocksPath: true },
+  venom_empress: { role: 'boss_elite', leash: 5, blocksPath: true },
+  mirror_paladin: { role: 'boss_elite', leash: 4, hold: true, prefer: ['ROGUE'], blocksPath: true },
+  cinder_wyrm: { role: 'boss_elite', leash: 6, blocksPath: true },
+  night_oracle: { role: 'boss_elite', leash: 5, prefer: ['MAGE'], blocksPath: true },
+  void_sovereign: { role: 'boss_elite', leash: 6, blocksPath: true },
+  blood_idol: { role: 'boss_elite', leash: 4, hold: true, blocksPath: true },
+  doom_bell: { role: 'boss_elite', leash: 5, prefer: ['MAGE'], blocksPath: true },
+  ash_apocalypse: { role: 'boss_elite', leash: 6, prefer: ['WARRIOR'], blocksPath: true },
+  chronos_fang: { role: 'boss_elite', leash: 6, blocksPath: true },
   moss_nurse: { role: 'aura_support', leash: 2, hold: true },
   salve_sprite: { role: 'aura_support', leash: 2.5, hold: true },
   vita_toad: { role: 'aura_support', leash: 2.5, hold: true },
@@ -776,5 +873,6 @@ export function monstersByRarityBucket(bucket) {
   if (bucket === 'rare') return MONSTERS.filter((m) => m.rarity === 2 || m.rarity === 3);
   if (bucket === 'epic') return MONSTERS.filter((m) => m.rarity === 4);
   if (bucket === 'legendary') return MONSTERS.filter((m) => m.rarity === 5);
+  if (bucket === 'mythic') return MONSTERS.filter((m) => m.rarity === 6);
   return MONSTERS;
 }

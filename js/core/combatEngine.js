@@ -184,6 +184,8 @@ export class CombatEngine {
       color: tpl.color,
       passive: tpl.passive,
       rarity: tpl.rarity,
+      tags: tpl.tags || [],
+      drawback: tpl.drawback || '',
       terrain,
       col,
       row,
@@ -206,6 +208,7 @@ export class CombatEngine {
       tileDefMul: 1,
       deployedInCombat: !fromSetup,
     };
+    unit._baseAtkSpeed = unit.atkSpeed;
     this.monsters.push(unit);
     return unit;
   }
@@ -541,6 +544,11 @@ export class CombatEngine {
       if (m.passive === 'HEAL_AURA' || m.passive === 'HEAL_PULSE') {
         this._tickMonsterHeal(m, dt);
       }
+      // Mythic heal tag (blood idol) — vẫn heal dù passive là treasure tax
+      if (m.tags?.includes('heal') && m.passive?.startsWith('MYTHIC_')) {
+        this._tickMonsterHeal(m, dt);
+      }
+      this._tickMythicDrawbacks(m, dt);
     }
     for (const h of this.heroes) {
       if (!h.alive) continue;
@@ -574,10 +582,54 @@ export class CombatEngine {
       const mod = getTileModifiers(this.map, col, row, 'monster', m);
       m.tileAtkMul = mod.atkMul;
       m.tileDefMul = mod.defMul;
+      if (m.passive === 'MYTHIC_GLASS') {
+        m.tileDefMul *= 0.55;
+      }
+      if (m.passive === 'MYTHIC_ALLY_SLOW') {
+        // bản thân không bị chậm bởi aura của mình
+      }
       let atkMul = mod.atkMul;
       if (this.time < this.monsterRageUntil) atkMul *= this.monsterRageMul;
       m.atk = Math.round((m.baseAtk || m.atk) * atkMul);
+      if (m._baseAtkSpeed) m.atkSpeed = m._baseAtkSpeed;
       if (mod.healPerSec > 0) m.hp = Math.min(m.maxHp, m.hp + mod.healPerSec * dt);
+    }
+
+    // Ally slow from mythic doom bell
+    for (const src of this.monsters) {
+      if (!src.alive || src.passive !== 'MYTHIC_ALLY_SLOW') continue;
+      const radius = (src.range || 3) * this.CELL * 0.85;
+      for (const ally of this.monsters) {
+        if (!ally.alive || ally === src || ally.isTrap) continue;
+        if (dist(ally, src) > radius) continue;
+        ally.atk = Math.round((ally.baseAtk || ally.atk) * (ally.tileAtkMul || 1) * 0.82);
+        ally.atkSpeed = (ally._baseAtkSpeed || ally.atkSpeed) * 0.85;
+      }
+    }
+  }
+
+  _tickMythicDrawbacks(m, dt) {
+    if (!m.alive) return;
+    if (m.passive === 'MYTHIC_SELF_DRAIN') {
+      const drain = m.maxHp * 0.04 * dt;
+      m.hp -= drain;
+      if (Math.random() < dt * 2) {
+        this.particles.burst(m.x, m.y - 4, '#7e57c2');
+      }
+      if (m.hp <= 0) {
+        m.alive = false;
+        this._onMonsterDeath(m, null);
+      }
+      return;
+    }
+    if (m.passive === 'MYTHIC_TREASURE_TAX') {
+      const tax = 3 * dt;
+      if (this.treasureHp != null) {
+        this.treasureHp = Math.max(0, this.treasureHp - tax);
+      }
+      if (Math.random() < dt * 1.5) {
+        this.particles.burst(m.x, m.y - 8, '#e53935');
+      }
     }
   }
 
@@ -935,6 +987,22 @@ export class CombatEngine {
     if (m.passive === 'DARK_BUFF' && killerHero) {
       killerHero.stunnedUntil = this.time + 0.8;
     }
+    if (m.passive === 'MYTHIC_DEATH_CURSE') {
+      const r = this.CELL * 2.4;
+      for (const ally of this.monsters) {
+        if (!ally.alive || ally === m || ally.isTrap) continue;
+        if (dist(ally, m) > r) continue;
+        const dmg = Math.max(1, Math.round(ally.maxHp * 0.2));
+        ally.hp -= dmg;
+        this._float(ally.x, ally.y - 8, `-${dmg}`, '#ff7043');
+        this.particles.burst(ally.x, ally.y, '#bf360c');
+        if (ally.hp <= 0) {
+          ally.alive = false;
+          this._onMonsterDeath(ally, killerHero);
+        }
+      }
+      this._float(m.x, m.y, 'Nguyền!', '#bf360c');
+    }
   }
 
   _updateMonsters(dt) {
@@ -1013,11 +1081,16 @@ export class CombatEngine {
       dmg *= 2;
       m.firstHitDone = true;
     }
-    if (m.passive === 'ANTI_WARRIOR_BURST' && hero.class === 'WARRIOR') {
+    if (
+      (m.passive === 'ANTI_WARRIOR_BURST' || m.tags?.includes('anti_warrior')) &&
+      hero.class === 'WARRIOR'
+    ) {
       dmg = Math.round(dmg * 2.2);
     }
     if (
-      (m.passive === 'SILENCE_ON_HIT' || pattern?.kind === 'silence_cast') &&
+      (m.passive === 'SILENCE_ON_HIT' ||
+        m.passive === 'MYTHIC_ALLY_SLOW' ||
+        pattern?.kind === 'silence_cast') &&
       hero.class === 'MAGE'
     ) {
       hero.silenced = true;

@@ -1,13 +1,14 @@
 import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js';
 
-/** Tối đa số loại quái trong 1 loadout */
-export const LOADOUT_MAX_TYPES = 5;
-
 /**
  * Pool mang vào ải = bội số Cap map (Clash-style).
  * Cap 5 → mang tối đa 10; xếp trận + thả trong trận không bao giờ vượt Cap cùng lúc.
+ * Số loại quái không giới hạn — chỉ bị chặn bởi pool Cost.
  */
 export const LOADOUT_POOL_MULT = 2;
+
+/** @deprecated Không còn giới hạn loại — giữ export để tương thích cũ */
+export const LOADOUT_MAX_TYPES = Infinity;
 
 /** Pool cost tối đa mang vào ải (thường 2× Cap map). */
 export function loadoutMaxPoolCost(costCap) {
@@ -44,7 +45,7 @@ export function loadoutFingerprint(loadout) {
 }
 
 /**
- * Chuẩn hóa loadout theo kho + tối đa LOADOUT_MAX_TYPES loại + pool ≤ costCap.
+ * Chuẩn hóa loadout theo kho + pool ≤ maxPool (không giới hạn số loại).
  * @returns {{ [id: string]: number }}
  */
 export function sanitizeLoadout(loadout, inventory, costCap = Infinity) {
@@ -56,14 +57,8 @@ export function sanitizeLoadout(loadout, inventory, costCap = Infinity) {
     const take = Math.min(Math.max(0, Math.floor(Number(n) || 0)), have);
     if (take > 0) out[id] = take;
   }
-  const ids = Object.keys(out);
-  if (ids.length > LOADOUT_MAX_TYPES) {
-    ids.sort();
-    for (const id of ids.slice(LOADOUT_MAX_TYPES)) delete out[id];
-  }
   const maxPool = Number.isFinite(costCap) ? loadoutMaxPoolCost(costCap) : Infinity;
   if (Number.isFinite(maxPool)) {
-    // Cắt dần copy đắt nhất nếu vượt pool
     while (loadoutPoolCost(out) > maxPool) {
       const ranked = Object.keys(out)
         .map((id) => ({ id, cost: MONSTER_BY_ID[id]?.cost || 1, n: out[id] }))
@@ -78,7 +73,7 @@ export function sanitizeLoadout(loadout, inventory, costCap = Infinity) {
 }
 
 /**
- * Gợi ý loadout: ưu tiên utility/trap, ≤5 loại, tổng Cost ≤ costCap.
+ * Gợi ý loadout: ưu tiên utility/trap, nhiều loại tùy ý, tổng Cost ≤ pool.
  */
 export function suggestLoadout(inventory, costCap) {
   const maxPool = loadoutMaxPoolCost(costCap);
@@ -103,9 +98,6 @@ export function suggestLoadout(inventory, costCap) {
 
   for (const m of owned) {
     const have = inventory[m.id] || 0;
-    const isNewType = !(loadout[m.id] > 0);
-    if (isNewType && loadoutTypeCount(loadout) >= LOADOUT_MAX_TYPES) continue;
-
     for (let i = 0; i < have; i++) {
       if (pool + m.cost > maxPool) break;
       loadout[m.id] = (loadout[m.id] || 0) + 1;
@@ -122,7 +114,7 @@ export function suggestLoadout(inventory, costCap) {
 }
 
 /**
- * Thêm 1 copy vào loadout nếu còn slot kho + pool + loại.
+ * Thêm 1 copy vào loadout nếu còn slot kho + pool Cost.
  * @returns {{ ok: boolean, reason?: string, loadout: object }}
  */
 export function tryAddToLoadout(loadout, inventory, monsterId, costCap) {
@@ -131,13 +123,6 @@ export function tryAddToLoadout(loadout, inventory, monsterId, costCap) {
   const have = inventory[monsterId] || 0;
   const cur = loadout[monsterId] || 0;
   if (cur >= have) return { ok: false, reason: 'Hết số lượng trong kho', loadout };
-  if (cur <= 0 && loadoutTypeCount(loadout) >= LOADOUT_MAX_TYPES) {
-    return {
-      ok: false,
-      reason: `Tối đa ${LOADOUT_MAX_TYPES} loại quái trong loadout`,
-      loadout,
-    };
-  }
   const maxPool = loadoutMaxPoolCost(costCap);
   const pool = loadoutPoolCost(loadout);
   if (pool + m.cost > maxPool) {

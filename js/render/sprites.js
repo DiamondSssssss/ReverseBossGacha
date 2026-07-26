@@ -1052,6 +1052,16 @@ const MONSTER_KIND = {
   frost_tyrant: 'golem',
   chaos_chimera: 'hydra',
   eclipse_serpent: 'leviathan',
+  storm_colossus: 'behemoth',
+  venom_empress: 'plague',
+  mirror_paladin: 'knight',
+  cinder_wyrm: 'dragon',
+  night_oracle: 'wraith',
+  void_sovereign: 'wraith',
+  blood_idol: 'behemoth',
+  doom_bell: 'monk',
+  ash_apocalypse: 'hydra',
+  chronos_fang: 'panther',
   moss_nurse: 'mushroom',
   salve_sprite: 'pixie',
   vita_toad: 'frog',
@@ -1094,7 +1104,11 @@ const HERO_KIND = {
 
 function paintBackground(ctx, rarity) {
   const g = ctx.createRadialGradient(32, 32, 4, 32, 32, 30);
-  if (rarity >= 5) {
+  if (rarity >= 6) {
+    g.addColorStop(0, 'rgba(239,83,80,0.4)');
+    g.addColorStop(0.55, 'rgba(123,31,162,0.2)');
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+  } else if (rarity >= 5) {
     g.addColorStop(0, 'rgba(255,213,79,0.35)');
     g.addColorStop(1, 'rgba(0,0,0,0)');
   } else if (rarity >= 4) {
@@ -1150,7 +1164,7 @@ export function getLockedMonsterSprite(rarity = 1) {
   ctx.stroke();
 
   // big ?
-  ctx.fillStyle = rarity >= 5 ? '#ffd54f' : rarity >= 4 ? '#ce93d8' : '#f7f1e6';
+  ctx.fillStyle = rarity >= 6 ? '#ef5350' : rarity >= 5 ? '#ffd54f' : rarity >= 4 ? '#ce93d8' : '#f7f1e6';
   ctx.font = 'bold 36px "Fraunces", Georgia, serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';

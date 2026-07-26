@@ -5,12 +5,16 @@ export const SAVE_KEY = 'rbg_save_v2';
 export const GACHA = {
   PULL_COST_SOULS: 100,
   PULL10_COST_SOULS: 900,
+  /** Pity Legendary (5★) */
   PITY_THRESHOLD: 50,
+  /** Pity Mythic (6★) */
+  MYTHIC_PITY_THRESHOLD: 100,
   RATES: {
-    common: 0.6,   // 1★
-    rare: 0.3,     // 2★–3★
-    epic: 0.08,    // 4★
-    legendary: 0.02, // 5★
+    common: 0.58, // 1★
+    rare: 0.3, // 2★–3★
+    epic: 0.085, // 4★
+    legendary: 0.03, // 5★
+    mythic: 0.005, // 6★
   },
 };
 
@@ -20,6 +24,7 @@ export const COST_BY_RARITY = {
   3: 3,
   4: 5,
   5: 7,
+  6: 9,
 };
 
 export const COMBAT = {
@@ -119,6 +124,7 @@ export const DUPLICATE_SOUL_REFUND = {
   3: 55,
   4: 90,
   5: 160,
+  6: 280,
 };
 
 /** Nâng cấp quái bằng Vàng */
@@ -128,7 +134,7 @@ export const MONSTER_UPGRADE = {
   STAT_PER_LEVEL: 0.12,
   COST_BASE: 40,
   COST_GROWTH: 1.45,
-  RARITY_MULT: { 1: 1, 2: 1.25, 3: 1.6, 4: 2.2, 5: 3.2 },
+  RARITY_MULT: { 1: 1, 2: 1.25, 3: 1.6, 4: 2.2, 5: 3.2, 6: 4.5 },
 };
 
 /**
@@ -210,6 +216,7 @@ export const RARITY_LABELS = {
   3: 'Rare+',
   4: 'Epic',
   5: 'Legendary',
+  6: 'Mythic',
 };
 
 export const RARITY_COLORS = {
@@ -218,4 +225,5 @@ export const RARITY_COLORS = {
   3: '#3d7a6a',
   4: '#5b4a7a',
   5: '#9a6b2a',
+  6: '#c62828',
 };
