@@ -1,14 +1,6 @@
 import { REDEEM_CODES, normalizeRedeemCode } from '../data/redeemCodes.js';
 import { saveState } from './storage.js';
 
-export function isNewPlayer(state) {
-  return (
-    (state.dungeonLevel || 1) <= 1 &&
-    (state.stats?.wins || 0) === 0 &&
-    (state.stats?.losses || 0) === 0
-  );
-}
-
 /**
  * @returns {{ ok: boolean, reason?: string, reward?: object, label?: string }}
  */
@@ -22,10 +14,6 @@ export function tryRedeemCode(state, rawCode) {
   if (!state.redeemedCodes) state.redeemedCodes = [];
   if (state.redeemedCodes.includes(def.id)) {
     return { ok: false, reason: 'Bạn đã nhập mã này rồi' };
-  }
-
-  if (def.newPlayerOnly && !isNewPlayer(state)) {
-    return { ok: false, reason: 'Mã chỉ dành cho người chơi mới (ải 1, chưa thắng/thua)' };
   }
 
   const reward = def.reward || {};
