@@ -1,4 +1,4 @@
-import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js';
+import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=53';
 
 /**
  * Pool mang vào ải = bội số Cap map (Clash-style).

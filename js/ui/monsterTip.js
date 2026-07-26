@@ -1,5 +1,5 @@
-import { RARITY_COLORS, RARITY_LABELS } from '../data/constants.js';
-import { MONSTER_BY_ID } from '../data/monsters.js';
+import { RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=53';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=53';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,

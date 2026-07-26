@@ -1,18 +1,18 @@
-import { MONSTERS } from '../data/monsters.js';
+import { MONSTERS } from '../data/monsters.js?v=53';
 import {
   RARITY_COLORS,
   RARITY_LABELS,
   INVENTORY_CAP,
   MONSTER_UPGRADE,
-} from '../data/constants.js';
-import { monsterDisplayUrl } from '../render/sprites.js';
+} from '../data/constants.js?v=53';
+import { monsterDisplayUrl } from '../render/sprites.js?v=53';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,
   tryUpgradeMonster,
   upgradeMonsterCost,
-} from '../core/monsterUpgrade.js';
-import { evaluateAchievements } from '../core/achievements.js';
+} from '../core/monsterUpgrade.js?v=53';
+import { evaluateAchievements } from '../core/achievements.js?v=53';
 
 const filters = {
   q: '',
@@ -21,6 +21,9 @@ const filters = {
   role: 'all',
   sort: 'rarity',
 };
+
+// Bỏ role filter cũ Mythic/Drawback (hiểu nhầm — drawback là hạn chế trên thẻ quái)
+if (filters.role === 'mythic' || filters.role === 'drawback') filters.role = 'all';
 
 const ROLE_OPTIONS = [
   { id: 'all', label: 'Mọi role' },
@@ -31,8 +34,6 @@ const ROLE_OPTIONS = [
   { id: 'silence', label: 'Silence' },
   { id: 'anti_rogue', label: 'Anti-Rogue' },
   { id: 'boss', label: 'Boss' },
-  { id: 'mythic', label: 'Mythic' },
-  { id: 'drawback', label: 'Drawback' },
 ];
 
 function matchesRole(m, role) {
@@ -94,6 +95,7 @@ function renderCards(state) {
           <div class="stars" style="color:${RARITY_COLORS[m.rarity]}">${'★'.repeat(m.rarity)} <span class="rarity-tag">${RARITY_LABELS[m.rarity]}</span></div>
           <div class="name">???</div>
           <div class="muted" style="font-size:0.75rem;margin-top:2px">Cost ? · HP ? · ATK ?</div>
+          ${m.rarity >= 6 ? '<div class="desc drawback-line">Mythic — có drawback khi dùng</div>' : ''}
           <div class="desc">Chưa mở khóa — quay Gacha hoặc thắng ải để nhận.</div>
           <div class="count locked-count">Chưa sở hữu</div>
         </div>
@@ -188,9 +190,10 @@ export function renderCollection(root, ctx) {
 
       <div class="filter-row" data-group="rarity">
         ${chip(filters.rarity === 'all', 'data-rarity="all"', '★ Tất cả')}
-        ${[1, 2, 3, 4, 5, 6]
+        ${[1, 2, 3, 4, 5]
           .map((r) => chip(filters.rarity === String(r), `data-rarity="${r}"`, `${'★'.repeat(r)}`))
           .join('')}
+        ${chip(filters.rarity === '6', 'data-rarity="6"', '★★★★★★ Mythic')}
       </div>
 
       <div class="filter-row filter-row-scroll" data-group="role">

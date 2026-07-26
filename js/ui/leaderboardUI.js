@@ -1,5 +1,5 @@
-import { MONSTERS } from '../data/monsters.js';
-import { RARITY_COLORS, RARITY_LABELS } from '../data/constants.js';
+import { MONSTERS } from '../data/monsters.js?v=53';
+import { RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=53';
 import { monsterDisplayUrl } from '../render/sprites.js';
 import { fetchLeaderboard, fetchPlayerProfile } from '../core/leaderboard.js';
 import { getUser } from '../core/auth.js';
