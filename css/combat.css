@@ -285,3 +285,8 @@
 .reward-actions button {
   width: 100%;
 }
+
+.reward-actions #btn-replay {
+  min-height: 48px;
+  font-size: 1.05rem;
+}

@@ -368,7 +368,7 @@ export function renderReward(root, ctx) {
       <div class="big-num">+${r.souls} LH</div>
       ${r.gold ? `<div class="muted">+${r.gold} Vàng</div>` : ''}
       <div class="reward-actions">
-        <button type="button" class="primary" id="btn-replay">${replayLabel}</button>
+        <button type="button" class="primary big" id="btn-replay">${replayLabel}</button>
         <button type="button" id="btn-to-gacha">Quay Gacha</button>
         <button type="button" id="btn-to-ach">Ấn chương</button>
         <button type="button" class="ghost" id="btn-to-hub">Về sảnh</button>
@@ -377,7 +377,7 @@ export function renderReward(root, ctx) {
   `;
 
   root.querySelector('#btn-replay').onclick = () => {
-    startRun();
+    if (typeof startRun === 'function') startRun();
     go('scout');
   };
   root.querySelector('#btn-to-gacha').onclick = () => go('gacha');
