@@ -30,7 +30,6 @@ import { playGhostWalk } from './setupPreview.js';
 import { saveState } from '../core/storage.js';
 import {
   hideMonsterTip,
-  showMonsterTip,
   monsterTipLine,
   monsterTipHtml,
 } from './monsterTip.js';
@@ -318,7 +317,6 @@ export function renderScout(root, ctx) {
         statPanel.innerHTML = monsterTipHtml(id, state);
         statPanel.classList.add('has-unit');
       }
-      showMonsterTip(el, id, state);
     }
 
     function clearPickInfo() {
@@ -327,7 +325,6 @@ export function renderScout(root, ctx) {
         statPanel.innerHTML =
           '<p class="muted" style="margin:0;font-size:0.75rem">Chạm / hover thẻ quái để xem mô tả chi tiết.</p>';
       }
-      hideMonsterTip();
     }
 
     // Event delegation — không phụ thuộc bind từng nút
@@ -403,7 +400,6 @@ export function renderScout(root, ctx) {
   }
 
   function refreshLoadout() {
-    hideMonsterTip(true);
     const page = root.querySelector('.scout-page');
     const keepScroll = page ? page.scrollTop : 0;
     const { html, units } = loadoutPanelHtml();
@@ -758,7 +754,6 @@ export function renderSetup(root, ctx) {
         statPanel.hidden = false;
         statPanel.innerHTML = monsterTipHtml(id, state, terrainNote ? { note: terrainNote } : {});
       }
-      showMonsterTip(el, id, state, terrainNote ? { note: terrainNote } : {});
     }
 
     function clearUnitInfo() {
@@ -767,7 +762,6 @@ export function renderSetup(root, ctx) {
         statPanel.hidden = true;
         statPanel.innerHTML = '';
       }
-      hideMonsterTip();
     }
 
     // Tray select + drag
@@ -788,7 +782,6 @@ export function renderSetup(root, ctx) {
       };
       el.onpointerleave = () => clearUnitInfo();
       el.ondragstart = (e) => {
-        hideMonsterTip(true);
         selectedId = el.getAttribute('data-mid');
         run.selectedMonsterId = selectedId;
         e.dataTransfer.setData('text/monster', selectedId);
@@ -892,7 +885,6 @@ export function renderSetup(root, ctx) {
 
       if (el.getAttribute('data-filled') === '1') {
         el.ondragstart = (e) => {
-          hideMonsterTip(true);
           e.dataTransfer.setData('text/from-cell', `${col},${row}`);
           e.dataTransfer.effectAllowed = 'move';
           el.classList.add('dragging');
