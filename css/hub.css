@@ -234,9 +234,34 @@
   line-height: 1.35;
 }
 
-.boss-picker {
+.boss-active {
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border: 2px solid var(--ink);
+  border-left: 5px solid var(--boss-accent, var(--seal));
+  background: color-mix(in srgb, var(--bone) 86%, white);
+  box-shadow: var(--shadow-stamp);
+}
+
+.boss-active-top {
   display: flex;
-  flex-direction: column;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.boss-active-top strong {
+  font-family: var(--font-display);
+}
+
+.boss-active-top span {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.boss-picker {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin-bottom: 14px;
 }
@@ -244,7 +269,8 @@
 .boss-card {
   text-align: left;
   width: 100%;
-  padding: 12px 14px;
+  min-height: 94px;
+  padding: 10px 12px;
   border: 2px solid var(--ink);
   background: var(--bone);
   box-shadow: var(--shadow-stamp);
@@ -274,8 +300,15 @@
 .boss-card-top {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
+}
+
+.boss-card .meta {
+  margin-top: 4px;
+  font-size: 0.76rem;
+  color: var(--muted);
+  line-height: 1.25;
 }
 
 .boss-badge {
@@ -293,21 +326,27 @@
 .boss-spells {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 8px;
+  gap: 5px;
+  margin-top: 6px;
 }
 
 .boss-spell {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 600;
-  padding: 2px 8px;
+  padding: 2px 6px;
   border: 1px solid var(--line);
   background: rgba(26, 22, 18, 0.04);
   color: var(--ink-soft);
 }
 
 .boss-lock-hint {
-  margin-top: 6px;
-  font-size: 0.75rem;
+  margin-top: 5px;
+  font-size: 0.7rem;
   color: var(--muted);
+}
+
+@media (max-width: 980px) {
+  .boss-picker {
+    grid-template-columns: 1fr;
+  }
 }

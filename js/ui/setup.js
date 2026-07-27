@@ -3,17 +3,17 @@ import {
   TERRAIN_LABELS,
   RARITY_COLORS,
   HERO_CLASS_LABELS,
-} from '../data/constants.js?v=82';
-import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=82';
-import { monsterScaleForLevel } from '../data/heroes.js?v=82';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=82';
-import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=82';
+} from '../data/constants.js?v=83';
+import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=83';
+import { monsterScaleForLevel } from '../data/heroes.js?v=83';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=83';
+import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=83';
 import {
   mapUsedCost,
   placeMonster,
   removePlacement,
   totalPlacements,
-} from '../core/dungeon.js?v=82';
+} from '../core/dungeon.js?v=83';
 import {
   loadoutMaxPoolCost,
   loadoutPoolCost,
@@ -24,19 +24,19 @@ import {
   suggestLoadout,
   tryAddToLoadout,
   tryRemoveFromLoadout,
-} from '../core/loadout.js?v=82';
-import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=82';
-import { attachSetupBoardFx } from './setupBoardFx.js?v=82';
-import { playGhostWalk } from './setupPreview.js?v=82';
-import { saveState } from '../core/storage.js?v=82';
+} from '../core/loadout.js?v=83';
+import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=83';
+import { attachSetupBoardFx } from './setupBoardFx.js?v=83';
+import { playGhostWalk } from './setupPreview.js?v=83';
+import { saveState } from '../core/storage.js?v=83';
 import {
   hideMonsterTip,
   monsterTipHtml,
-} from './monsterTip.js?v=82';
+} from './monsterTip.js?v=83';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,
-} from '../core/monsterUpgrade.js?v=82';
+} from '../core/monsterUpgrade.js?v=83';
 
 function shortName(name) {
   if (!name) return '?';

@@ -1,10 +1,10 @@
-import { RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=82';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=82';
-import { describeMonsterKit } from '../data/skillDesc.js?v=82';
+import { RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=83';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=83';
+import { describeMonsterKit } from '../data/skillDesc.js?v=83';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,
-} from '../core/monsterUpgrade.js?v=82';
+} from '../core/monsterUpgrade.js?v=83';
 
 function escapeHtml(str) {
   return String(str ?? '')

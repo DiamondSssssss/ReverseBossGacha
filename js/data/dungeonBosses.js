@@ -1,4 +1,4 @@
-import { SPELLS } from './constants.js?v=82';
+import { SPELLS } from './constants.js?v=83';
 
 /**
  * Boss hầm ngục — mỗi boss = 2 skill passive của “Sếp Tổng”.
@@ -40,6 +40,51 @@ export const DUNGEON_BOSSES = [
     blurb: 'Phá tàng hình / silence + choáng diện rộng.',
     unlock: { type: 'level', value: 10 },
     spells: ['eye_flare', 'quake_stun'],
+  },
+  {
+    id: 'embercrown',
+    name: 'Vương Miện Lửa',
+    title: 'Sếp Hỏa Ấn',
+    color: '#b84f2a',
+    blurb: 'Ép nhịp giao tranh bằng công mạnh + hất lùi phòng tuyến.',
+    unlock: { type: 'level', value: 15 },
+    spells: ['war_drum', 'knock_back'],
+  },
+  {
+    id: 'graveveil',
+    name: 'Màn Mộ',
+    title: 'Sếp Huyết Hồn',
+    color: '#7b6ba8',
+    blurb: 'Hồi bầy quái và che nhịp tiếp cận bằng sương chậm.',
+    unlock: { type: 'level', value: 20 },
+    spells: ['heal_monsters', 'slow_wave'],
+  },
+  {
+    id: 'bogoracle',
+    name: 'Tiên Tri Đầm',
+    title: 'Sếp Độc Nhãn',
+    color: '#557c46',
+    blurb: 'Độc diện rộng + soi tàng hình, khắc đội ẩn nấp.',
+    unlock: { type: 'level', value: 30 },
+    spells: ['poison_mire', 'eye_flare'],
+  },
+  {
+    id: 'citadelcore',
+    name: 'Lõi Thành',
+    title: 'Sếp Thành Khiên',
+    color: '#6a645d',
+    blurb: 'Giữ kho cực lì: khiên kho + hồi bầy quái.',
+    unlock: { type: 'level', value: 40 },
+    spells: ['treasure_ward', 'heal_monsters'],
+  },
+  {
+    id: 'cataclysm',
+    name: 'Tai Kiếp',
+    title: 'Sếp Tận Thế',
+    color: '#a13d54',
+    blurb: 'Bộ boss muộn game: tăng công + choáng diện rộng.',
+    unlock: { type: 'level', value: 50 },
+    spells: ['war_drum', 'quake_stun'],
   },
 ];
 
