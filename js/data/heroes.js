@@ -1,6 +1,6 @@
 /** Hero AI catalog — mỗi ải 1–40 có tổ hợp hero riêng */
 
-import { COMBAT } from './constants.js?v=86';
+import { COMBAT } from './constants.js?v=88';
 
 export const HEROES = [
   // ——— MAGE ———
@@ -620,6 +620,34 @@ export const HEROES = [
     skills: ['HERO_AURA_SPEED', 'REVEAL'],
     description: 'Buff tốc chạy cho Hero gần, đồng thời soi quái tàng hình.',
   },
+  {
+    id: 'hero_hex_charm',
+    name: 'Mê Vu Sư',
+    class: 'HEXER',
+    hp: 380, atk: 55, speed: 1.7, range: 3.0, atkSpeed: 0.95, aoeRadius: 0,
+    target: 'MONSTER', color: '#f48fb1',
+    skills: ['HEAL_CUT', 'ROOT_ON_HIT', 'FRAIL_ON_HIT'],
+    description: 'Hexer — cắt hồi + kẹp chân + Frail lên quái.',
+  },
+  {
+    id: 'hero_frail_blade',
+    name: 'Đao Dễ Vỡ',
+    class: 'ROGUE',
+    stealth: true,
+    hp: 340, atk: 95, speed: 2.2, range: 1.6, atkSpeed: 1.25, aoeRadius: 0,
+    target: 'MONSTER', color: '#ce93d8',
+    skills: ['STEALTH', 'BACKSTAB', 'FRAIL_ON_HIT'],
+    description: 'Sát thủ — lén đâm + gắn Frail khiến quái nhận thêm dame.',
+  },
+  {
+    id: 'hero_cleanse_monk',
+    name: 'Tăng Thanh Tẩy',
+    class: 'HEALER',
+    hp: 480, atk: 40, speed: 1.55, range: 3.2, atkSpeed: 0.85, aoeRadius: 0,
+    target: 'MONSTER', color: '#a5d6a7',
+    skills: ['HEAL_ALLY', 'CLEANSE_ALLY', 'SHIELD'],
+    description: 'Healer — hồi + tẩy debuff đồng minh định kỳ.',
+  },
 ];
 
 export const HERO_BY_ID = Object.fromEntries(HEROES.map((h) => [h.id, h]));
@@ -1131,7 +1159,7 @@ export const WAVE_PLANS = {
     waves: [
       { delay: 0.35, ids: ['hero_support_01', 'hero_archer_04', 'hero_archer_05', 'hero_healer_04', 'hero_mage_06'] },
       { delay: 11, ids: ['hero_boss_55', 'hero_healer_05', 'hero_hex_06', 'hero_tank_04', 'hero_support_02'] },
-      { delay: 24, ids: ['hero_boss_55', 'hero_archer_06', 'hero_healer_05', 'hero_berserker_04', 'hero_mage_08', 'hero_support_03'] },
+      { delay: 24, ids: ['hero_boss_55', 'hero_archer_06', 'hero_healer_05', 'hero_berserker_04', 'hero_mage_08', 'hero_hex_charm', 'hero_support_03'] },
     ],
   },
   56: {

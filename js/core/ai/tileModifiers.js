@@ -1,7 +1,7 @@
-import { TERRAIN } from '../../data/rooms.js?v=86';
-import { COMBAT, MONSTER_UPGRADE } from '../../data/constants.js?v=86';
-import { monsterStatMul } from '../monsterUpgrade.js?v=86';
-import { monsterScaleForLevel } from '../../data/heroes.js?v=86';
+import { TERRAIN } from '../../data/rooms.js?v=88';
+import { COMBAT, MONSTER_UPGRADE } from '../../data/constants.js?v=88';
+import { monsterStatMul, raritySurvivabilityMul } from '../monsterUpgrade.js?v=88';
+import { monsterScaleForLevel } from '../../data/heroes.js?v=88';
 
 /**
  * Buff / debuff địa hình theo passive element.
@@ -285,6 +285,7 @@ export function spawnMonsterStats(template, terrain, upgradeLevel = 0, stageLeve
     hpMul *= 1.4;
     atkMul *= 0.95;
   }
+  hpMul *= raritySurvivabilityMul(template);
 
   return {
     baseHp: Math.round(stats.hp * hpMul),

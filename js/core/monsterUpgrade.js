@@ -1,7 +1,7 @@
-import { MONSTER_UPGRADE } from '../data/constants.js?v=86';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=86';
-import { monsterScaleForLevel } from '../data/heroes.js?v=86';
-import { saveState } from './storage.js?v=86';
+import { MONSTER_UPGRADE } from '../data/constants.js?v=88';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=88';
+import { monsterScaleForLevel } from '../data/heroes.js?v=88';
+import { saveState } from './storage.js?v=88';
 
 export function getMonsterUpgradeLevel(state, monsterId) {
   return Math.max(0, Number(state.monsterUpgrades?.[monsterId]) || 0);
@@ -10,6 +10,45 @@ export function getMonsterUpgradeLevel(state, monsterId) {
 export function monsterStatMul(level) {
   const lv = Math.max(0, Number(level) || 0);
   return 1 + lv * MONSTER_UPGRADE.STAT_PER_LEVEL;
+}
+
+/**
+ * Buff HP 1–4★ để không oneshot; suicide/trap/potion giữ mỏng.
+ * Tank/tankette nhận mul cao hơn.
+ */
+export function raritySurvivabilityMul(template) {
+  const rarity = Number(template?.rarity) || 1;
+  if (rarity >= 5) return 1;
+  const tags = template?.tags || [];
+  const passive = template?.passive || '';
+  const skills = template?.skills || [];
+  const fragile =
+    tags.includes('trap') ||
+    tags.includes('potion') ||
+    passive === 'SELF_DESTRUCT' ||
+    skills.includes('SELF_DESTRUCT') ||
+    passive === 'BONE_PILE' ||
+    String(passive).startsWith('SLIME_EXPLODE') ||
+    String(passive).startsWith('TRAP_') ||
+    String(passive).startsWith('POTION_');
+  if (fragile) return rarity <= 2 ? 1.05 : 1;
+
+  const isTank =
+    tags.includes('tank') ||
+    tags.includes('tankette') ||
+    passive === 'TAUNT' ||
+    passive === 'AURA_TAUNT' ||
+    passive === 'AURA_STUN' ||
+    passive === 'ANTI_HEAL_AURA' ||
+    passive === 'HEAL_AURA' ||
+    passive === 'HEAL_PULSE' ||
+    passive === 'THORNS_PASSIVE' ||
+    passive === 'ROOT_AURA';
+
+  const table = isTank
+    ? { 1: 1.85, 2: 1.7, 3: 1.55, 4: 1.4 }
+    : { 1: 1.55, 2: 1.4, 3: 1.28, 4: 1.18 };
+  return table[rarity] ?? 1;
 }
 
 export function upgradeMonsterCost(monsterId, currentLevel) {
@@ -76,6 +115,8 @@ export function displayMonsterStats(template, upgradeLevel = 0, stageLevel = 0) 
     hpMul *= 1.4;
     atkMul *= 0.95;
   }
+  const surv = raritySurvivabilityMul(template);
+  hpMul *= surv;
   return {
     hp: Math.round(template.stats.hp * hpMul),
     atk: Math.round(template.stats.atk * atkMul),
@@ -87,7 +128,9 @@ export function displayMonsterStats(template, upgradeLevel = 0, stageLevel = 0) 
     /** Hệ số scale ải (1 = không scale) */
     stageMul,
     /** HP/ATK gốc + nâng cấp, chưa nhân ải — để so sánh */
-    baseHp: Math.round(template.stats.hp * upMul * (isAssassin ? 1.15 : isTank ? 1.4 : 1)),
+    baseHp: Math.round(
+      template.stats.hp * upMul * (isAssassin ? 1.15 : isTank ? 1.4 : 1) * surv
+    ),
     baseAtk: Math.round(
       template.stats.atk * upMul * (isAssassin ? 1.28 : isTank ? 0.95 : 1)
     ),

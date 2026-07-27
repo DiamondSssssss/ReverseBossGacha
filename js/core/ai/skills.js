@@ -10,6 +10,7 @@ export function ensureHeroSkillState(hero, time) {
 
 export function applyIncomingDamage(unit, dmg, time) {
   ensureHeroSkillState(unit, time);
+  if (unit.invulnUntil && time < unit.invulnUntil) return 0;
   if (unit.shieldHp > 0 && time < unit.shieldUntil) {
     const absorbed = Math.min(unit.shieldHp, dmg);
     unit.shieldHp -= absorbed;
@@ -139,6 +140,90 @@ export function applyDefShred(target, time, { factor = 0.7, duration = 4 } = {})
   target.defShredFactor = Math.min(target.defShredFactor ?? 1, factor);
 }
 
+/** Kẹp chân — không di chuyển, vẫn đánh được */
+export function applyRoot(target, time, duration = 1.4) {
+  target.rootedUntil = Math.max(target.rootedUntil || 0, time + duration);
+}
+
+/** Mê hoặc — hero bỏ kho / đánh đồng minh */
+export function applyCharm(target, time, duration = 2.2) {
+  target.charmedUntil = Math.max(target.charmedUntil || 0, time + duration);
+}
+
+export function applyFrail(target, time, { mul = 1.25, duration = 4 } = {}) {
+  target.frailUntil = Math.max(target.frailUntil || 0, time + duration);
+  target.frailMul = Math.max(target.frailMul || 1, mul);
+}
+
+export function applyInvulnerable(target, time, duration = 1.5) {
+  target.invulnUntil = Math.max(target.invulnUntil || 0, time + duration);
+}
+
+/** Gai phản theo unit (ratio 0–1) */
+export function applyThornsPassive(target, ratio = 0.18) {
+  target.thornsRatio = Math.max(target.thornsRatio || 0, ratio);
+}
+
+/**
+ * Giảm CD skill — rút ngắn các *CdUntil đang chờ.
+ * factor &lt; 1 = còn lại ít hơn (0.7 = rút 30% thời gian còn lại).
+ */
+export function applyCdReduction(unit, time, { factor = 0.7, duration = 5 } = {}) {
+  unit.cdReduceUntil = Math.max(unit.cdReduceUntil || 0, time + duration);
+  unit.cdReduceFactor = Math.min(unit.cdReduceFactor ?? 1, factor);
+  const keys = ['shieldCdUntil', 'tauntCdUntil', 'healCdUntil', 'invulnCdUntil', 'cleanseCdUntil'];
+  for (const k of keys) {
+    if (unit[k] && unit[k] > time) {
+      const remain = unit[k] - time;
+      unit[k] = time + remain * factor;
+    }
+  }
+}
+
+/** Xóa debuff trên đồng minh (instant utility) */
+export function cleanseUnit(unit) {
+  if (!unit) return;
+  unit.burnUntil = 0;
+  unit.burnDps = 0;
+  unit.poisonUntil = 0;
+  unit.poisonDps = 0;
+  unit.slowUntil = 0;
+  unit.slowFactor = 1;
+  unit.rootedUntil = 0;
+  unit.defShredUntil = 0;
+  unit.defShredFactor = 1;
+  unit.frailUntil = 0;
+  unit.frailMul = 1;
+  unit.healCutUntil = 0;
+  unit.healCutFactor = 1;
+  unit.charmedUntil = 0;
+}
+
+export function cleanseAlliesInRadius(source, allies, radius, floatFn, particles) {
+  let n = 0;
+  for (const a of allies) {
+    if (!a?.alive || a === source) continue;
+    if (Math.hypot(a.x - source.x, a.y - source.y) > radius) continue;
+    cleanseUnit(a);
+    particles?.heal?.(a.x, a.y - 6);
+    floatFn?.(a.x, a.y - 10, 'Tẩy!', '#81c784');
+    n++;
+  }
+  return n;
+}
+
+export function isRooted(unit, time) {
+  return !!(unit?.rootedUntil && time < unit.rootedUntil);
+}
+
+export function isCharmed(unit, time) {
+  return !!(unit?.charmedUntil && time < unit.charmedUntil);
+}
+
+export function isInvulnerable(unit, time) {
+  return !!(unit?.invulnUntil && time < unit.invulnUntil);
+}
+
 export function tickStatusDots(unit, time, dt) {
   let dmg = 0;
   if (unit.burnUntil && time < unit.burnUntil && unit.burnDps > 0) {
@@ -202,6 +287,9 @@ export function computeHeroAttackDamage(hero, target, time) {
     poison: skills.includes('POISON_ON_HIT'),
     stun: skills.includes('STUN_ON_HIT'),
     defShred: skills.includes('DEF_SHRED'),
+    frail: skills.includes('FRAIL_ON_HIT'),
+    charm: skills.includes('CHARM_ON_HIT'),
+    root: skills.includes('ROOT_ON_HIT'),
     pierce,
     lifesteal: skills.includes('LIFESTEAL'),
   };
@@ -236,6 +324,13 @@ export function applyOnHitStatuses(attacker, target, time, flags = {}) {
     passive === 'FROST_BOLT' ||
     passive === 'RANGED_FROST';
   const defShred = flags.defShred || skills.includes('DEF_SHRED') || passive === 'DEF_SHRED';
+  const root =
+    flags.root ||
+    skills.includes('ROOT_ON_HIT') ||
+    passive === 'ROOT_ON_HIT' ||
+    passive === 'ROOT_AURA';
+  const charm = flags.charm || skills.includes('CHARM_ON_HIT') || passive === 'CHARM_ON_HIT';
+  const frail = flags.frail || skills.includes('FRAIL_ON_HIT') || passive === 'FRAIL_ON_HIT';
 
   const applied = [];
   if (burn) {
@@ -254,6 +349,18 @@ export function applyOnHitStatuses(attacker, target, time, flags = {}) {
       skills.includes('FROST_BOLT') || passive === 'FROST_BOLT' ? 1.4 : 1.15
     );
     applied.push('freeze');
+  }
+  if (root) {
+    applyRoot(target, time, 1.35);
+    applied.push('root');
+  }
+  if (charm) {
+    applyCharm(target, time, 2.0);
+    applied.push('charm');
+  }
+  if (frail) {
+    applyFrail(target, time, { mul: 1.22, duration: 3.8 });
+    applied.push('frail');
   }
   if (stun) {
     applyStun(target, time, passive === 'MYTHIC_STASIS' ? 1.4 : 0.85);

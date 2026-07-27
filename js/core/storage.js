@@ -4,11 +4,11 @@ import {
   SPELLS,
   INVENTORY_CAP,
   DUPLICATE_SOUL_REFUND,
-} from '../data/constants.js?v=86';
-import { DEFAULT_BOSS_ID, syncUnlockedBosses } from '../data/dungeonBosses.js?v=86';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=86';
-import { isLoggedIn } from './auth.js?v=86';
-import { pushCloudSave } from './cloudSave.js?v=86';
+} from '../data/constants.js?v=88';
+import { DEFAULT_BOSS_ID, syncUnlockedBosses } from '../data/dungeonBosses.js?v=88';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=88';
+import { isLoggedIn } from './auth.js?v=88';
+import { pushCloudSave } from './cloudSave.js?v=88';
 
 const LEGACY_KEYS = ['rbg_save_v1'];
 
@@ -50,6 +50,9 @@ function defaultState() {
     ownedEver: Object.keys(STARTING.starterMonsters),
     lastLoadout: {},
     redeemedCodes: [],
+    challengeProgress: { unlocked: [], cleared: {}, bestTime: {} },
+    titles: [],
+    equippedTitle: null,
     updatedAt: Date.now(),
   };
 }
@@ -124,6 +127,13 @@ export function loadState() {
       redeemedCodes: Array.isArray(parsed.redeemedCodes) ? [...parsed.redeemedCodes] : [],
       tutorialDone: !!parsed.tutorialDone,
       achievementGemRev: Number(parsed.achievementGemRev) || 0,
+      challengeProgress: parsed.challengeProgress || {
+        unlocked: [],
+        cleared: {},
+        bestTime: {},
+      },
+      titles: Array.isArray(parsed.titles) ? [...parsed.titles] : [],
+      equippedTitle: parsed.equippedTitle || null,
       updatedAt: parsed.updatedAt || Date.now(),
     };
     clampInventoryToCap(merged);
@@ -167,6 +177,13 @@ export function applySaveData(state, data) {
     mythicPityCounter: Math.max(0, Number(data.mythicPityCounter) || 0),
     rainbowPityCounter: Math.max(0, Number(data.rainbowPityCounter) || 0),
     achievementGemRev: Number(data.achievementGemRev) || 0,
+    challengeProgress: data.challengeProgress || {
+      unlocked: [],
+      cleared: {},
+      bestTime: {},
+    },
+    titles: Array.isArray(data.titles) ? [...data.titles] : [],
+    equippedTitle: data.equippedTitle || null,
     updatedAt: data.updatedAt || Date.now(),
   });
   clampInventoryToCap(state);

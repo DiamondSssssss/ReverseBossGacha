@@ -3,17 +3,17 @@ import {
   TERRAIN_LABELS,
   RARITY_COLORS,
   HERO_CLASS_LABELS,
-} from '../data/constants.js?v=86';
-import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=86';
-import { monsterScaleForLevel } from '../data/heroes.js?v=86';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=86';
-import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=86';
+} from '../data/constants.js?v=88';
+import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=88';
+import { monsterScaleForLevel } from '../data/heroes.js?v=88';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=88';
+import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=88';
 import {
   mapUsedCost,
   placeMonster,
   removePlacement,
   totalPlacements,
-} from '../core/dungeon.js?v=86';
+} from '../core/dungeon.js?v=88';
 import {
   loadoutMaxPoolCost,
   loadoutPoolCost,
@@ -24,19 +24,20 @@ import {
   suggestLoadout,
   tryAddToLoadout,
   tryRemoveFromLoadout,
-} from '../core/loadout.js?v=86';
-import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=86';
-import { attachSetupBoardFx } from './setupBoardFx.js?v=86';
-import { playGhostWalk } from './setupPreview.js?v=86';
-import { saveState } from '../core/storage.js?v=86';
+} from '../core/loadout.js?v=88';
+import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=88';
+import { attachSetupBoardFx } from './setupBoardFx.js?v=88';
+import { playGhostWalk } from './setupPreview.js?v=88';
+import { saveState } from '../core/storage.js?v=88';
 import {
   hideMonsterTip,
   monsterTipHtml,
-} from './monsterTip.js?v=86';
+} from './monsterTip.js?v=88';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,
-} from '../core/monsterUpgrade.js?v=86';
+} from '../core/monsterUpgrade.js?v=88';
+import { validateChallengeLoadout } from '../core/challenge.js?v=88';
 
 function shortName(name) {
   if (!name) return '?';
@@ -257,6 +258,12 @@ export function renderScout(root, ctx) {
   const tips = [];
   if (run.waveTip) tips.push(run.waveTip);
   if (map.tip) tips.push(map.tip);
+  if (run.mode === 'challenge' && run.challenge) {
+    tips.unshift(`Thách thức CH${run.challengeId}: ${run.challenge.blurb}`);
+    for (const o of run.challenge.objectives || []) {
+      if (o.label) tips.push(`Điều kiện: ${o.label}`);
+    }
+  }
   if (classes.includes('MAGE')) tips.push('Có Pháp sư → Silence / áp sát');
   if (classes.includes('WARRIOR')) tips.push('Có Chiến sĩ → Boss burst / DoT');
   if (classes.includes('ARCHER')) tips.push('Có Cung thủ → gap-close / chase tầm xa');
@@ -975,6 +982,17 @@ export function renderSetup(root, ctx) {
       if (totalPlacements(run) === 0) {
         toast('Hãy thả ít nhất 1 quái!');
         return;
+      }
+      if (run.mode === 'challenge' && run.challenge) {
+        const check = validateChallengeLoadout(
+          run.challenge,
+          run.loadout,
+          run.map.placements || []
+        );
+        if (!check.ok) {
+          toast(check.errors[0] || 'Loadout không hợp lệ');
+          return;
+        }
       }
       // Phần còn trong khay → tay bài thả trong trận
       run.deployHand = { ...inventory };

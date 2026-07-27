@@ -1,11 +1,16 @@
-import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=86';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=86';
-import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=86';
-import { CombatEngine } from '../core/combatEngine.js?v=86';
-import { saveState } from '../core/storage.js?v=86';
-import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=86';
-import { monsterSpriteUrl } from '../render/sprites.js?v=86';
-import { bindMonsterTips, hideMonsterTip } from './monsterTip.js?v=86';
+import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=88';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=88';
+import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=88';
+import { CombatEngine } from '../core/combatEngine.js?v=88';
+import { saveState } from '../core/storage.js?v=88';
+import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=88';
+import {
+  evaluateChallengeResult,
+  grantChallengeReward,
+  titleName,
+} from '../core/challenge.js?v=88';
+import { monsterSpriteUrl } from '../render/sprites.js?v=88';
+import { bindMonsterTips, hideMonsterTip } from './monsterTip.js?v=88';
 
 let engine = null;
 
@@ -171,6 +176,60 @@ export function renderCombat(root, ctx) {
     const killed = run.wave.length;
     let souls = 0;
     let gold = 0;
+
+    if (run.mode === 'challenge') {
+      const ch = run.challenge;
+      const ev = evaluateChallengeResult(ch, engine, { result });
+      if (result === 'win' && ev.ok) {
+        const reward = grantChallengeReward(state, ch);
+        const isReplay = !!reward.replay;
+        souls = isReplay ? 0 : reward.souls || 40;
+        gold = isReplay ? 0 : 20 + run.challengeId * 5;
+        if (gold) state.gold = (state.gold || 0) + gold;
+        state.stats.wins += 1;
+        if (state.challengeProgress) {
+          state.challengeProgress.bestTime = state.challengeProgress.bestTime || {};
+          const prev = state.challengeProgress.bestTime[ch.id];
+          if (prev == null || engine.time < prev) {
+            state.challengeProgress.bestTime[ch.id] = Math.round(engine.time * 10) / 10;
+          }
+        }
+        saveState(state);
+        refreshChrome();
+        ctx.lastReward = {
+          result: 'win',
+          souls,
+          gold,
+          challenge: true,
+          challengeId: ch.id,
+          titleId: reward.titleId,
+          titleName: titleName(reward.titleId),
+          objectivesFailed: [],
+          replay: isReplay,
+        };
+        go('reward');
+      } else {
+        souls = REWARDS.LOSE_SOULS;
+        state.souls += souls;
+        state.stats.losses += 1;
+        saveState(state);
+        refreshChrome();
+        ctx.lastReward = {
+          result: 'lose',
+          souls,
+          gold: 0,
+          challenge: true,
+          challengeId: ch.id,
+          objectivesFailed: (ev.failed || []).map((o) => o.label || o.type),
+          note:
+            result === 'win'
+              ? 'Thắng kho nhưng trượt điều kiện phụ'
+              : 'Thất bại',
+        };
+        go('reward');
+      }
+      return;
+    }
 
     if (result === 'win') {
       souls =
@@ -447,25 +506,44 @@ export function renderCombat(root, ctx) {
 }
 
 export function renderReward(root, ctx) {
-  const { lastReward, go, state, startRun } = ctx;
+  const { lastReward, go, state, startRun, startChallenge } = ctx;
   const r = lastReward || { result: 'win', souls: 0, gold: 0 };
   const win = r.result === 'win';
   const stageClass = r.clearedJustNow ? 'clear' : win ? '' : 'lose';
   const mark = r.clearedJustNow ? String(MAX_STAGE) : win ? 'OK' : '…';
-  const replayLabel = win ? 'Vào ải tiếp' : 'Chơi lại';
+  const isCh = !!r.challenge;
+  const replayLabel = isCh ? 'Về Thách thức' : win ? 'Vào ải tiếp' : 'Chơi lại';
 
   root.innerHTML = `
     <div class="reward-stage ${stageClass}">
       <div class="seal-mark">${mark}</div>
-      <h2>${r.clearedJustNow ? 'Phá đảo' : win ? 'Chiến thắng' : 'Thất thủ'}</h2>
-      <p class="muted">${
+      <h2>${
         r.clearedJustNow
-          ? `Thắng ải ${MAX_STAGE}. Tiếp tục sưu tầm ấn chương còn lại.`
-          : win
-            ? `Tiến độ: ải ${Math.min(state.dungeonLevel, MAX_STAGE)}/${MAX_STAGE}`
-            : r.heroesDefeated
-              ? `Kho báu bị rút — nhưng đã hạ/đẩy ${r.heroesDefeated} Hero.`
-              : 'Kho báu bị rút — nhận Linh Hồn an ủi.'
+          ? 'Phá đảo'
+          : isCh
+            ? win
+              ? `Thách thức ${r.challengeId} — Xong`
+              : `Thách thức ${r.challengeId} — Trượt`
+            : win
+              ? 'Chiến thắng'
+              : 'Thất thủ'
+      }</h2>
+      <p class="muted">${
+        isCh
+          ? win
+            ? r.titleName
+              ? `Nhận Title: ${r.titleName}`
+              : 'Điều kiện phụ đạt'
+            : (r.objectivesFailed || []).length
+              ? `Trượt: ${(r.objectivesFailed || []).join('; ')}`
+              : r.note || 'Thất bại'
+          : r.clearedJustNow
+            ? `Thắng ải ${MAX_STAGE}. Tiếp tục sưu tầm ấn chương còn lại.`
+            : win
+              ? `Tiến độ: ải ${Math.min(state.dungeonLevel, MAX_STAGE)}/${MAX_STAGE}`
+              : r.heroesDefeated
+                ? `Kho báu bị rút — nhưng đã hạ/đẩy ${r.heroesDefeated} Hero.`
+                : 'Kho báu bị rút — nhận Linh Hồn an ủi.'
       }</p>
       <div class="big-num">+${r.souls} LH</div>
       ${r.gold ? `<div class="muted">+${r.gold} Vàng</div>` : ''}
@@ -479,6 +557,10 @@ export function renderReward(root, ctx) {
   `;
 
   root.querySelector('#btn-replay').onclick = () => {
+    if (isCh) {
+      go('challenges');
+      return;
+    }
     if (typeof startRun === 'function') startRun();
     go('scout');
   };

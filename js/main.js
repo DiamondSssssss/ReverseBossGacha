@@ -3,23 +3,25 @@ import {
   saveState,
   resetState,
   inventoryCopy,
-} from './core/storage.js?v=86';
-import { createRunState } from './core/dungeon.js?v=86';
-import { loadoutFingerprint } from './core/loadout.js?v=86';
-import { evaluateAchievements } from './core/achievements.js?v=86';
-import { initAuth, onAuthChange } from './core/auth.js?v=86';
-import { renderHub } from './ui/hub.js?v=86';
-import { renderGacha } from './ui/gachaUI.js?v=86';
-import { renderCollection } from './ui/collection.js?v=86';
-import { renderHeroes } from './ui/heroesUI.js?v=86';
-import { renderScout, renderSetup } from './ui/setup.js?v=86';
-import { renderCombat, renderReward, stopCombatIfAny, getCombatEngine } from './ui/combat.js?v=86';
-import { renderAchievements, announceUnlocks } from './ui/achievementsUI.js?v=86';
-import { renderLeaderboard } from './ui/leaderboardUI.js?v=86';
-import { renderAdmin } from './ui/adminUI.js?v=86';
-import { startGuidedTour, showTipBanner } from './ui/tutorial.js?v=86';
-import { renderAccountBar } from './ui/authUI.js?v=86';
-import { hideMonsterTip } from './ui/monsterTip.js?v=86';
+} from './core/storage.js?v=88';
+import { createRunState } from './core/dungeon.js?v=88';
+import { createChallengeRunState } from './core/challenge.js?v=88';
+import { loadoutFingerprint } from './core/loadout.js?v=88';
+import { evaluateAchievements } from './core/achievements.js?v=88';
+import { initAuth, onAuthChange } from './core/auth.js?v=88';
+import { renderHub } from './ui/hub.js?v=88';
+import { renderChallenges } from './ui/challengesUI.js?v=88';
+import { renderGacha } from './ui/gachaUI.js?v=88';
+import { renderCollection } from './ui/collection.js?v=88';
+import { renderHeroes } from './ui/heroesUI.js?v=88';
+import { renderScout, renderSetup } from './ui/setup.js?v=88';
+import { renderCombat, renderReward, stopCombatIfAny, getCombatEngine } from './ui/combat.js?v=88';
+import { renderAchievements, announceUnlocks } from './ui/achievementsUI.js?v=88';
+import { renderLeaderboard } from './ui/leaderboardUI.js?v=88';
+import { renderAdmin } from './ui/adminUI.js?v=88';
+import { startGuidedTour, showTipBanner } from './ui/tutorial.js?v=88';
+import { renderAccountBar } from './ui/authUI.js?v=88';
+import { hideMonsterTip } from './ui/monsterTip.js?v=88';
 
 const state = loadState();
 // Mở ấn đủ điều kiện + backfill Gem cho ấn đã mở (bảng thưởng mới)
@@ -31,6 +33,7 @@ let currentScreen = 'hub';
 
 const screens = {
   hub: document.getElementById('screen-hub'),
+  challenges: document.getElementById('screen-challenges'),
   gacha: document.getElementById('screen-gacha'),
   collection: document.getElementById('screen-collection'),
   heroes: document.getElementById('screen-heroes'),
@@ -89,6 +92,12 @@ function refreshAccount() {
 
 function startRun() {
   run = createRunState(state);
+  inventory = inventoryCopy(state);
+  lastReward = null;
+}
+
+function startChallenge(challengeId) {
+  run = createChallengeRunState(state, challengeId);
   inventory = inventoryCopy(state);
   lastReward = null;
 }
@@ -178,6 +187,7 @@ const bag = {
   toast,
   refreshChrome,
   startRun,
+  startChallenge,
   applyLoadout,
   ensureLoadoutInventory,
   announceAchievements,
@@ -281,6 +291,9 @@ function renderScreen(name) {
   switch (name) {
     case 'hub':
       renderHub(root, bag);
+      break;
+    case 'challenges':
+      renderChallenges(root, bag);
       break;
     case 'gacha':
       renderGacha(root, bag);

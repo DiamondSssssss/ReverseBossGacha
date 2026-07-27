@@ -1,4 +1,4 @@
-import { SPELLS } from './constants.js?v=86';
+import { SPELLS } from './constants.js?v=88';
 
 /**
  * Boss hầm ngục — mỗi boss có 2 skill riêng, không dùng chung spell ID.
@@ -9,9 +9,9 @@ export const DUNGEON_BOSSES = [
     name: 'Huyết Sương',
     title: 'Sếp Sương Máu',
     color: '#5b8fa8',
-    blurb: 'Kiểm soát nhịp Hero + hồi máu đội quái.',
+    blurb: 'Làm chậm toàn map + gai máu phản sát thương.',
     unlock: { type: 'start' },
-    spells: ['hemofrost', 'crimson_thaw'],
+    spells: ['hemofrost', 'blood_thorns'],
   },
   {
     id: 'ironward',
@@ -54,16 +54,16 @@ export const DUNGEON_BOSSES = [
     name: 'Màn Mộ',
     title: 'Sếp Huyết Hồn',
     color: '#7b6ba8',
-    blurb: 'Hồi bầy quái và che nhịp tiếp cận bằng sương chậm.',
+    blurb: 'Liên kết sát thương Hero + kéo bầy về kho rồi neo chân.',
     unlock: { type: 'level', value: 20 },
-    spells: ['winter_wake', 'grave_bloom'],
+    spells: ['soul_tether', 'ossuary_yank'],
   },
   {
     id: 'bogoracle',
     name: 'Tiên Tri Đầm',
     title: 'Sếp Độc Nhãn',
     color: '#557c46',
-    blurb: 'Độc diện rộng + soi tàng hình, khắc đội ẩn nấp.',
+    blurb: 'Độc diện rộng + mù tầm / cắt ATK backline.',
     unlock: { type: 'level', value: 30 },
     spells: ['rot_tide', 'seer_pupil'],
   },
@@ -72,18 +72,18 @@ export const DUNGEON_BOSSES = [
     name: 'Lõi Thành',
     title: 'Sếp Thành Khiên',
     color: '#6a645d',
-    blurb: 'Giữ kho cực lì: khiên kho + hồi bầy quái.',
+    blurb: 'Khiên toàn bầy + hút-nện Hero gần kho, giảm ATK.',
     unlock: { type: 'level', value: 40 },
-    spells: ['vault_oath', 'stone_feast'],
+    spells: ['vault_oath', 'garrison_spike'],
   },
   {
     id: 'cataclysm',
     name: 'Tai Kiếp',
     title: 'Sếp Tận Thế',
     color: '#a13d54',
-    blurb: 'Bộ boss muộn game: tăng công + choáng diện rộng.',
+    blurb: 'Sét nhảy liên hoàn + chuông xử Hero máu thấp.',
     unlock: { type: 'level', value: 50 },
-    spells: ['doom_march', 'ruin_bell'],
+    spells: ['sky_fracture', 'ruin_bell'],
   },
 ];
 

@@ -1,17 +1,18 @@
-import { MAP_UPGRADE, SPELLS, MAX_STAGE } from '../data/constants.js?v=86';
-import { MONSTERS } from '../data/monsters.js?v=86';
+import { MAP_UPGRADE, SPELLS, MAX_STAGE } from '../data/constants.js?v=88';
+import { MONSTERS } from '../data/monsters.js?v=88';
 import {
   DUNGEON_BOSSES,
   getBoss,
   isBossUnlocked,
   unlockHint,
   syncUnlockedBosses,
-} from '../data/dungeonBosses.js?v=86';
-import { tryUpgradeMap, upgradeMapCost } from '../core/dungeon.js?v=86';
-import { saveState } from '../core/storage.js?v=86';
-import { achievementProgress, isGameCleared, evaluateAchievements } from '../core/achievements.js?v=86';
-import { showTutorial } from './tutorial.js?v=86';
-import { showRedeemModal } from './redeemUI.js?v=86';
+} from '../data/dungeonBosses.js?v=88';
+import { tryUpgradeMap, upgradeMapCost } from '../core/dungeon.js?v=88';
+import { saveState } from '../core/storage.js?v=88';
+import { achievementProgress, isGameCleared, evaluateAchievements } from '../core/achievements.js?v=88';
+import { titleName, ensureChallengeProgress } from '../core/challenge.js?v=88';
+import { showTutorial } from './tutorial.js?v=88';
+import { showRedeemModal } from './redeemUI.js?v=88';
 
 const GATE_SVG = `
 <svg viewBox="0 0 200 250" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -50,12 +51,14 @@ function bossCardHtml(boss, state) {
 export function renderHub(root, ctx) {
   const { state, go, toast, refreshChrome, startRun, announceAchievements } = ctx;
   syncUnlockedBosses(state);
+  ensureChallengeProgress(state);
   const prog = achievementProgress(state);
   const cleared = isGameCleared(state);
   const stageLabel = cleared ? 'Phá đảo' : `Ải ${Math.min(state.dungeonLevel, MAX_STAGE)}/${MAX_STAGE}`;
   const ownedMonsters = MONSTERS.filter((m) => (state.inventory?.[m.id] || 0) > 0).length;
   const monsterLabel = `${ownedMonsters}/${MONSTERS.length}`;
   const activeBoss = getBoss(state.selectedBossId);
+  const titleLabel = titleName(state.equippedTitle);
 
   const lvl = state.mapUpgrade || 0;
   const cost = upgradeMapCost(lvl);
@@ -74,6 +77,7 @@ export function renderHub(root, ctx) {
         <div class="hub-cta">
           <button type="button" class="primary big" id="btn-play">Mở cổng ải</button>
           <div class="hub-secondary">
+            <button type="button" id="btn-challenge">Thách thức</button>
             <button type="button" id="btn-gacha">Quay Gacha</button>
             <button type="button" id="btn-redeem">Nhập mã</button>
             <button type="button" id="btn-ach">Ấn chương</button>
@@ -86,6 +90,11 @@ export function renderHub(root, ctx) {
           <div><strong>${state.stats.wins}</strong><span>Thắng</span></div>
           <div><strong>${prog.done}/${prog.total}</strong><span>Ấn</span></div>
         </div>
+        ${
+          titleLabel
+            ? `<p class="muted" style="margin-top:8px">Title: <strong>${titleLabel}</strong></p>`
+            : ''
+        }
       </div>
 
       <div class="hub-side">
@@ -158,6 +167,7 @@ export function renderHub(root, ctx) {
     startRun();
     go('scout');
   };
+  root.querySelector('#btn-challenge')?.addEventListener('click', () => go('challenges'));
   root.querySelector('#btn-gacha').onclick = () => go('gacha');
   root.querySelector('#btn-redeem').onclick = () => {
     showRedeemModal(document.getElementById('modal'), {

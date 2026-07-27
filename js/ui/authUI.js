@@ -1,7 +1,7 @@
-import { signIn, signUp, signOut, getUser } from '../core/auth.js?v=86';
-import { pullCloudSave, pushCloudSave, pickBetterSave } from '../core/cloudSave.js?v=86';
-import { applySaveData, saveState, saveStateNow } from '../core/storage.js?v=86';
-import { showRedeemModal } from './redeemUI.js?v=86';
+import { signIn, signUp, signOut, getUser } from '../core/auth.js?v=88';
+import { pullCloudSave, pushCloudSave, pickBetterSave } from '../core/cloudSave.js?v=88';
+import { applySaveData, saveState, saveStateNow } from '../core/storage.js?v=88';
+import { showRedeemModal } from './redeemUI.js?v=88';
 
 export function renderAccountBar({ accountEl, modalEl, state, toast, onSaveLoaded, refreshChrome, go }) {
   const user = getUser();

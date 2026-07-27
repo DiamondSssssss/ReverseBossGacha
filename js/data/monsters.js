@@ -39,8 +39,8 @@ export const MONSTERS = [
     name: 'Bọ Nến Lẻ',
     rarity: 1, cost: 1,
     stats: { hp: 70, atk: 9, speed: 1.5, range: 1.3, atkSpeed: 1.1 },
-    passive: 'NONE', tags: ['utility'], color: '#ffcc80',
-    description: 'Filler 1★ — HP 70 / ATK 9. Rẻ, đông, kéo thời gian.',
+    passive: 'CLEANSE_ALLY', auraRadius: 2.2, tags: ['utility', 'support'], color: '#ffcc80',
+    description: 'Support rẻ — mỗi ~5s tẩy debuff đồng minh gần.',
   },
   {
     id: 'moss_slug',
@@ -79,16 +79,16 @@ export const MONSTERS = [
     name: 'Nấm Bào Tử',
     rarity: 1, cost: 1,
     stats: { hp: 90, atk: 7, speed: 0.9, range: 1.1, atkSpeed: 0.8 },
-    passive: 'BONE_PILE', tags: ['utility', 'slow'], color: '#aed581',
-    description: 'chết: vùng chậm 8s, còn 20% tốc /1.6 ô',
+    passive: 'CHARM_ON_HIT', tags: ['utility', 'slow'], color: '#aed581',
+    description: 'Đánh trúng: mê hoặc Hero ~2s (bỏ kho / đánh nhầm đồng minh)',
   },
   {
     id: 'tin_knight',
     name: 'Hiệp Sĩ Thiếc',
     rarity: 1, cost: 1,
     stats: { hp: 130, atk: 8, speed: 1.0, range: 1.1, atkSpeed: 0.85 },
-    passive: 'TAUNT', tags: ['tankette'], color: '#b0bec5',
-    description: 'Tank — Hero ưu tiên đánh mình',
+    passive: 'ROOT_ON_HIT', tags: ['tankette', 'utility'], color: '#b0bec5',
+    description: 'Tankette — đánh trúng kẹp chân Hero 1.35s (vẫn đánh được)',
   },
   {
     id: 'pickpocket_pixie',
@@ -151,24 +151,24 @@ export const MONSTERS = [
     name: 'Búp Bê Giẻ',
     rarity: 1, cost: 1,
     stats: { hp: 140, atk: 4, speed: 1.2, range: 1.0, atkSpeed: 0.7 },
-    passive: 'AURA_TAUNT', tags: ['tankette'], color: '#e57373',
-    description: 'Tank — aura kéo agro ~2.2 ô',
+    passive: 'ROOT_AURA', auraRadius: 2.0, tags: ['tankette', 'utility'], color: '#e57373',
+    description: 'Tankette — mỗi ~3.8s kẹp chân Hero trong 2 ô.',
   },
   {
     id: 'coin_scarab',
     name: 'Bọ Hung Xu',
     rarity: 1, cost: 1,
     stats: { hp: 55, atk: 10, speed: 2.1, range: 1.1, atkSpeed: 1.3 },
-    passive: 'NONE', tags: ['utility'], color: '#ffd54f',
-    description: 'Filler nhanh — speed cao, cost 1, lấp slot.',
+    passive: 'CD_REDUCTION', auraRadius: 2.0, tags: ['utility', 'support'], color: '#ffd54f',
+    description: 'Aura rút CD khiên/taunt đồng minh gần (~30%).',
   },
   {
     id: 'thorn_seed',
     name: 'Hạt Gai',
     rarity: 1, cost: 1,
     stats: { hp: 70, atk: 11, speed: 1.2, range: 1.4, atkSpeed: 1.05 },
-    passive: 'BURN_ON_HIT', tags: ['utility','fire'], color: '#8bc34a',
-    description: 'đốt 10 HP/s ×3.2s',
+    passive: 'THORNS_PASSIVE', tags: ['utility', 'tankette'], color: '#8bc34a',
+    description: 'Gai phản ~18% dame về Hero đánh trúng.',
   },
   {
     id: 'cinder_puff',
@@ -595,6 +595,7 @@ export const MONSTERS = [
     rarity: 5, cost: 7,
     stats: { hp: 900, atk: 150, speed: 1.2, range: 2.8, atkSpeed: 0.9 },
     passive: 'BUFF_IN_LOW_CEILING_ROOM', tags: ['boss', 'dps'], color: '#ef5350',
+    drawback: 'Chỉ mạnh trên ô trần thấp/tối — ô cao −50% ATK.',
     description: 'DPS — ô l/d +200% ATK; ô h −50%',
   },
   {
@@ -603,6 +604,7 @@ export const MONSTERS = [
     rarity: 5, cost: 8,
     stats: { hp: 1200, atk: 95, speed: 1.0, range: 2.0, atkSpeed: 1.1 },
     passive: 'ANTI_WARRIOR_BURST', tags: ['boss', 'anti_warrior'], color: '#7b1fa2',
+    drawback: 'Không khiên/taunt — dễ bị focus burst.',
     description: 'DPS — vs Chiến sĩ (WARRIOR): mỗi đòn ×2.2 ATK. Không khiên/taunt.',
   },
   {
@@ -615,6 +617,7 @@ export const MONSTERS = [
     skills: ['STEALTH', 'BACKSTAB'],
     tags: ['boss', 'dps', 'assassin'],
     color: '#311b92',
+    drawback: 'Ngoài ô tối ATK −35%.',
     description: 'Sát thủ — ô tối +100% ATK; ngoài −35% ATK — tàng hình — lén đâm ×1.5 ATK',
   },
   {
@@ -623,6 +626,7 @@ export const MONSTERS = [
     rarity: 5, cost: 8,
     stats: { hp: 1100, atk: 100, speed: 0.9, range: 2.4, atkSpeed: 0.85 },
     passive: 'WATER_BUFF', tags: ['boss', 'water'], color: '#0277bd',
+    drawback: 'Cạn nước: −30% ATK.',
     description: 'ô nước +40% ATK/HP; cạn −30% ATK',
   },
   {
@@ -631,6 +635,7 @@ export const MONSTERS = [
     rarity: 5, cost: 7,
     stats: { hp: 1200, atk: 80, speed: 0.8, range: 1.6, atkSpeed: 0.75 },
     passive: 'ANTI_WARRIOR_BURST', tags: ['boss', 'tank'], color: '#bf360c',
+    drawback: 'Không khiên/taunt — chỉ mạnh vs Warrior.',
     description: 'Tank — vs Chiến sĩ mỗi đòn ×2.2 ATK. Không khiên/taunt — tường HP + nghiền Warrior.',
   },
   {
@@ -640,6 +645,7 @@ export const MONSTERS = [
     stats: { hp: 850, atk: 160, speed: 1.6, range: 2.5, atkSpeed: 1.05 },
     passive: 'BURST_FIRST_HIT', tags: ['boss', 'dps', 'stun'], color: '#ff6f00',
     skills: ['STUN_ON_HIT'],
+    drawback: 'Đòn sau đòn đầu yếu hơn rõ.',
     description: 'DPS — đòn đầu ×2 ATK — choáng 0.85s',
   },
   {
@@ -648,6 +654,7 @@ export const MONSTERS = [
     rarity: 5, cost: 7,
     stats: { hp: 900, atk: 70, speed: 0.85, range: 4, atkSpeed: 0.9 },
     passive: 'RANGED_FROST', tags: ['boss','ranged','ice'], color: '#4fc3f7',
+    drawback: 'ATK thấp nếu không giữ khoảng cách.',
     description: 'Tầm xa — đóng băng 1.15s',
   },
   {
@@ -657,6 +664,7 @@ export const MONSTERS = [
     stats: { hp: 1150, atk: 135, speed: 1.35, range: 2.0, atkSpeed: 1.1 },
     passive: 'BURST_FIRST_HIT', tags: ['boss', 'anti_warrior', 'dps'], color: '#d500f9',
     skills: ['STUN_ON_HIT'],
+    drawback: 'Cost cao (8); dễ overcap.',
     description: 'DPS — đòn đầu ×2 ATK — choáng 0.85s — vs Chiến sĩ ×2.2 ATK — đòn đầu vs Warrior ≈ ×4.4 ATK',
   },
   {
@@ -673,6 +681,7 @@ export const MONSTERS = [
     rarity: 5, cost: 7,
     stats: { hp: 1050, atk: 72, speed: 0.85, range: 1.8, atkSpeed: 0.8 },
     passive: 'WATER_BUFF', tags: ['boss', 'tank', 'water'], color: '#0277bd',
+    drawback: 'Cạn nước: −30% ATK.',
     description: 'Tank — ô nước +40% ATK/HP; cạn −30% ATK',
   },
   {
@@ -681,6 +690,7 @@ export const MONSTERS = [
     rarity: 5, cost: 7,
     stats: { hp: 850, atk: 68, speed: 0.9, range: 3.9, atkSpeed: 0.95 },
     passive: 'RANGED_POISON', tags: ['boss','ranged','poison'], color: '#9ccc65',
+    drawback: 'DPS DoT chậm — yếu vs burst race.',
     description: 'Tầm xa — độc 9 HP/s ×4s',
   },
   {
@@ -699,6 +709,7 @@ export const MONSTERS = [
     stats: { hp: 880, atk: 155, speed: 1.5, range: 2.2, atkSpeed: 1.05 },
     passive: 'BURST_FIRST_HIT', tags: ['boss', 'dps', 'stun'], color: '#e65100',
     skills: ['STUN_ON_HIT'],
+    drawback: 'HP thấp hơn tank cùng sao.',
     description: 'DPS — đòn đầu ×2 ATK — choáng 0.85s',
   },
   {
@@ -707,6 +718,7 @@ export const MONSTERS = [
     rarity: 5, cost: 7,
     stats: { hp: 520, atk: 55, speed: 1, range: 4, atkSpeed: 0.95 },
     passive: 'SILENCE_ON_HIT', tags: ['boss','silence','ranged'], color: '#4a148c',
+    drawback: 'HP thấp; chết nhanh nếu bị áp sát.',
     description: 'Tầm xa — câm Mage hết trận (ATK còn ~35%)',
   },
 
@@ -757,6 +769,16 @@ export const MONSTERS = [
     description: 'DPS — nhận dmg ×~1.8 (def×0.55)',
   },
 
+  {
+    id: 'blood_tithe_wraith',
+    name: 'Oan Hồn Hiến Tế',
+    rarity: 6, cost: 9, ownCap: 1,
+    stats: { hp: 1400, atk: 160, speed: 1.15, range: 2.2, atkSpeed: 0.95 },
+    passive: 'MYTHIC_BLOOD_TITHE', tags: ['mythic', 'dps', 'drawback'], color: '#880e4f',
+    drawback: 'Nuốt đồng minh mỗi đòn — mạnh theo cost nạn nhân. Không còn ally → ATK ×0.25.',
+    description: 'Mythic — hiến tế ally gần nhất mỗi đòn; dame ×(1+0.35×cost), cap ×3.5',
+  },
+
   // ——— Heal support (đa rarity) ———
   {
     id: 'moss_nurse',
@@ -797,6 +819,7 @@ export const MONSTERS = [
     stats: { hp: 980, atk: 42, speed: 1.05, range: 1.7, atkSpeed: 0.85 },
     passive: 'HEAL_PULSE', auraRadius: 3, tags: ['boss', 'heal', 'utility', 'tank'], color: '#fdd835',
     skills: ['SHIELD'],
+    drawback: 'Cost 7; heal chậm hơn burst.',
     description: 'Tank — xung hồi mỗi 2.4s (~6–20% maxHp theo ★) — khiên 26% maxHp/3s khi ≤45% HP (CD 11s)',
   },
   {
@@ -1088,10 +1111,10 @@ export const MONSTERS = [
     name: 'Golem Sét',
     rarity: 4, cost: 5,
     stats: { hp: 820, atk: 50, speed: 0.68, range: 1.4, atkSpeed: 0.7 },
-    passive: 'NONE', tags: ['epic', 'tank'], color: '#ffd54f',
-    skills: ['SHIELD'],
+    passive: 'THORNS_PASSIVE', tags: ['epic', 'tank'], color: '#ffd54f',
+    skills: ['SHIELD', 'INVULNERABLE_PROC'],
     auraRadius: 2.5,
-    description: 'Tank — khiên 26% maxHp/3s khi ≤45% HP (CD 11s)',
+    description: 'Tank gai 22% + khiên; ≤30% HP bất tử 1.6s (CD 14s).',
   },
   {
     id: 'ash_artillery',
@@ -1448,6 +1471,7 @@ const AI_OVERRIDES = {
   prism_sanctum: { role: 'aura_support', leash: 1.5, hold: true },
   prism_wrath: { role: 'aura_support', leash: 1.5, hold: true },
   prism_aegis: { role: 'aura_support', leash: 1.5, hold: true },
+  blood_tithe_wraith: { role: 'chaser', leash: 5.5 },
 };
 
 for (const m of MONSTERS) {

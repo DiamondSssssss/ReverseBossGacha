@@ -256,6 +256,42 @@ export const PASSIVE_INFO = {
     name: 'Phá giáp',
     desc: 'Đánh trúng: phòng thủ mục tiêu ×0.65 trong 4.5 giây (nhận thêm ~54% sát thương).',
   },
+  ROOT_ON_HIT: {
+    name: 'Kẹp chân',
+    desc: 'Đánh trúng: kẹp chân 1.35 giây — không chạy nhưng vẫn đánh được.',
+  },
+  ROOT_AURA: {
+    name: 'Aura kẹp chân',
+    desc: 'Mỗi ~3.8 giây: kẹp chân Hero trong bán kính aura ~1.1 giây.',
+  },
+  CHARM_ON_HIT: {
+    name: 'Mê hoặc',
+    desc: 'Đánh trúng: mê hoặc Hero ~2 giây — bỏ kho / đánh nhầm đồng minh.',
+  },
+  FRAIL_ON_HIT: {
+    name: 'Dễ vỡ',
+    desc: 'Đánh trúng: mục tiêu nhận ×1.22 sát thương trong 3.8 giây.',
+  },
+  CLEANSE_ALLY: {
+    name: 'Thanh tẩy',
+    desc: 'Định kỳ xóa đốt/độc/chậm/kẹp chân/phá giáp trên đồng minh gần.',
+  },
+  CD_REDUCTION: {
+    name: 'Giảm hồi chiêu',
+    desc: 'Aura rút ngắn CD khiên/khiêu khích của đồng minh gần (~30%).',
+  },
+  INVULNERABLE_PROC: {
+    name: 'Bất tử tạm',
+    desc: 'Khi máu ≤30%: bất tử 1.6 giây. Hồi chiêu 14 giây.',
+  },
+  THORNS_PASSIVE: {
+    name: 'Gai phản',
+    desc: 'Phản ~18–22% sát thương về Hero đánh trúng.',
+  },
+  MYTHIC_BLOOD_TITHE: {
+    name: 'Hiến tế máu (Mythic)',
+    desc: 'Mỗi đòn: hiến tế 1 đồng minh gần. Dame ×(1+0.35×cost nạn nhân), tối đa ×3.5. Không còn ally → ATK ×0.25.',
+  },
 };
 
 export const SKILL_INFO = {
@@ -294,6 +330,13 @@ export const SKILL_INFO = {
     desc: 'Đánh trúng: giảm hồi địch còn 20–40% trong 4–5.5 giây (theo rarity/Hero).',
   },
   DEF_SHRED: PASSIVE_INFO.DEF_SHRED,
+  ROOT_ON_HIT: PASSIVE_INFO.ROOT_ON_HIT,
+  CHARM_ON_HIT: PASSIVE_INFO.CHARM_ON_HIT,
+  FRAIL_ON_HIT: PASSIVE_INFO.FRAIL_ON_HIT,
+  CLEANSE_ALLY: PASSIVE_INFO.CLEANSE_ALLY,
+  CD_REDUCTION: PASSIVE_INFO.CD_REDUCTION,
+  INVULNERABLE_PROC: PASSIVE_INFO.INVULNERABLE_PROC,
+  THORNS_PASSIVE: PASSIVE_INFO.THORNS_PASSIVE,
   SELF_DESTRUCT: PASSIVE_INFO.SELF_DESTRUCT,
   REVIVE: PASSIVE_INFO.REVIVE,
   BURN_ON_HIT: PASSIVE_INFO.BURN_ON_HIT,
