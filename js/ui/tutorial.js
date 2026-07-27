@@ -3,8 +3,8 @@
  * Người chơi bấm / thả / chọn đúng chỗ mới sang bước tiếp.
  */
 
-import { totalPlacements } from '../core/dungeon.js?v=92';
-import { loadoutUnitCount } from '../core/loadout.js?v=92';
+import { totalPlacements } from '../core/dungeon.js?v=94';
+import { loadoutUnitCount } from '../core/loadout.js?v=94';
 
 /** @typedef {'click' | 'condition' | 'next' | 'either'} AdvanceMode */
 
@@ -34,13 +34,16 @@ export const TOUR_STEPS = [
     id: 'hub_play',
     screen: 'hub',
     title: 'Mở cổng ải',
-    body: 'Bấm <strong>Mở cổng ải</strong> để vào Trinh sát — xem địch và chọn quái mang theo.',
+    body: 'Bấm <strong>Mở cổng ải</strong> để chọn ải (Thường/Khó), rồi vào Trinh sát.',
     target: '#btn-play',
     advance: 'condition',
     prepare: (ctx) => {
       if (ctx.currentScreen?.() !== 'hub') ctx.go('hub');
     },
-    ready: (ctx) => ctx.currentScreen?.() === 'scout',
+    ready: (ctx) => {
+      const s = ctx.currentScreen?.();
+      return s === 'stages' || s === 'scout';
+    },
   },
   {
     id: 'scout_enemy',

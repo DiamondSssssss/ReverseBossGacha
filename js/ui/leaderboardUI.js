@@ -1,9 +1,9 @@
-import { MONSTERS } from '../data/monsters.js?v=92';
-import { RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=92';
-import { monsterDisplayUrl } from '../render/sprites.js?v=92';
-import { fetchLeaderboard, fetchPlayerProfile } from '../core/leaderboard.js?v=92';
-import { getUser } from '../core/auth.js?v=92';
-import { titleName } from '../core/challenge.js?v=92';
+import { MONSTERS } from '../data/monsters.js?v=94';
+import { RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=94';
+import { monsterDisplayUrl } from '../render/sprites.js?v=94';
+import { fetchLeaderboard, fetchPlayerProfile } from '../core/leaderboard.js?v=94';
+import { getUser } from '../core/auth.js?v=94';
+import { titleName } from '../core/challenge.js?v=94';
 
 function escapeHtml(str) {
   return String(str ?? '')

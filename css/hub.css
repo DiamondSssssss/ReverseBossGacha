@@ -354,6 +354,119 @@
   color: var(--muted);
 }
 
+/* ——— Stage select (Thường / Khó) ——— */
+.stages-page {
+  padding: 12px 14px 28px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.stages-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.stages-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.stages-tab {
+  flex: 1;
+  min-height: 44px;
+  font-weight: 700;
+  border: 1.5px solid var(--ink);
+  background: var(--bone);
+  color: var(--ink);
+}
+
+.stages-tab.active {
+  background: var(--ink);
+  color: var(--bone);
+}
+
+.stages-hard-tip {
+  margin: 0 0 14px;
+  font-size: 0.8rem;
+}
+
+.stages-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 10px;
+}
+
+.stage-card {
+  text-align: left;
+  padding: 10px 11px;
+  border: 1.5px solid var(--line-strong);
+  background: rgba(255, 252, 245, 0.72);
+  color: var(--ink);
+  border-radius: 0;
+  cursor: pointer;
+  min-height: 96px;
+}
+
+.stage-card:hover:not(:disabled) {
+  border-color: var(--ink);
+  background: #fffdf8;
+}
+
+.stage-card.access-frontier {
+  border-color: var(--ink);
+  box-shadow: inset 3px 0 0 var(--seal, #c43c28);
+}
+
+.stage-card.access-locked,
+.stage-card:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.stage-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.stage-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.stage-card.access-frontier .stage-badge {
+  color: var(--seal, #c43c28);
+}
+
+.stage-card .meta {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.stage-hard-rules {
+  margin-top: 6px;
+  font-size: 0.68rem;
+  color: var(--ink-soft);
+  line-height: 1.3;
+}
+
+.stage-record {
+  margin-top: 8px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.35;
+}
+
 @media (max-width: 980px) {
   .boss-picker {
     grid-template-columns: 1fr;

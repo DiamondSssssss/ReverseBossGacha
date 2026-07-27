@@ -1,4 +1,4 @@
-import { api, isLoggedIn } from './auth.js?v=92';
+import { api, isLoggedIn } from './auth.js?v=94';
 
 function sanitize(state) {
   const {
@@ -11,6 +11,8 @@ function sanitize(state) {
     mythicPityCounter,
     rainbowPityCounter,
     dungeonLevel,
+    hardDungeonLevel,
+    stageBestCost,
     roomUpgrades,
     mapUpgrade,
     unlockedSpells,
@@ -24,6 +26,9 @@ function sanitize(state) {
     lastLoadout,
     redeemedCodes,
     achievementGemRev,
+    challengeProgress,
+    titles,
+    equippedTitle,
   } = state;
   return {
     souls,
@@ -35,6 +40,8 @@ function sanitize(state) {
     mythicPityCounter: mythicPityCounter || 0,
     rainbowPityCounter: rainbowPityCounter || 0,
     dungeonLevel,
+    hardDungeonLevel: Math.max(1, Number(hardDungeonLevel) || 1),
+    stageBestCost: stageBestCost || { normal: {}, hard: {} },
     roomUpgrades,
     mapUpgrade: mapUpgrade || 0,
     unlockedSpells,
@@ -48,6 +55,9 @@ function sanitize(state) {
     lastLoadout: lastLoadout || {},
     redeemedCodes: redeemedCodes || [],
     achievementGemRev: achievementGemRev || 0,
+    challengeProgress: challengeProgress || { unlocked: [], cleared: {}, bestTime: {} },
+    titles: Array.isArray(titles) ? titles : [],
+    equippedTitle: equippedTitle || null,
     updatedAt: Date.now(),
   };
 }
@@ -94,6 +104,7 @@ export function pickBetterSave(local, cloud) {
 
   const score = (s) =>
     (s.dungeonLevel || 1) * 10000 +
+    (s.hardDungeonLevel || 1) * 5000 +
     (s.stats?.wins || 0) * 100 +
     (s.stats?.pulls || 0) * 50 +
     (Number(s.rainbowPityCounter) || 0) * 35 +

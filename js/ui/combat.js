@@ -1,16 +1,25 @@
-import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=92';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=92';
-import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=92';
-import { CombatEngine } from '../core/combatEngine.js?v=92';
-import { saveState } from '../core/storage.js?v=92';
-import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=92';
+import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=94';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=94';
+import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=94';
+import { CombatEngine } from '../core/combatEngine.js?v=94';
+import { saveState } from '../core/storage.js?v=94';
+import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=94';
 import {
   evaluateChallengeResult,
   grantChallengeReward,
   titleName,
-} from '../core/challenge.js?v=92';
-import { monsterSpriteUrl } from '../render/sprites.js?v=92';
-import { bindMonsterTips, hideMonsterTip } from './monsterTip.js?v=92';
+} from '../core/challenge.js?v=94';
+import { loadoutPoolCost } from '../core/loadout.js?v=94';
+import {
+  frontierForMode,
+  recordPersonalBestCost,
+} from '../data/hardMode.js?v=94';
+import { submitStageBestCost } from '../core/stageRecords.js?v=94';
+import { isLoggedIn } from '../core/auth.js?v=94';
+import { monsterSpriteUrl } from '../render/sprites.js?v=94';
+import { bindMonsterTips, hideMonsterTip } from './monsterTip.js?v=94';
+
+const REPLAY_REWARD_MUL = 0.35;
 
 let engine = null;
 
@@ -59,13 +68,22 @@ export function renderCombat(root, ctx) {
   const boss = getBoss(state.selectedBossId);
   const spells = bossSpells(boss.id);
   const initialHand = { ...(run.deployHand || {}) };
+  const stageMode = run.mode === 'hard' ? 'hard' : 'normal';
+  run.loadoutPoolCost = loadoutPoolCost(run.loadout || {});
+
+  const modeLabel =
+    run.mode === 'challenge'
+      ? `CH${run.challengeId}`
+      : `${stageMode === 'hard' ? 'Khó' : 'Thường'} · Ải ${run.level}${
+          run.isReplay ? ' · Replay' : ''
+        }`;
 
   root.innerHTML = `
     <div class="combat-wrap">
       <div class="combat-head">
         <div>
           <h2>Chiến đấu · ${boss.name}</h2>
-          <p class="combat-legend">Kéo map xem trận · Chọn quái → chạm thả · Cost ≤ Cap</p>
+          <p class="combat-legend">${modeLabel} · Kéo map · Chọn quái → chạm thả · Cost ≤ Cap</p>
         </div>
         <div class="combat-head-right">
           <div class="speed-row" id="speed-row" role="group" aria-label="Tốc độ">
@@ -232,18 +250,52 @@ export function renderCombat(root, ctx) {
     }
 
     if (result === 'win') {
-      souls =
-        REWARDS.WIN_SOULS_BASE +
-        killed * REWARDS.PER_HERO_SOULS +
-        run.level * 20;
-      gold =
-        REWARDS.WIN_GOLD_BASE + killed * REWARDS.PER_HERO_GOLD + run.level * 10;
+      const isReplay = !!run.isReplay;
+      const rewardMul = isReplay ? REPLAY_REWARD_MUL : 1;
+      souls = Math.max(
+        1,
+        Math.round(
+          (REWARDS.WIN_SOULS_BASE +
+            killed * REWARDS.PER_HERO_SOULS +
+            run.level * 20) *
+            rewardMul
+        )
+      );
+      gold = Math.max(
+        0,
+        Math.round(
+          (REWARDS.WIN_GOLD_BASE +
+            killed * REWARDS.PER_HERO_GOLD +
+            run.level * 10) *
+            rewardMul
+        )
+      );
       state.souls += souls;
       state.gold += gold;
       state.stats.wins += 1;
-      const beforeClear = !isGameCleared(state);
-      state.dungeonLevel += 1;
-      const clearedJustNow = beforeClear && isGameCleared(state);
+
+      const poolCost =
+        run.loadoutPoolCost != null
+          ? run.loadoutPoolCost
+          : loadoutPoolCost(run.loadout || {});
+      const isBest = recordPersonalBestCost(state, stageMode, run.level, poolCost);
+      if (isBest && isLoggedIn()) {
+        submitStageBestCost(stageMode, run.level, poolCost).catch(() => {});
+      }
+
+      const frontier = frontierForMode(state, stageMode);
+      const beforeClear = stageMode === 'normal' && !isGameCleared(state);
+      let advanced = false;
+      if (!isReplay && run.level === frontier) {
+        if (stageMode === 'hard') {
+          state.hardDungeonLevel = (Number(state.hardDungeonLevel) || 1) + 1;
+        } else {
+          state.dungeonLevel = (Number(state.dungeonLevel) || 1) + 1;
+        }
+        advanced = true;
+      }
+      const clearedJustNow =
+        stageMode === 'normal' && beforeClear && isGameCleared(state);
       const beforeBosses = new Set(state.unlockedBosses || []);
       syncUnlockedBosses(state);
       const newBosses = (state.unlockedBosses || []).filter((id) => !beforeBosses.has(id));
@@ -261,6 +313,13 @@ export function renderCombat(root, ctx) {
         gold,
         clearedJustNow,
         dungeonLevel: state.dungeonLevel,
+        hardDungeonLevel: state.hardDungeonLevel,
+        mode: stageMode,
+        level: run.level,
+        isReplay,
+        advanced,
+        poolCost,
+        personalBest: isBest,
       };
       go('reward');
     } else {
@@ -278,6 +337,9 @@ export function renderCombat(root, ctx) {
         souls,
         gold,
         heroesDefeated: defeated,
+        mode: stageMode,
+        level: run.level,
+        isReplay: !!run.isReplay,
       };
       go('reward');
     }
@@ -512,7 +574,35 @@ export function renderReward(root, ctx) {
   const stageClass = r.clearedJustNow ? 'clear' : win ? '' : 'lose';
   const mark = r.clearedJustNow ? String(MAX_STAGE) : win ? 'OK' : '…';
   const isCh = !!r.challenge;
-  const replayLabel = isCh ? 'Về Thử Thách' : win ? 'Vào ải tiếp' : 'Chơi lại';
+  const mode = r.mode === 'hard' ? 'hard' : 'normal';
+  const modeName = mode === 'hard' ? 'Khó' : 'Thường';
+  let replayLabel = 'Chơi lại';
+  if (isCh) replayLabel = 'Về Thử Thách';
+  else if (win && !r.isReplay) replayLabel = 'Vào ải tiếp';
+  else if (win && r.isReplay) replayLabel = 'Chọn ải khác';
+
+  const progressLine = (() => {
+    if (isCh) return null;
+    if (r.clearedJustNow) {
+      return `Thắng ải ${MAX_STAGE}. Tiếp tục sưu tầm ấn chương còn lại.`;
+    }
+    if (win) {
+      const frontier =
+        mode === 'hard'
+          ? Math.min(state.hardDungeonLevel || 1, MAX_STAGE)
+          : Math.min(state.dungeonLevel || 1, MAX_STAGE);
+      const bits = [
+        `${modeName}: ải ${frontier}/${MAX_STAGE}`,
+        r.isReplay ? 'Replay — thưởng giảm' : null,
+        r.personalBest && r.poolCost != null ? `Best pool: ${r.poolCost}` : null,
+      ].filter(Boolean);
+      return bits.join(' · ');
+    }
+    if (r.heroesDefeated) {
+      return `Kho báu bị rút — nhưng đã hạ/đẩy ${r.heroesDefeated} Hero.`;
+    }
+    return 'Kho báu bị rút — nhận Linh Hồn an ủi.';
+  })();
 
   root.innerHTML = `
     <div class="reward-stage ${stageClass}">
@@ -525,7 +615,9 @@ export function renderReward(root, ctx) {
               ? `Thử Thách ${r.challengeId} — Xong`
               : `Thử Thách ${r.challengeId} — Trượt`
             : win
-              ? 'Chiến thắng'
+              ? r.isReplay
+                ? `Replay ${modeName} · Ải ${r.level}`
+                : 'Chiến thắng'
               : 'Thất thủ'
       }</h2>
       <p class="muted">${
@@ -537,13 +629,7 @@ export function renderReward(root, ctx) {
             : (r.objectivesFailed || []).length
               ? `Trượt: ${(r.objectivesFailed || []).join('; ')}`
               : r.note || 'Thất bại'
-          : r.clearedJustNow
-            ? `Thắng ải ${MAX_STAGE}. Tiếp tục sưu tầm ấn chương còn lại.`
-            : win
-              ? `Tiến độ: ải ${Math.min(state.dungeonLevel, MAX_STAGE)}/${MAX_STAGE}`
-              : r.heroesDefeated
-                ? `Kho báu bị rút — nhưng đã hạ/đẩy ${r.heroesDefeated} Hero.`
-                : 'Kho báu bị rút — nhận Linh Hồn an ủi.'
+          : progressLine
       }</p>
       <div class="big-num">+${r.souls} LH</div>
       ${r.gold ? `<div class="muted">+${r.gold} Vàng</div>` : ''}
@@ -561,7 +647,27 @@ export function renderReward(root, ctx) {
       go('challenges');
       return;
     }
-    if (typeof startRun === 'function') startRun();
+    if (win && r.isReplay) {
+      go('stages');
+      return;
+    }
+    if (win && !r.isReplay) {
+      const frontier =
+        mode === 'hard'
+          ? Number(state.hardDungeonLevel) || 1
+          : Number(state.dungeonLevel) || 1;
+      if (frontier > MAX_STAGE) {
+        go('stages');
+        return;
+      }
+      if (typeof startRun === 'function') startRun({ mode });
+      go('scout');
+      return;
+    }
+    // lose — chơi lại cùng ải
+    if (typeof startRun === 'function') {
+      startRun({ mode, level: r.level || undefined });
+    }
     go('scout');
   };
   root.querySelector('#btn-to-gacha').onclick = () => go('gacha');

@@ -1,6 +1,6 @@
-import { HEROES } from '../data/heroes.js?v=92';
-import { HERO_CLASS_LABELS } from '../data/constants.js?v=92';
-import { heroSpriteUrl } from '../render/sprites.js?v=92';
+import { HEROES } from '../data/heroes.js?v=94';
+import { HERO_CLASS_LABELS } from '../data/constants.js?v=94';
+import { heroSpriteUrl } from '../render/sprites.js?v=94';
 
 const filters = {
   q: '',

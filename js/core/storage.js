@@ -4,16 +4,33 @@ import {
   SPELLS,
   INVENTORY_CAP,
   DUPLICATE_SOUL_REFUND,
-} from '../data/constants.js?v=92';
-import { DEFAULT_BOSS_ID, syncUnlockedBosses } from '../data/dungeonBosses.js?v=92';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=92';
-import { isLoggedIn } from './auth.js?v=92';
-import { pushCloudSave } from './cloudSave.js?v=92';
+} from '../data/constants.js?v=94';
+import { DEFAULT_BOSS_ID, syncUnlockedBosses } from '../data/dungeonBosses.js?v=94';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=94';
+import { isLoggedIn } from './auth.js?v=94';
+import { pushCloudSave } from './cloudSave.js?v=94';
 
 const LEGACY_KEYS = ['rbg_save_v1'];
 
 let cloudTimer = 0;
 let cloudSyncEnabled = true;
+
+function normalizeStageBestCost(raw) {
+  const out = { normal: {}, hard: {} };
+  if (!raw || typeof raw !== 'object') return out;
+  for (const mode of ['normal', 'hard']) {
+    const src = raw[mode];
+    if (!src || typeof src !== 'object') continue;
+    for (const [k, v] of Object.entries(src)) {
+      const stage = Number(k);
+      const cost = Number(v);
+      if (!Number.isFinite(stage) || stage < 1) continue;
+      if (!Number.isFinite(cost) || cost < 0) continue;
+      out[mode][Math.floor(stage)] = Math.floor(cost);
+    }
+  }
+  return out;
+}
 
 export function setCloudSyncEnabled(on) {
   cloudSyncEnabled = !!on;
@@ -30,6 +47,8 @@ function defaultState() {
     mythicPityCounter: 0,
     rainbowPityCounter: 0,
     dungeonLevel: 1,
+    hardDungeonLevel: 1,
+    stageBestCost: { normal: {}, hard: {} },
     mapUpgrade: 0,
     roomUpgrades: {},
     unlockedSpells: ['slow_wave', 'heal_monsters'],
@@ -132,6 +151,8 @@ export function loadState() {
         cleared: {},
         bestTime: {},
       },
+      hardDungeonLevel: Math.max(1, Number(parsed.hardDungeonLevel) || 1),
+      stageBestCost: normalizeStageBestCost(parsed.stageBestCost),
       titles: Array.isArray(parsed.titles) ? [...parsed.titles] : [],
       equippedTitle: parsed.equippedTitle || null,
       updatedAt: parsed.updatedAt || Date.now(),
@@ -182,6 +203,8 @@ export function applySaveData(state, data) {
       cleared: {},
       bestTime: {},
     },
+    hardDungeonLevel: Math.max(1, Number(data.hardDungeonLevel) || 1),
+    stageBestCost: normalizeStageBestCost(data.stageBestCost),
     titles: Array.isArray(data.titles) ? [...data.titles] : [],
     equippedTitle: data.equippedTitle || null,
     updatedAt: data.updatedAt || Date.now(),

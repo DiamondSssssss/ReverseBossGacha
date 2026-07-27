@@ -1,18 +1,73 @@
-import { getStageMap, isPlaceable } from '../data/maps.js?v=92';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=92';
-import { MAP_UPGRADE } from '../data/constants.js?v=92';
-import { buildWave, getWavePlan, assignHeroFormation } from '../data/heroes.js?v=92';
+import { getStageMap, isPlaceable } from '../data/maps.js?v=94';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=94';
+import { MAP_UPGRADE, COMBAT, MAX_STAGE } from '../data/constants.js?v=94';
+import { buildWave, getWavePlan, assignHeroFormation } from '../data/heroes.js?v=94';
 import {
   sanitizeLoadout,
   suggestLoadout,
   placeMaxCost,
   loadoutPoolMultForLevel,
-} from './loadout.js?v=92';
+} from './loadout.js?v=94';
+import {
+  frontierForMode,
+  hardModifiersForLevel,
+} from '../data/hardMode.js?v=94';
 
-export function createRunState(playerState) {
-  const level = playerState.dungeonLevel || 1;
+function reindexBuffs(map) {
+  const buffIndex = {};
+  for (const b of map.buffs || []) {
+    for (const cell of b.cells || []) {
+      if (!buffIndex[cell]) buffIndex[cell] = [];
+      buffIndex[cell].push(b);
+    }
+  }
+  map.buffIndex = buffIndex;
+}
+
+function applyHardMapMods(map, mods) {
+  const delta = Number(mods.costCapDelta) || 0;
+  if (delta) {
+    map.baseCostCap = Math.max(1, (map.baseCostCap || map.costCap || 5) + delta);
+  }
+  if (mods.extraMapBuffs?.length) {
+    map.buffs = [...(map.buffs || []), ...mods.extraMapBuffs];
+    reindexBuffs(map);
+  }
+  const thMul = Number(mods.treasureHpMul);
+  if (Number.isFinite(thMul) && thMul > 0 && thMul !== 1) {
+    const base = map.treasureHp || COMBAT.TREASURE_HP;
+    map.treasureHp = Math.max(40, Math.round(base * thMul));
+  }
+}
+
+function scaleWaveHeroes(wave, mul) {
+  if (!mul || mul === 1) return wave;
+  for (const h of wave || []) {
+    h.hp = Math.round((h.hp || h.maxHp || 0) * mul);
+    h.maxHp = Math.round((h.maxHp || h.hp || 0) * mul);
+    h.atk = Math.round((h.atk || 0) * mul);
+  }
+  return wave;
+}
+
+/**
+ * @param {object} playerState
+ * @param {{ mode?: 'normal'|'hard', level?: number }} [opts]
+ */
+export function createRunState(playerState, opts = {}) {
+  const mode = opts.mode === 'hard' ? 'hard' : 'normal';
+  const frontier = frontierForMode(playerState, mode);
+  let level =
+    opts.level != null ? Math.floor(Number(opts.level) || 1) : frontier;
+  level = Math.max(1, Math.min(MAX_STAGE, level));
+  if (level > frontier) level = frontier;
+
+  const isReplay = level < frontier;
   const plan = getWavePlan(level);
   const map = getStageMap(level);
+  const hardMods = mode === 'hard' ? hardModifiersForLevel(level) : null;
+  if (hardMods) applyHardMapMods(map, hardMods);
+
   const upgradeLv = playerState.mapUpgrade || 0;
   /** Cap gốc (sau nâng hầm) — dùng cho pool loadout */
   const refCap = map.baseCostCap + upgradeLv * MAP_UPGRADE.COST_CAP_BONUS;
@@ -22,7 +77,9 @@ export function createRunState(playerState) {
   map.upgradeLevel = upgradeLv;
   map.poolMult = loadoutPoolMultForLevel(level);
 
-  const wave = assignHeroFormation(buildWave(level), map);
+  let wave = assignHeroFormation(buildWave(level), map);
+  if (hardMods) wave = scaleWaveHeroes(wave, hardMods.heroStatMul);
+
   const inv = playerState.inventory || {};
   let loadout = sanitizeLoadout(playerState.lastLoadout, inv, map.refCostCap, level);
   if (loadoutPoolEmpty(loadout)) {
@@ -30,7 +87,13 @@ export function createRunState(playerState) {
   }
 
   return {
+    mode,
+    difficulty: mode,
     level,
+    isReplay,
+    hardRules: hardMods?.rules || null,
+    monsterStatMul: hardMods?.monsterStatMul || 1,
+    treasureHpOverride: map.treasureHp || null,
     map,
     /** @deprecated compat — UI/combat use map only */
     rooms: [map],
@@ -42,6 +105,7 @@ export function createRunState(playerState) {
     loadout,
     loadoutReady: false,
     appliedLoadoutKey: null,
+    loadoutPoolCost: null,
   };
 }
 

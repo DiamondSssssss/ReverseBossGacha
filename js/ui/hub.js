@@ -1,18 +1,18 @@
-import { MAP_UPGRADE, SPELLS, MAX_STAGE } from '../data/constants.js?v=92';
-import { MONSTERS } from '../data/monsters.js?v=92';
+import { MAP_UPGRADE, SPELLS, MAX_STAGE } from '../data/constants.js?v=94';
+import { MONSTERS } from '../data/monsters.js?v=94';
 import {
   DUNGEON_BOSSES,
   getBoss,
   isBossUnlocked,
   unlockHint,
   syncUnlockedBosses,
-} from '../data/dungeonBosses.js?v=92';
-import { tryUpgradeMap, upgradeMapCost } from '../core/dungeon.js?v=92';
-import { saveState } from '../core/storage.js?v=92';
-import { achievementProgress, isGameCleared, evaluateAchievements } from '../core/achievements.js?v=92';
-import { titleName, ensureChallengeProgress } from '../core/challenge.js?v=92';
-import { showTutorial } from './tutorial.js?v=92';
-import { showRedeemModal } from './redeemUI.js?v=92';
+} from '../data/dungeonBosses.js?v=94';
+import { tryUpgradeMap, upgradeMapCost } from '../core/dungeon.js?v=94';
+import { saveState } from '../core/storage.js?v=94';
+import { achievementProgress, isGameCleared, evaluateAchievements } from '../core/achievements.js?v=94';
+import { titleName, ensureChallengeProgress } from '../core/challenge.js?v=94';
+import { showTutorial } from './tutorial.js?v=94';
+import { showRedeemModal } from './redeemUI.js?v=94';
 
 const GATE_SVG = `
 <svg viewBox="0 0 200 250" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -49,12 +49,16 @@ function bossCardHtml(boss, state) {
 }
 
 export function renderHub(root, ctx) {
-  const { state, go, toast, refreshChrome, startRun, announceAchievements } = ctx;
+  const { state, go, toast, refreshChrome, announceAchievements } = ctx;
   syncUnlockedBosses(state);
   ensureChallengeProgress(state);
   const prog = achievementProgress(state);
   const cleared = isGameCleared(state);
-  const stageLabel = cleared ? 'Phá đảo' : `Ải ${Math.min(state.dungeonLevel, MAX_STAGE)}/${MAX_STAGE}`;
+  const nFront = Math.min(state.dungeonLevel || 1, MAX_STAGE);
+  const hFront = Math.min(state.hardDungeonLevel || 1, MAX_STAGE);
+  const stageLabel = cleared
+    ? `Thường phá đảo · Khó ${hFront}/${MAX_STAGE}`
+    : `T ${nFront}/${MAX_STAGE} · K ${hFront}/${MAX_STAGE}`;
   const ownedMonsters = MONSTERS.filter((m) => (state.inventory?.[m.id] || 0) > 0).length;
   const monsterLabel = `${ownedMonsters}/${MONSTERS.length}`;
   const activeBoss = getBoss(state.selectedBossId);
@@ -164,8 +168,7 @@ export function renderHub(root, ctx) {
   `;
 
   root.querySelector('#btn-play').onclick = () => {
-    startRun();
-    go('scout');
+    go('stages');
   };
   root.querySelector('#btn-challenge')?.addEventListener('click', () => go('challenges'));
   root.querySelector('#btn-gacha').onclick = () => go('gacha');

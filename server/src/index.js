@@ -22,6 +22,8 @@ import {
   deleteRedeemCodeAdmin,
   redeemCodeForUser,
   isUserBanned,
+  upsertStageBestCost,
+  listStageRecordHolders,
 } from './db.js';
 import { signToken, authMiddleware, adminMiddleware } from './auth.js';
 
@@ -116,6 +118,21 @@ app.get('/api/leaderboard', (req, res) => {
   const limit = Number(req.query.limit) || 50;
   const entries = listLeaderboard(limit);
   res.json({ entries });
+});
+
+app.put('/api/stage-cost', authMiddleware, (req, res) => {
+  const mode = req.body?.mode === 'hard' ? 'hard' : 'normal';
+  const stage = Number(req.body?.stage);
+  const cost = Number(req.body?.cost);
+  const result = upsertStageBestCost(req.user.id, mode, stage, cost);
+  if (!result.ok) return res.status(400).json({ error: result.error || 'invalid' });
+  res.json(result);
+});
+
+app.get('/api/stage-records', (req, res) => {
+  const mode = req.query.mode === 'hard' ? 'hard' : 'normal';
+  const records = listStageRecordHolders(mode);
+  res.json({ mode, records });
 });
 
 app.get('/api/players/:username', (req, res) => {

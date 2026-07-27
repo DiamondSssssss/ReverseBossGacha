@@ -1,14 +1,14 @@
-import { CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_TITLES, getChallenge, CHALLENGE_ROLE_TAGS } from '../data/challenges.js?v=92';
-import { getChallengeMap } from '../data/mapsChallenge.js?v=92';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=92';
-import { HERO_BY_ID, assignHeroFormation } from '../data/heroes.js?v=92';
+import { CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_TITLES, getChallenge, CHALLENGE_ROLE_TAGS } from '../data/challenges.js?v=94';
+import { getChallengeMap } from '../data/mapsChallenge.js?v=94';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=94';
+import { HERO_BY_ID, assignHeroFormation } from '../data/heroes.js?v=94';
 import {
   placeMaxCost,
   sanitizeLoadout,
   suggestLoadout,
   tryAddToLoadout,
   LOADOUT_POOL_MULT,
-} from './loadout.js?v=92';
+} from './loadout.js?v=94';
 
 export { getChallenge, CHALLENGES, CHALLENGE_TITLES };
 
@@ -460,6 +460,36 @@ export function grantChallengeReward(state, ch) {
 
 export function titleName(titleId) {
   return CHALLENGE_TITLES[titleId]?.name || titleId || '';
+}
+
+/**
+ * Scale HP/ATK quái trong Thử Thách — cố định theo màn, KHÔNG lấy dungeonLevel / progress người chơi.
+ */
+export function challengeMonsterScaleLevel(runOrCh, challengeId) {
+  if (runOrCh?.mode === 'challenge' || runOrCh?.scaleLevel != null || runOrCh?.mapId) {
+    const ch = runOrCh.challenge || runOrCh;
+    const id = Number(runOrCh.challengeId || challengeId || ch?.id || 1);
+    const fixed = Number(runOrCh.scaleLevel ?? ch?.scaleLevel);
+    if (Number.isFinite(fixed) && fixed > 0) return fixed;
+    return 30 + id;
+  }
+  const id = Number(challengeId || runOrCh?.id || 1);
+  const fixed = Number(runOrCh?.scaleLevel);
+  if (Number.isFinite(fixed) && fixed > 0) return fixed;
+  return 30 + id;
+}
+
+/** Stage level dùng để scale quái trong 1 run (challenge độc lập / ải thường). */
+export function monsterStageLevelForRun(run) {
+  if (!run) return 1;
+  if (run.mode === 'challenge') return challengeMonsterScaleLevel(run);
+  return Math.max(1, Number(run.level) || 1);
+}
+
+/** Thử Thách không dùng cấp nâng quái từ progress người chơi. */
+export function monsterUpgradeLevelForRun(run, state, monsterId) {
+  if (run?.mode === 'challenge') return 0;
+  return Number(state?.monsterUpgrades?.[monsterId]) || 0;
 }
 
 export function challengeConstraintSummary(ch) {

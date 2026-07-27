@@ -1,10 +1,10 @@
-import { RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=92';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=92';
-import { describeMonsterKit } from '../data/skillDesc.js?v=92';
+import { RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=94';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=94';
+import { describeMonsterKit } from '../data/skillDesc.js?v=94';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,
-} from '../core/monsterUpgrade.js?v=92';
+} from '../core/monsterUpgrade.js?v=94';
 
 function escapeHtml(str) {
   return String(str ?? '')
@@ -19,13 +19,23 @@ export function monsterTipHtml(monsterOrId, state, extra = {}) {
   const m = typeof monsterOrId === 'string' ? MONSTER_BY_ID[monsterOrId] : monsterOrId;
   if (!m) return '';
 
-  const upLv = state ? getMonsterUpgradeLevel(state, m.id) : 0;
+  const challengeMode = !!extra.challengeMode;
+  const upLv =
+    extra.upgradeLevel != null
+      ? Number(extra.upgradeLevel) || 0
+      : challengeMode
+        ? 0
+        : state
+          ? getMonsterUpgradeLevel(state, m.id)
+          : 0;
   const stageLv =
     extra.stageLevel > 0
       ? extra.stageLevel
-      : state?.dungeonLevel > 0
-        ? state.dungeonLevel
-        : 0;
+      : challengeMode
+        ? 0
+        : state?.dungeonLevel > 0
+          ? state.dungeonLevel
+          : 0;
   const st = displayMonsterStats(m, upLv, stageLv);
   const tags = (m.tags || []).join(' · ') || '—';
   const kit = describeMonsterKit(m);
@@ -35,13 +45,21 @@ export function monsterTipHtml(monsterOrId, state, extra = {}) {
         `<div class="mtip-skill"><b>${escapeHtml(k.name)}</b> — ${escapeHtml(k.desc)}</div>`
     )
     .join('');
+  const stageName =
+    challengeMode && extra.challengeId
+      ? `CH${extra.challengeId}`
+      : stageLv > 0
+        ? `Ải ${stageLv}`
+        : '';
   const stageBadge =
     stageLv > 0
-      ? `<span class="mtip-stage-badge">Ải ${stageLv} · ×${Number(st.stageMul).toFixed(2)}</span>`
+      ? `<span class="mtip-stage-badge">${stageName} · ×${Number(st.stageMul).toFixed(2)}</span>`
       : '';
   const stageNote =
     stageLv > 0
-      ? `<div class="mtip-note">HP/ATK trong trận theo <b>ải ${stageLv}</b> (gốc ${st.baseHp}/${st.baseAtk} → trận ${st.hp}/${st.atk}).</div>`
+      ? `<div class="mtip-note">HP/ATK trong trận theo <b>${stageName}</b>${
+          challengeMode ? ' (Thử Thách độc lập, không theo ải thường)' : ''
+        } (gốc ${st.baseHp}/${st.baseAtk} → trận ${st.hp}/${st.atk}).</div>`
       : '';
   const note = extra.note ? `<div class="mtip-note">${escapeHtml(extra.note)}</div>` : '';
 
@@ -49,11 +67,11 @@ export function monsterTipHtml(monsterOrId, state, extra = {}) {
     <div class="mtip-name" style="--r:${RARITY_COLORS[m.rarity]}">${escapeHtml(m.name)} ${stageBadge}</div>
     <div class="mtip-rarity" style="color:${RARITY_COLORS[m.rarity]}">
       ${'★'.repeat(m.rarity)} ${RARITY_LABELS[m.rarity] || ''}
-      · Cost ${m.cost}${upLv ? ` · Lv↑${upLv}` : ''}
+      · Cost ${m.cost}${upLv ? ` · Lv↑${upLv}` : ''}${challengeMode ? ' · base' : ''}
     </div>
     <div class="mtip-stats">
-      <span><b>HP</b> ${st.hp}${stageLv > 0 ? ` <i class="mtip-scaled">(ải)</i>` : ''}</span>
-      <span><b>ATK</b> ${st.atk}${stageLv > 0 ? ` <i class="mtip-scaled">(ải)</i>` : ''}</span>
+      <span><b>HP</b> ${st.hp}${stageLv > 0 ? ` <i class="mtip-scaled">(${challengeMode ? 'CH' : 'ải'})</i>` : ''}</span>
+      <span><b>ATK</b> ${st.atk}${stageLv > 0 ? ` <i class="mtip-scaled">(${challengeMode ? 'CH' : 'ải'})</i>` : ''}</span>
       <span><b>SPD</b> ${Number(st.speed).toFixed(2)}</span>
       <span><b>RNG</b> ${st.range}</span>
       <span><b>AS</b> ${st.atkSpeed}</span>

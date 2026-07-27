@@ -53,11 +53,22 @@ db.exec(`
     FOREIGN KEY (code_id) REFERENCES redeem_codes(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   );
+
+  CREATE TABLE IF NOT EXISTS stage_best_costs (
+    user_id INTEGER NOT NULL,
+    mode TEXT NOT NULL,
+    stage INTEGER NOT NULL,
+    best_cost INTEGER NOT NULL,
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (user_id, mode, stage),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  );
 `);
 
 migrateLeaderboardColumns();
 migrateAdminColumns();
 backfillLeaderboardStats();
+backfillStageBestCostsFromSaves();
 
 function tableColumns(table) {
   return db.prepare(`PRAGMA table_info(${table})`).all().map((c) => c.name);
@@ -239,7 +250,120 @@ export function upsertSave(userId, saveData) {
        unique_monsters = excluded.unique_monsters,
        wins = excluded.wins`
   ).run(userId, json, stats.stagesCleared, stats.uniqueMonsters, stats.wins);
+  mergeStageBestCostsFromSave(userId, saveData);
   return getSave(userId);
+}
+
+function normalizeMode(mode) {
+  return mode === 'hard' ? 'hard' : 'normal';
+}
+
+function mergeStageBestCostsFromSave(userId, saveData) {
+  const bag = saveData?.stageBestCost;
+  if (!bag || typeof bag !== 'object') return;
+  const upsert = db.prepare(
+    `INSERT INTO stage_best_costs (user_id, mode, stage, best_cost, updated_at)
+     VALUES (?, ?, ?, ?, datetime('now'))
+     ON CONFLICT(user_id, mode, stage) DO UPDATE SET
+       best_cost = CASE
+         WHEN excluded.best_cost < stage_best_costs.best_cost THEN excluded.best_cost
+         ELSE stage_best_costs.best_cost
+       END,
+       updated_at = CASE
+         WHEN excluded.best_cost < stage_best_costs.best_cost THEN datetime('now')
+         ELSE stage_best_costs.updated_at
+       END`
+  );
+  const tx = db.transaction(() => {
+    for (const mode of ['normal', 'hard']) {
+      const src = bag[mode];
+      if (!src || typeof src !== 'object') continue;
+      for (const [k, v] of Object.entries(src)) {
+        const stage = Math.floor(Number(k) || 0);
+        const cost = Math.floor(Number(v));
+        if (stage < 1 || stage > 60 || !Number.isFinite(cost) || cost < 0) continue;
+        upsert.run(userId, mode, stage, cost);
+      }
+    }
+  });
+  tx();
+}
+
+function backfillStageBestCostsFromSaves() {
+  const rows = db.prepare('SELECT user_id, save_data FROM player_saves').all();
+  for (const row of rows) {
+    let data = {};
+    try {
+      data = JSON.parse(row.save_data || '{}');
+    } catch {
+      data = {};
+    }
+    mergeStageBestCostsFromSave(row.user_id, data);
+  }
+}
+
+/**
+ * @param {number} userId
+ * @param {'normal'|'hard'} mode
+ * @param {number} stage
+ * @param {number} cost
+ */
+export function upsertStageBestCost(userId, mode, stage, cost) {
+  const m = normalizeMode(mode);
+  const s = Math.floor(Number(stage) || 0);
+  const c = Math.floor(Number(cost));
+  if (s < 1 || s > 60 || !Number.isFinite(c) || c < 0) {
+    return { ok: false, error: 'invalid' };
+  }
+  const prev = db
+    .prepare(
+      'SELECT best_cost AS bestCost FROM stage_best_costs WHERE user_id = ? AND mode = ? AND stage = ?'
+    )
+    .get(userId, m, s);
+  if (prev && c >= prev.bestCost) {
+    return { ok: true, bestCost: prev.bestCost, updated: false };
+  }
+  db.prepare(
+    `INSERT INTO stage_best_costs (user_id, mode, stage, best_cost, updated_at)
+     VALUES (?, ?, ?, ?, datetime('now'))
+     ON CONFLICT(user_id, mode, stage) DO UPDATE SET
+       best_cost = excluded.best_cost,
+       updated_at = datetime('now')`
+  ).run(userId, m, s, c);
+  return { ok: true, bestCost: c, updated: true };
+}
+
+/** Record holders (#1 per stage) for a mode. */
+export function listStageRecordHolders(mode = 'normal') {
+  const m = normalizeMode(mode);
+  const rows = db
+    .prepare(
+      `SELECT s.stage, s.best_cost AS bestCost, u.username, u.display_name AS displayName
+       FROM stage_best_costs s
+       INNER JOIN users u ON u.id = s.user_id
+       WHERE s.mode = ?
+         AND (u.is_banned IS NULL OR u.is_banned = 0)
+         AND NOT EXISTS (
+           SELECT 1 FROM stage_best_costs s2
+           WHERE s2.mode = s.mode AND s2.stage = s.stage
+             AND (
+               s2.best_cost < s.best_cost
+               OR (s2.best_cost = s.best_cost AND s2.updated_at < s.updated_at)
+               OR (s2.best_cost = s.best_cost AND s2.updated_at = s.updated_at AND s2.user_id < s.user_id)
+             )
+         )
+       ORDER BY s.stage ASC`
+    )
+    .all(m);
+  const records = {};
+  for (const row of rows) {
+    records[String(row.stage)] = {
+      username: row.username,
+      displayName: row.displayName,
+      bestCost: row.bestCost,
+    };
+  }
+  return records;
 }
 
 export function listLeaderboard(limit = 50) {
