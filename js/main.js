@@ -3,23 +3,23 @@ import {
   saveState,
   resetState,
   inventoryCopy,
-} from './core/storage.js?v=85';
-import { createRunState } from './core/dungeon.js?v=85';
-import { loadoutFingerprint } from './core/loadout.js?v=85';
-import { evaluateAchievements } from './core/achievements.js?v=85';
-import { initAuth, onAuthChange } from './core/auth.js?v=85';
-import { renderHub } from './ui/hub.js?v=85';
-import { renderGacha } from './ui/gachaUI.js?v=85';
-import { renderCollection } from './ui/collection.js?v=85';
-import { renderHeroes } from './ui/heroesUI.js?v=85';
-import { renderScout, renderSetup } from './ui/setup.js?v=85';
-import { renderCombat, renderReward, stopCombatIfAny, getCombatEngine } from './ui/combat.js?v=85';
-import { renderAchievements, announceUnlocks } from './ui/achievementsUI.js?v=85';
-import { renderLeaderboard } from './ui/leaderboardUI.js?v=85';
-import { renderAdmin } from './ui/adminUI.js?v=85';
-import { startGuidedTour, showTipBanner } from './ui/tutorial.js?v=85';
-import { renderAccountBar } from './ui/authUI.js?v=85';
-import { hideMonsterTip } from './ui/monsterTip.js?v=85';
+} from './core/storage.js?v=86';
+import { createRunState } from './core/dungeon.js?v=86';
+import { loadoutFingerprint } from './core/loadout.js?v=86';
+import { evaluateAchievements } from './core/achievements.js?v=86';
+import { initAuth, onAuthChange } from './core/auth.js?v=86';
+import { renderHub } from './ui/hub.js?v=86';
+import { renderGacha } from './ui/gachaUI.js?v=86';
+import { renderCollection } from './ui/collection.js?v=86';
+import { renderHeroes } from './ui/heroesUI.js?v=86';
+import { renderScout, renderSetup } from './ui/setup.js?v=86';
+import { renderCombat, renderReward, stopCombatIfAny, getCombatEngine } from './ui/combat.js?v=86';
+import { renderAchievements, announceUnlocks } from './ui/achievementsUI.js?v=86';
+import { renderLeaderboard } from './ui/leaderboardUI.js?v=86';
+import { renderAdmin } from './ui/adminUI.js?v=86';
+import { startGuidedTour, showTipBanner } from './ui/tutorial.js?v=86';
+import { renderAccountBar } from './ui/authUI.js?v=86';
+import { hideMonsterTip } from './ui/monsterTip.js?v=86';
 
 const state = loadState();
 // Mở ấn đủ điều kiện + backfill Gem cho ấn đã mở (bảng thưởng mới)

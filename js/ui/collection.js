@@ -1,20 +1,20 @@
-import { MONSTERS } from '../data/monsters.js?v=85';
+import { MONSTERS } from '../data/monsters.js?v=86';
 import {
   RARITY_COLORS,
   RARITY_LABELS,
   INVENTORY_CAP,
   MONSTER_UPGRADE,
-} from '../data/constants.js?v=85';
-import { monsterDisplayUrl } from '../render/sprites.js?v=85';
+} from '../data/constants.js?v=86';
+import { monsterDisplayUrl } from '../render/sprites.js?v=86';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,
   tryUpgradeMonster,
   upgradeMonsterCost,
-} from '../core/monsterUpgrade.js?v=85';
-import { evaluateAchievements } from '../core/achievements.js?v=85';
-import { describeMonsterKit } from '../data/skillDesc.js?v=85';
-import { inventoryOwnCap } from '../core/storage.js?v=85';
+} from '../core/monsterUpgrade.js?v=86';
+import { evaluateAchievements } from '../core/achievements.js?v=86';
+import { describeMonsterKit } from '../data/skillDesc.js?v=86';
+import { inventoryOwnCap } from '../core/storage.js?v=86';
 
 const filters = {
   q: '',
