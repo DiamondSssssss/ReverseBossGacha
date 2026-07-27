@@ -1,16 +1,17 @@
-import { MAP_UPGRADE, SPELLS, MAX_STAGE } from '../data/constants.js?v=68';
+import { MAP_UPGRADE, SPELLS, MAX_STAGE } from '../data/constants.js?v=70';
+import { MONSTERS } from '../data/monsters.js?v=70';
 import {
   DUNGEON_BOSSES,
   getBoss,
   isBossUnlocked,
   unlockHint,
   syncUnlockedBosses,
-} from '../data/dungeonBosses.js?v=68';
-import { tryUpgradeMap, upgradeMapCost } from '../core/dungeon.js?v=68';
-import { saveState } from '../core/storage.js?v=68';
-import { achievementProgress, isGameCleared, evaluateAchievements } from '../core/achievements.js?v=68';
-import { showTutorial } from './tutorial.js?v=68';
-import { showRedeemModal } from './redeemUI.js?v=68';
+} from '../data/dungeonBosses.js?v=70';
+import { tryUpgradeMap, upgradeMapCost } from '../core/dungeon.js?v=70';
+import { saveState } from '../core/storage.js?v=70';
+import { achievementProgress, isGameCleared, evaluateAchievements } from '../core/achievements.js?v=70';
+import { showTutorial } from './tutorial.js?v=70';
+import { showRedeemModal } from './redeemUI.js?v=70';
 
 const GATE_SVG = `
 <svg viewBox="0 0 200 250" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -52,6 +53,8 @@ export function renderHub(root, ctx) {
   const prog = achievementProgress(state);
   const cleared = isGameCleared(state);
   const stageLabel = cleared ? 'Phá đảo' : `Ải ${Math.min(state.dungeonLevel, MAX_STAGE)}/${MAX_STAGE}`;
+  const ownedMonsters = MONSTERS.filter((m) => (state.inventory?.[m.id] || 0) > 0).length;
+  const monsterLabel = `${ownedMonsters}/${MONSTERS.length}`;
   const activeBoss = getBoss(state.selectedBossId);
 
   const lvl = state.mapUpgrade || 0;
@@ -78,6 +81,7 @@ export function renderHub(root, ctx) {
         </div>
         <div class="hub-meta">
           <div><strong>${stageLabel}</strong><span>Tiến độ</span></div>
+          <div><strong>${monsterLabel}</strong><span>Quái</span></div>
           <div><strong>${state.stats.wins}</strong><span>Thắng</span></div>
           <div><strong>${prog.done}/${prog.total}</strong><span>Ấn</span></div>
         </div>

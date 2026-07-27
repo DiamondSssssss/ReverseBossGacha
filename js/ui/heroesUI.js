@@ -1,6 +1,6 @@
-import { HEROES } from '../data/heroes.js?v=68';
-import { HERO_CLASS_LABELS } from '../data/constants.js?v=68';
-import { heroSpriteUrl } from '../render/sprites.js?v=68';
+import { HEROES } from '../data/heroes.js?v=70';
+import { HERO_CLASS_LABELS } from '../data/constants.js?v=70';
+import { heroSpriteUrl } from '../render/sprites.js?v=70';
 
 const filters = {
   q: '',
@@ -140,7 +140,7 @@ export function renderHeroes(root, ctx) {
         <h2>Catalog Hero</h2>
         <p class="muted" id="heroes-meta">Catalog <strong>${HEROES.length}</strong> hero · Đang hiện ${count}</p>
         <p class="muted" style="font-size:0.78rem;margin:4px 0 0">
-          Hero là địch xâm nhập hầm — xem class / skill để chọn quái khắc chế. Ải 30–50 trộn Cung thủ, Thuần tank, Berserker.
+          Hero là địch xâm nhập hầm — xem class / skill để chọn quái khắc chế. Ải 30–60 trộn Cung thủ, Thuần tank, Berserker.
         </p>
       </div>
       <button type="button" class="ghost" id="btn-heroes-to-col">Kho quái</button>

@@ -145,7 +145,7 @@ export const MAP_UPGRADE = {
   COST_BASE: 1,
   COST_GROWTH: 1.5,
   COST_CAP_BONUS: 2,
-  /** Trước 6 — mở rộng vì ải 50 + người chơi dư Gem */
+  /** Trước 6 — mở rộng vì ải 60 + người chơi dư Gem */
   MAX_LEVEL: 12,
 };
 

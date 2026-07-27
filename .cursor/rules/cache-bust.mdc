@@ -1,0 +1,23 @@
+---
+description: Always bump JS/CSS cache query (?v=) after any code or asset change
+alwaysApply: true
+---
+
+# Cache bust (ReverseBossGacha)
+
+Browser caches ES modules via `?v=N` on imports and `index.html` script/link tags.
+
+**Whenever you change any game code, data, CSS, or assets — bump the cache version before finishing.**
+
+## How
+
+1. Find current version in `index.html` (`js/main.js?v=N`) or any `from '...js?v=N'`.
+2. Bump **every** `?v=N` → `?v=N+1` in:
+   - `index.html` (script + CSS links)
+   - **all** `js/**/*.js` import query strings
+3. Prefer a project-wide replace (`?v=69` → `?v=70`) so nothing is left on the old version.
+4. Do **not** leave mixed versions (some files on old `v`, some on new).
+
+## Why
+
+If you skip this, hub/UI keep showing stale totals (e.g. ải `/50`, catalog quái cũ) even though source already says 60 / new monster count.

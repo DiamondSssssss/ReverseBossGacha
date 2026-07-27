@@ -89,6 +89,7 @@
 
 .hub-meta {
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   margin-top: 18px;
   padding-top: 14px;
