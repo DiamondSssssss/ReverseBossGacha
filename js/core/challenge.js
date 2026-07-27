@@ -1,14 +1,14 @@
-import { CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_TITLES, getChallenge } from '../data/challenges.js?v=90';
-import { getChallengeMap } from '../data/mapsChallenge.js?v=90';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=90';
-import { HERO_BY_ID, assignHeroFormation } from '../data/heroes.js?v=90';
+import { CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_TITLES, getChallenge, CHALLENGE_ROLE_TAGS } from '../data/challenges.js?v=92';
+import { getChallengeMap } from '../data/mapsChallenge.js?v=92';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=92';
+import { HERO_BY_ID, assignHeroFormation } from '../data/heroes.js?v=92';
 import {
   placeMaxCost,
   sanitizeLoadout,
   suggestLoadout,
   tryAddToLoadout,
   LOADOUT_POOL_MULT,
-} from './loadout.js?v=90';
+} from './loadout.js?v=92';
 
 export { getChallenge, CHALLENGES, CHALLENGE_TITLES };
 
@@ -63,22 +63,54 @@ export function unlockHintChallenge(c, state) {
 }
 
 function buildChallengeWave(ch) {
-  const ids = ch.wave?.ids || ['hero_warrior_01', 'hero_mage_01'];
   const list = [];
   let i = 0;
-  for (const id of ids) {
+
+  const pushHero = (id, spawnDelay, waveIndex) => {
     const tpl = HERO_BY_ID[id];
-    if (!tpl) continue;
+    if (!tpl) return;
     list.push({
       ...tpl,
       templateId: tpl.id,
       id: `${tpl.id}_${i++}`,
-      spawnDelay: 0.5 + i * 1.8,
-      waveIndex: 1,
+      spawnDelay,
+      waveIndex: waveIndex || 1,
       spawned: false,
     });
+  };
+
+  const squads = ch.wave?.squads;
+  if (squads?.length) {
+    for (const sq of squads) {
+      const wi = sq.wave || 1;
+      const gap = sq.gap ?? 1.4;
+      let t = 0.5;
+      for (const id of sq.ids || []) {
+        pushHero(id, t, wi);
+        t += gap;
+      }
+    }
+    return list;
+  }
+
+  const ids = ch.wave?.ids || ['hero_warrior_01', 'hero_mage_01'];
+  let t = 0.5;
+  for (const id of ids) {
+    pushHero(id, t, 1);
+    t += 1.6;
   }
   return list;
+}
+
+/** Expand banRoles → tag list */
+export function expandedBanTags(ch) {
+  const cons = ch?.constraints || {};
+  const tags = new Set(cons.banTags || []);
+  for (const role of cons.banRoles || []) {
+    const mapped = CHALLENGE_ROLE_TAGS[role] || [role];
+    for (const t of mapped) tags.add(t);
+  }
+  return [...tags];
 }
 
 /** Lý do cứng — quái này không được mang vào thử thách (không phụ thuộc count). */
@@ -87,6 +119,17 @@ export function challengeHardBlockReason(ch, monster) {
   const cons = ch.constraints || {};
   const isPotion = !!monster.tags?.includes('potion');
   const isTrap = !!monster.tags?.includes('trap');
+  const mTags = monster.tags || [];
+
+  const banTags = expandedBanTags(ch);
+  if (banTags.length) {
+    const hit = banTags.find((t) => mTags.includes(t));
+    if (hit) {
+      const role =
+        Object.entries(CHALLENGE_ROLE_TAGS).find(([, arr]) => arr.includes(hit))?.[0] || hit;
+      return `Thử thách cấm ${role}`;
+    }
+  }
 
   if (cons.banMythic && monster.rarity >= 6) return 'Thử thách cấm Mythic/Rainbow';
   if (cons.banLegendary && monster.rarity === 5 && !isPotion) return 'Thử thách cấm Legendary';
@@ -103,6 +146,7 @@ export function challengeHardBlockReason(ch, monster) {
   if (
     cons.fillerMaxRarity != null &&
     monster.id !== cons.requireMonster &&
+    !(ch.forcedLoadout && ch.forcedLoadout[monster.id]) &&
     monster.rarity > cons.fillerMaxRarity
   ) {
     return `Filler chỉ ≤${cons.fillerMaxRarity}★`;
@@ -166,16 +210,16 @@ export function validateChallengeLoadout(ch, loadout, placements = []) {
 }
 
 /** Thử thêm 1 copy — kiểm cap pool + constraint thử thách. */
-export function tryAddChallengeLoadout(ch, loadout, inventory, monsterId, costCap, level) {
+export function tryAddChallengeLoadout(ch, loadout, inventory, monsterId, costCap, level, poolMult) {
+  if (ch.lockLoadout) return { ok: false, reason: 'Loadout bị khóa trong thử thách này', loadout };
   const m = MONSTER_BY_ID[monsterId];
   const hard = challengeHardBlockReason(ch, m);
   if (hard) return { ok: false, reason: hard, loadout };
 
-  const res = tryAddToLoadout(loadout, inventory, monsterId, costCap, level);
+  const res = tryAddToLoadout(loadout, inventory, monsterId, costCap, level, poolMult);
   if (!res.ok) return res;
 
   const check = validateChallengeLoadout(ch, res.loadout, []);
-  // minLowStar / requireMonster chỉ bắt buộc lúc vào trận — bỏ qua khi đang chọn dần
   const soft = (check.errors || []).filter(
     (e) => !e.startsWith('Cần ≥') && !e.startsWith('Thiếu quái')
   );
@@ -185,10 +229,22 @@ export function tryAddChallengeLoadout(ch, loadout, inventory, monsterId, costCa
 
 /** Cắt quái cấm / vượt quota khỏi loadout. */
 export function sanitizeChallengeLoadout(ch, loadout) {
+  if (ch.forcedLoadout && ch.lockLoadout) {
+    return { ...ch.forcedLoadout };
+  }
   const out = { ...(loadout || {}) };
+  if (ch.forcedLoadout) {
+    for (const [id, n] of Object.entries(ch.forcedLoadout)) {
+      out[id] = Math.max(out[id] || 0, n);
+    }
+  }
   for (const id of Object.keys(out)) {
     const m = MONSTER_BY_ID[id];
-    if (!m || challengeHardBlockReason(ch, m)) delete out[id];
+    if (!m || challengeHardBlockReason(ch, m)) {
+      // Giữ forced dù hard-block (forced là ngoại lệ yêu cầu)
+      if (ch.forcedLoadout?.[id]) continue;
+      delete out[id];
+    }
   }
   const trimKind = (pred, maxKey) => {
     const cons = ch.constraints || {};
@@ -201,6 +257,7 @@ export function sanitizeChallengeLoadout(ch, loadout) {
     }
     while (count > max) {
       const id = Object.keys(out).find((k) => {
+        if (ch.forcedLoadout?.[k]) return false;
         const m = MONSTER_BY_ID[k];
         return m && pred(m) && out[k] > 0;
       });
@@ -216,32 +273,63 @@ export function sanitizeChallengeLoadout(ch, loadout) {
   return out;
 }
 
-export function suggestChallengeLoadout(ch, inventory, costCap, level) {
+export function suggestChallengeLoadout(ch, inventory, costCap, level, poolMult) {
+  if (ch.forcedLoadout && ch.lockLoadout) return { ...ch.forcedLoadout };
   const filtered = {};
   for (const [id, n] of Object.entries(inventory || {})) {
     const m = MONSTER_BY_ID[id];
     if (!m || !(n > 0)) continue;
-    if (challengeHardBlockReason(ch, m)) continue;
+    if (challengeHardBlockReason(ch, m) && !ch.forcedLoadout?.[id]) continue;
     filtered[id] = n;
   }
   let loadout = {};
+  if (ch.forcedLoadout) {
+    loadout = { ...ch.forcedLoadout };
+  }
   const req = ch.constraints?.requireMonster;
   if (req && (filtered[req] || 0) > 0) {
-    loadout[req] = 1;
+    loadout[req] = Math.max(loadout[req] || 0, 1);
   }
-  const rest = suggestLoadout(filtered, costCap, level);
-  for (const [id, n] of Object.entries(rest)) {
-    if (id === req) continue;
-    for (let i = 0; i < n; i++) {
-      const res = tryAddChallengeLoadout(ch, loadout, filtered, id, costCap, level);
+
+  // Fill pool: ưu tiên utility/trap rồi cost thấp để lấp đầy dưới constraint
+  const ranked = Object.keys(filtered)
+    .map((id) => MONSTER_BY_ID[id])
+    .filter(Boolean)
+    .sort((a, b) => {
+      const score = (m) => {
+        let s = 0;
+        const tags = m.tags || [];
+        if (tags.includes('trap') || tags.includes('detect')) s += 40;
+        if (tags.includes('tank') || tags.includes('tankette')) s += 28;
+        if (tags.includes('silence') || tags.includes('stun')) s += 22;
+        if (tags.includes('utility')) s += 12;
+        if (tags.includes('dps')) s += 10;
+        s += (8 - m.cost) * 4;
+        s -= m.rarity * 2; // tránh nhồi mythic sớm khi có maxMythic
+        return s;
+      };
+      return score(b) - score(a) || a.cost - b.cost;
+    });
+
+  for (const m of ranked) {
+    const have = filtered[m.id] || 0;
+    for (let i = 0; i < have; i++) {
+      if ((loadout[m.id] || 0) >= have) break;
+      const res = tryAddChallengeLoadout(ch, loadout, filtered, m.id, costCap, level, poolMult);
       if (!res.ok) break;
       loadout = res.loadout;
     }
   }
-  if (req && !loadout[req] && (filtered[req] || 0) > 0) {
-    loadout = { [req]: 1, ...loadout };
-  }
   return sanitizeChallengeLoadout(ch, loadout);
+}
+
+/** Vault session: kho người chơi + quái forced (cho mượn nếu chưa sở hữu). */
+export function buildChallengeVault(playerState, ch) {
+  const vault = { ...(playerState.inventory || {}) };
+  for (const [id, n] of Object.entries(ch.forcedLoadout || {})) {
+    vault[id] = Math.max(vault[id] || 0, n);
+  }
+  return vault;
 }
 
 export function createChallengeRunState(playerState, challengeId) {
@@ -250,25 +338,49 @@ export function createChallengeRunState(playerState, challengeId) {
   const map = getChallengeMap(ch.mapId);
   if (!map) return null;
 
-  // Cap cố định theo map thử thách — không cộng mapUpgrade người chơi
-  const refCap = Math.max(1, Number(map.baseCostCap) || Number(map.costCap) || 8);
+  // Cap/pool theo từng thử thách — không cộng mapUpgrade người chơi
+  const refCap = Math.max(
+    1,
+    Number(ch.costCap) || Number(map.baseCostCap) || Number(map.costCap) || 8
+  );
+  const poolMult = Math.max(1, Number(ch.poolMult) || LOADOUT_POOL_MULT);
   map.refCostCap = refCap;
   map.costCap = placeMaxCost(refCap);
   map.upgradeLevel = 0;
-  map.poolMult = LOADOUT_POOL_MULT;
+  map.poolMult = poolMult;
+  if (ch.treasureHp != null) map.treasureHp = ch.treasureHp;
 
   let wave = buildChallengeWave(ch);
   wave = assignHeroFormation(wave, map);
 
-  const inv = playerState.inventory || {};
-  let loadout = sanitizeLoadout(playerState.lastLoadout, inv, map.refCostCap, challengeId);
-  loadout = sanitizeChallengeLoadout(ch, loadout);
-  if (!Object.values(loadout || {}).some((n) => n > 0)) {
-    loadout = suggestChallengeLoadout(ch, inv, map.refCostCap, challengeId);
+  const challengeVault = buildChallengeVault(playerState, ch);
+  let loadout;
+  if (ch.forcedLoadout && ch.lockLoadout) {
+    loadout = { ...ch.forcedLoadout };
+  } else if (ch.forcedLoadout) {
+    loadout = sanitizeChallengeLoadout(ch, { ...ch.forcedLoadout });
+    // Cho phép thêm từ vault nếu còn pool
+    const suggested = suggestChallengeLoadout(ch, challengeVault, map.refCostCap, challengeId, poolMult);
+    loadout = sanitizeLoadout(suggested, challengeVault, map.refCostCap, challengeId, poolMult);
+    loadout = sanitizeChallengeLoadout(ch, loadout);
+  } else {
+    loadout = sanitizeLoadout(
+      playerState.lastLoadout,
+      challengeVault,
+      map.refCostCap,
+      challengeId,
+      poolMult
+    );
+    loadout = sanitizeChallengeLoadout(ch, loadout);
+    if (!Object.values(loadout || {}).some((n) => n > 0)) {
+      loadout = suggestChallengeLoadout(ch, challengeVault, map.refCostCap, challengeId, poolMult);
+    }
   }
 
   return {
     level: challengeId,
+    /** Scale HP/ATK quái — khớp hero cuối game, không dùng challengeId */
+    scaleLevel: Number(ch.scaleLevel) || 30 + challengeId,
     mode: 'challenge',
     challengeId,
     challenge: ch,
@@ -279,6 +391,8 @@ export function createChallengeRunState(playerState, challengeId) {
     waveTip: ch.wave?.tip || map.tip,
     selectedMonsterId: null,
     loadout,
+    challengeVault,
+    lockLoadout: !!ch.lockLoadout,
     loadoutReady: false,
     appliedLoadoutKey: null,
     noBossSpells: !!ch.constraints?.noBossSpells,
@@ -351,9 +465,14 @@ export function titleName(titleId) {
 export function challengeConstraintSummary(ch) {
   const cons = ch?.constraints || {};
   const parts = [];
+  if (ch.lockLoadout) parts.push('loadout khóa');
+  if (ch.forcedLoadout) parts.push('có loadout bắt buộc');
+  for (const role of cons.banRoles || []) parts.push(`cấm ${role}`);
+  for (const t of cons.banTags || []) parts.push(`cấm tag:${t}`);
   if (cons.maxRarity != null) parts.push(`≤${cons.maxRarity}★`);
   if (cons.banMythic) parts.push('cấm Mythic');
   if (cons.banLegendary) parts.push('cấm Legendary');
+  if (cons.banRainbow) parts.push('cấm Rainbow');
   if (cons.maxMythic != null) parts.push(`≤${cons.maxMythic} Mythic`);
   if (cons.maxLegendary != null) parts.push(`≤${cons.maxLegendary} Legendary`);
   if (cons.maxEpic != null) parts.push(`≤${cons.maxEpic} Epic`);
@@ -363,5 +482,8 @@ export function challengeConstraintSummary(ch) {
   if (cons.fillerMaxRarity != null) parts.push(`filler ≤${cons.fillerMaxRarity}★`);
   if (cons.minLowStarUnits != null) parts.push(`≥${cons.minLowStarUnits} unit thấp ★`);
   if (cons.noBossSpells) parts.push('cấm chiêu boss');
+  if (cons.allowPotion === false) parts.push('cấm potion');
+  if (ch.costCap) parts.push(`Cap ${ch.costCap}`);
+  if (ch.poolMult) parts.push(`Pool ×${ch.poolMult}`);
   return parts.join(' · ') || 'Không ràng buộc đặc biệt';
 }

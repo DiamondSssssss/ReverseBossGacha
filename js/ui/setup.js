@@ -3,17 +3,17 @@ import {
   TERRAIN_LABELS,
   RARITY_COLORS,
   HERO_CLASS_LABELS,
-} from '../data/constants.js?v=90';
-import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=90';
-import { monsterScaleForLevel } from '../data/heroes.js?v=90';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=90';
-import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=90';
+} from '../data/constants.js?v=92';
+import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=92';
+import { monsterScaleForLevel } from '../data/heroes.js?v=92';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=92';
+import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=92';
 import {
   mapUsedCost,
   placeMonster,
   removePlacement,
   totalPlacements,
-} from '../core/dungeon.js?v=90';
+} from '../core/dungeon.js?v=92';
 import {
   loadoutMaxPoolCost,
   loadoutPoolCost,
@@ -24,19 +24,19 @@ import {
   suggestLoadout,
   tryAddToLoadout,
   tryRemoveFromLoadout,
-} from '../core/loadout.js?v=90';
-import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=90';
-import { attachSetupBoardFx } from './setupBoardFx.js?v=90';
-import { playGhostWalk } from './setupPreview.js?v=90';
-import { saveState } from '../core/storage.js?v=90';
+} from '../core/loadout.js?v=92';
+import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=92';
+import { attachSetupBoardFx } from './setupBoardFx.js?v=92';
+import { playGhostWalk } from './setupPreview.js?v=92';
+import { saveState } from '../core/storage.js?v=92';
 import {
   hideMonsterTip,
   monsterTipHtml,
-} from './monsterTip.js?v=90';
+} from './monsterTip.js?v=92';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,
-} from '../core/monsterUpgrade.js?v=90';
+} from '../core/monsterUpgrade.js?v=92';
 import {
   validateChallengeLoadout,
   tryAddChallengeLoadout,
@@ -44,7 +44,7 @@ import {
   suggestChallengeLoadout,
   challengeHardBlockReason,
   challengeConstraintSummary,
-} from '../core/challenge.js?v=90';
+} from '../core/challenge.js?v=92';
 
 function shortName(name) {
   if (!name) return '?';
@@ -248,15 +248,34 @@ export function renderScout(root, ctx) {
 
   const map = run.map;
   const pathHint = hintPath(map);
-  const vault = state.inventory || {};
+  const poolMult = map.poolMult || loadoutPoolMultForLevel(run.level);
+  const vault =
+    run.mode === 'challenge' && run.challengeVault
+      ? run.challengeVault
+      : state.inventory || {};
+  const lockLoadout = !!(run.lockLoadout || run.challenge?.lockLoadout);
 
-  if (!run.loadout) {
-    run.loadout = sanitizeLoadout(state.lastLoadout, vault, loadoutRefCap(map), run.level);
+  if (lockLoadout && run.challenge?.forcedLoadout) {
+    run.loadout = { ...run.challenge.forcedLoadout };
+  } else if (!run.loadout) {
+    run.loadout = sanitizeLoadout(
+      state.lastLoadout,
+      vault,
+      loadoutRefCap(map),
+      run.level,
+      poolMult
+    );
     if (!loadoutUnitCount(run.loadout)) {
-      run.loadout = suggestLoadout(vault, loadoutRefCap(map), run.level);
+      run.loadout =
+        run.mode === 'challenge' && run.challenge
+          ? suggestChallengeLoadout(run.challenge, vault, loadoutRefCap(map), run.level, poolMult)
+          : suggestLoadout(vault, loadoutRefCap(map), run.level, poolMult);
     }
-  } else {
-    run.loadout = sanitizeLoadout(run.loadout, vault, loadoutRefCap(map), run.level);
+  } else if (!lockLoadout) {
+    run.loadout = sanitizeLoadout(run.loadout, vault, loadoutRefCap(map), run.level, poolMult);
+    if (run.mode === 'challenge' && run.challenge) {
+      run.loadout = sanitizeChallengeLoadout(run.challenge, run.loadout);
+    }
   }
 
   let filterRole = 'all';
@@ -292,11 +311,14 @@ export function renderScout(root, ctx) {
   function loadoutPanelHtml() {
     const loadout = run.loadout || {};
     const isChallenge = run.mode === 'challenge' && run.challenge;
-    const stageLv = run.level || state.dungeonLevel || 1;
+    const stageLv =
+      run.scaleLevel ||
+      (run.mode === 'challenge' ? 30 + (run.challengeId || run.level || 1) : run.level) ||
+      state.dungeonLevel ||
+      1;
     const pool = loadoutPoolCost(loadout);
     const refCap = loadoutRefCap(map);
-    const maxPool = loadoutMaxPoolCost(refCap, stageLv);
-    const poolMult = map.poolMult || loadoutPoolMultForLevel(stageLv);
+    const maxPool = loadoutMaxPoolCost(refCap, stageLv, poolMult);
     const units = loadoutUnitCount(loadout);
     const types = loadoutTypeCount(loadout);
     const placeCap = map.costCap;
@@ -339,7 +361,7 @@ export function renderScout(root, ctx) {
         const left = have - inLoad;
         const hardBan = isChallenge ? challengeHardBlockReason(run.challenge, m) : null;
         const trial = isChallenge
-          ? tryAddChallengeLoadout(run.challenge, loadout, vault, m.id, refCap, stageLv)
+          ? tryAddChallengeLoadout(run.challenge, loadout, vault, m.id, refCap, stageLv, poolMult)
           : tryAddToLoadout(loadout, vault, m.id, refCap, stageLv);
         const blocked = !!hardBan || (left > 0 && !trial.ok && trial.reason !== 'Hết số lượng trong kho');
         const full = left <= 0 || !!hardBan;
@@ -372,7 +394,9 @@ export function renderScout(root, ctx) {
         <div class="loadout-head">
           <div>
             <p class="section-label" style="margin:0">${isChallenge ? 'Loadout Thử Thách' : 'Loadout của bạn'}</p>
-            <h3 style="margin:2px 0 0;font-size:1.05rem">Chọn quái mang vào xếp trận</h3>
+            <h3 style="margin:2px 0 0;font-size:1.05rem">${
+              lockLoadout ? 'Loadout bắt buộc (không đổi)' : 'Chọn quái mang vào xếp trận'
+            }</h3>
             <p class="muted" style="margin:4px 0 0;font-size:0.75rem">
               Pool mang theo <strong>${pool}/${maxPool}</strong>
               · Cap sân <strong>${placeCap}</strong>
@@ -394,8 +418,12 @@ export function renderScout(root, ctx) {
             <p class="stat-stage-banner">${stageBanner}</p>
           </div>
           <div class="loadout-tools">
-            <button type="button" class="ghost" id="btn-loadout-suggest">Gợi ý</button>
-            <button type="button" class="ghost" id="btn-loadout-clear">Xóa</button>
+            ${
+              lockLoadout
+                ? ''
+                : `<button type="button" class="ghost" id="btn-loadout-suggest">Gợi ý</button>
+            <button type="button" class="ghost" id="btn-loadout-clear">Xóa</button>`
+            }
           </div>
         </div>
 
@@ -412,7 +440,11 @@ export function renderScout(root, ctx) {
         </div>
 
         <div class="loadout-pool">
-          ${poolCards || '<p class="muted">Kho trống — quay Gacha trước.</p>'}
+          ${
+            lockLoadout
+              ? '<p class="muted">Màn này giao loadout sẵn — chỉ xếp trận với bộ bài trên.</p>'
+              : poolCards || '<p class="muted">Kho trống — quay Gacha trước.</p>'
+          }
         </div>
 
         <div class="unit-stat-panel loadout-stat-panel sticky-stat" id="loadout-stat-panel">
@@ -435,7 +467,11 @@ export function renderScout(root, ctx) {
       // Giữ tip cuối — không clear khi rời thẻ (tránh panel co/giãn → chớp hover)
       if (id === lastPickId && statPanel.classList.contains('has-unit')) return;
       lastPickId = id;
-      const stageLv = run.level || state.dungeonLevel || 1;
+      const stageLv =
+      run.scaleLevel ||
+      (run.mode === 'challenge' ? 30 + (run.challengeId || run.level || 1) : run.level) ||
+      state.dungeonLevel ||
+      1;
       statPanel.innerHTML = monsterTipHtml(id, state, { stageLevel: stageLv });
       statPanel.classList.add('has-unit');
     }
@@ -452,6 +488,10 @@ export function renderScout(root, ctx) {
       btn.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
+        if (lockLoadout) {
+          toast('Loadout bị khóa trong thử thách này');
+          return;
+        }
         if (btn.classList.contains('is-full') || btn.getAttribute('aria-disabled') === 'true') {
           const why = btn.getAttribute('title');
           if (why) toast(why);
@@ -462,8 +502,16 @@ export function renderScout(root, ctx) {
         const refCap = loadoutRefCap(map);
         const res =
           run.mode === 'challenge' && run.challenge
-            ? tryAddChallengeLoadout(run.challenge, run.loadout, vault, id, refCap, run.level)
-            : tryAddToLoadout(run.loadout, vault, id, refCap, run.level);
+            ? tryAddChallengeLoadout(
+                run.challenge,
+                run.loadout,
+                vault,
+                id,
+                refCap,
+                run.level,
+                poolMult
+              )
+            : tryAddToLoadout(run.loadout, vault, id, refCap, run.level, poolMult);
         if (!res.ok) {
           toast(res.reason);
           return;
@@ -478,7 +526,15 @@ export function renderScout(root, ctx) {
       btn.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
+        if (lockLoadout) {
+          toast('Loadout bị khóa trong thử thách này');
+          return;
+        }
         const id = btn.getAttribute('data-remove');
+        if (run.challenge?.forcedLoadout?.[id] && (run.loadout[id] || 0) <= run.challenge.forcedLoadout[id]) {
+          toast('Không bỏ được quái bắt buộc');
+          return;
+        }
         showPickInfo(btn);
         const res = tryRemoveFromLoadout(run.loadout, id);
         if (res.ok) {
@@ -497,22 +553,32 @@ export function renderScout(root, ctx) {
       };
     });
 
-    panel.querySelector('#btn-loadout-suggest').onclick = (e) => {
-      e.preventDefault();
-      const refCap = loadoutRefCap(map);
-      run.loadout =
-        run.mode === 'challenge' && run.challenge
-          ? suggestChallengeLoadout(run.challenge, vault, refCap, run.level)
-          : suggestLoadout(vault, refCap, run.level);
-      refreshLoadout();
-      toast('Đã gợi ý loadout');
-    };
+    const suggestBtn = panel.querySelector('#btn-loadout-suggest');
+    if (suggestBtn) {
+      suggestBtn.onclick = (e) => {
+        e.preventDefault();
+        const refCap = loadoutRefCap(map);
+        run.loadout =
+          run.mode === 'challenge' && run.challenge
+            ? suggestChallengeLoadout(run.challenge, vault, refCap, run.level, poolMult)
+            : suggestLoadout(vault, refCap, run.level, poolMult);
+        refreshLoadout();
+        toast('Đã gợi ý loadout');
+      };
+    }
 
-    panel.querySelector('#btn-loadout-clear').onclick = (e) => {
-      e.preventDefault();
-      run.loadout = {};
-      refreshLoadout();
-    };
+    const clearBtn = panel.querySelector('#btn-loadout-clear');
+    if (clearBtn) {
+      clearBtn.onclick = (e) => {
+        e.preventDefault();
+        if (run.challenge?.forcedLoadout) {
+          run.loadout = { ...run.challenge.forcedLoadout };
+        } else {
+          run.loadout = {};
+        }
+        refreshLoadout();
+      };
+    }
   }
 
   function refreshLoadout() {
@@ -590,11 +656,14 @@ export function renderScout(root, ctx) {
 
   root.querySelector('#btn-to-setup').onclick = () => {
     hideMonsterTip(true);
-    let clean = sanitizeLoadout(run.loadout, vault, loadoutRefCap(map), run.level);
+    let clean = sanitizeLoadout(run.loadout, vault, loadoutRefCap(map), run.level, poolMult);
     if (run.mode === 'challenge' && run.challenge) {
-      clean = sanitizeChallengeLoadout(run.challenge, clean);
+      if (lockLoadout && run.challenge.forcedLoadout) {
+        clean = { ...run.challenge.forcedLoadout };
+      } else {
+        clean = sanitizeChallengeLoadout(run.challenge, clean);
+      }
       const check = validateChallengeLoadout(run.challenge, clean, []);
-      // minLowStar bắt lúc start trận; maxUnits bắt lúc đặt sân
       const blocking = (check.errors || []).filter(
         (e) => !e.startsWith('Cần ≥') && !e.includes('unit trên sân')
       );
@@ -776,7 +845,11 @@ export function renderSetup(root, ctx) {
         const trap = m.tags?.includes('trap');
         const src = monsterSpriteUrl(id, m.color, m.rarity);
         const upLv = getMonsterUpgradeLevel(state, id);
-        const stageLv = run.level || state.dungeonLevel || 1;
+        const stageLv =
+      run.scaleLevel ||
+      (run.mode === 'challenge' ? 30 + (run.challengeId || run.level || 1) : run.level) ||
+      state.dungeonLevel ||
+      1;
         const st = displayMonsterStats(m, upLv, stageLv);
         return `
           <button type="button" class="tray-item ${selectedId === id ? 'selected' : ''}" data-mid="${id}" draggable="true">

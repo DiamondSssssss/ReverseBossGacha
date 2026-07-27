@@ -1,4 +1,4 @@
-import { compileMap } from './maps.js?v=90';
+import { compileMap } from './maps.js?v=92';
 
 function M(id, name, costCap, tiles, extras = {}) {
   return { id, name, costCap, tiles, ...extras };
@@ -8,7 +8,7 @@ const RAW_CHALLENGE_MAPS = {
   ch01: M(
     'ch01',
     'Hẻm Ướt',
-    8,
+    16,
     [
       '##############',
       '#~~~~~~~~~~~~#',
@@ -26,13 +26,13 @@ const RAW_CHALLENGE_MAPS = {
         { cells: ['10,3', '10,4'], side: 'hero', kind: 'HEAL_TICK', value: 4 },
         { cells: ['6,2', '6,5'], side: 'monster', kind: 'ATK_UP', value: 1.2 },
       ],
-      treasureHp: 100,
+      treasureHp: 140,
     }
   ),
   ch02: M(
     'ch02',
     'Lò Dầu',
-    7,
+    15,
     [
       '##############',
       '###........###',
@@ -54,7 +54,7 @@ const RAW_CHALLENGE_MAPS = {
   ch03: M(
     'ch03',
     'Mê Cung Soi',
-    9,
+    18,
     [
       '##############',
       '#dd##..##dd..#',
@@ -76,7 +76,7 @@ const RAW_CHALLENGE_MAPS = {
   ch04: M(
     'ch04',
     'Đấu Trường Trống',
-    10,
+    16,
     [
       '##############',
       '#............#',
@@ -95,7 +95,7 @@ const RAW_CHALLENGE_MAPS = {
   ch05: M(
     'ch05',
     'Thuế Máu',
-    9,
+    18,
     [
       '##############',
       '#..##....##..#',
@@ -107,15 +107,15 @@ const RAW_CHALLENGE_MAPS = {
       '##############',
     ],
     {
-      tip: 'Kho máu thấp — tránh mythic tax. Thắng nhanh.',
-      treasureHp: 55,
+      tip: 'Kho máu thấp — cấm utility. Sống sót dưới áp lực.',
+      treasureHp: 95,
       buffs: [{ cells: ['5,3', '5,4'], side: 'monster', kind: 'ATK_UP', value: 1.2 }],
     }
   ),
   ch06: M(
     'ch06',
     'Cấm Địa Trần',
-    8,
+    15,
     [
       '##############',
       '#llllllllllll#',
@@ -134,7 +134,7 @@ const RAW_CHALLENGE_MAPS = {
   ch07: M(
     'ch07',
     'Dây Rối',
-    10,
+    17,
     [
       '##############',
       '#....####....#',
@@ -156,7 +156,7 @@ const RAW_CHALLENGE_MAPS = {
   ch08: M(
     'ch08',
     'Hiến Tế Thử',
-    12,
+    20,
     [
       '##############',
       '#............#',
@@ -175,7 +175,7 @@ const RAW_CHALLENGE_MAPS = {
   ch09: M(
     'ch09',
     'Im Lặng Pháp',
-    10,
+    19,
     [
       '##############',
       '#............#',
@@ -197,7 +197,7 @@ const RAW_CHALLENGE_MAPS = {
   ch10: M(
     'ch10',
     'Toàn Tập',
-    11,
+    22,
     [
       '################',
       '#~~..ff..ii..pp#',
@@ -209,13 +209,13 @@ const RAW_CHALLENGE_MAPS = {
       '################',
     ],
     {
-      tip: 'Đa nguyên tố — ≥4 unit ≤3★, ≤1 Mythic, ≤1 Legendary.',
+      tip: 'Đa nguyên tố — ≥5 unit ≤3★, ≤1 Mythic, ≤1 Legendary.',
       buffs: [
         { cells: ['2,3', '2,4'], side: 'monster', kind: 'ATK_UP', value: 1.15 },
         { cells: ['8,3', '8,4'], side: 'monster', kind: 'DEF_UP', value: 1.15 },
         { cells: ['13,3', '13,4'], side: 'hero', kind: 'HEAL_TICK', value: 3 },
       ],
-      treasureHp: 90,
+      treasureHp: 130,
     }
   ),
 };

@@ -1,5 +1,5 @@
-import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=90';
-import { BOSS_FIGHT_STAGES } from '../data/constants.js?v=90';
+import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=92';
+import { BOSS_FIGHT_STAGES } from '../data/constants.js?v=92';
 
 /**
  * Pool mang vào ải = bội số Cap map.
@@ -24,9 +24,12 @@ export function loadoutPoolMultForLevel(level) {
 }
 
 /** Pool cost tối đa mang vào ải (3× hoặc 5× Cap map theo ải). */
-export function loadoutMaxPoolCost(costCap, level) {
+export function loadoutMaxPoolCost(costCap, level, poolMultOverride) {
   const cap = Math.max(1, Number(costCap) || 1);
-  const mult = loadoutPoolMultForLevel(level);
+  const mult =
+    poolMultOverride != null
+      ? Math.max(1, Number(poolMultOverride) || 1)
+      : loadoutPoolMultForLevel(level);
   return Math.max(cap, Math.floor(cap * mult));
 }
 
@@ -68,7 +71,7 @@ export function loadoutFingerprint(loadout) {
  * Chuẩn hóa loadout theo kho + pool ≤ maxPool (không giới hạn số loại).
  * @returns {{ [id: string]: number }}
  */
-export function sanitizeLoadout(loadout, inventory, costCap = Infinity, level) {
+export function sanitizeLoadout(loadout, inventory, costCap = Infinity, level, poolMultOverride) {
   const out = {};
   if (!loadout) return out;
   for (const [id, n] of Object.entries(loadout)) {
@@ -77,7 +80,9 @@ export function sanitizeLoadout(loadout, inventory, costCap = Infinity, level) {
     const take = Math.min(Math.max(0, Math.floor(Number(n) || 0)), have);
     if (take > 0) out[id] = take;
   }
-  const maxPool = Number.isFinite(costCap) ? loadoutMaxPoolCost(costCap, level) : Infinity;
+  const maxPool = Number.isFinite(costCap)
+    ? loadoutMaxPoolCost(costCap, level, poolMultOverride)
+    : Infinity;
   if (Number.isFinite(maxPool)) {
     while (loadoutPoolCost(out) > maxPool) {
       const ranked = Object.keys(out)
@@ -95,8 +100,8 @@ export function sanitizeLoadout(loadout, inventory, costCap = Infinity, level) {
 /**
  * Gợi ý loadout: ưu tiên utility/trap, nhiều loại tùy ý, tổng Cost ≤ pool.
  */
-export function suggestLoadout(inventory, costCap, level) {
-  const maxPool = loadoutMaxPoolCost(costCap, level);
+export function suggestLoadout(inventory, costCap, level, poolMultOverride) {
+  const maxPool = loadoutMaxPoolCost(costCap, level, poolMultOverride);
   const owned = MONSTERS.filter((m) => (inventory[m.id] || 0) > 0).sort((a, b) => {
     const score = (m) => {
       let s = 0;
@@ -137,14 +142,17 @@ export function suggestLoadout(inventory, costCap, level) {
  * Thêm 1 copy vào loadout nếu còn slot kho + pool Cost.
  * @returns {{ ok: boolean, reason?: string, loadout: object }}
  */
-export function tryAddToLoadout(loadout, inventory, monsterId, costCap, level) {
+export function tryAddToLoadout(loadout, inventory, monsterId, costCap, level, poolMultOverride) {
   const m = MONSTER_BY_ID[monsterId];
   if (!m) return { ok: false, reason: 'Quái không tồn tại', loadout };
   const have = inventory[monsterId] || 0;
   const cur = loadout[monsterId] || 0;
   if (cur >= have) return { ok: false, reason: 'Hết số lượng trong kho', loadout };
-  const mult = loadoutPoolMultForLevel(level);
-  const maxPool = loadoutMaxPoolCost(costCap, level);
+  const mult =
+    poolMultOverride != null
+      ? Math.max(1, Number(poolMultOverride) || 1)
+      : loadoutPoolMultForLevel(level);
+  const maxPool = loadoutMaxPoolCost(costCap, level, poolMultOverride);
   const pool = loadoutPoolCost(loadout);
   if (pool + m.cost > maxPool) {
     return {

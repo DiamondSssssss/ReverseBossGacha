@@ -5,9 +5,9 @@ import {
   unlockHintChallenge,
   titleName,
   syncChallengeUnlocks,
-} from '../core/challenge.js?v=90';
-import { saveState } from '../core/storage.js?v=90';
-import { CHALLENGE_TITLES } from '../data/challenges.js?v=90';
+} from '../core/challenge.js?v=92';
+import { saveState } from '../core/storage.js?v=92';
+import { CHALLENGE_TITLES } from '../data/challenges.js?v=92';
 
 export function renderChallenges(root, ctx) {
   const { state, go, toast, startChallenge } = ctx;
@@ -26,7 +26,7 @@ export function renderChallenges(root, ctx) {
       <div>
         <p class="section-label">Chế độ Thử Thách</p>
         <h2 style="margin:0 0 8px;font-family:Fraunces,serif">10 ải puzzle</h2>
-        <p class="muted" style="margin:0 0 16px">Mở theo tiến độ. Thưởng Title độc bản.</p>
+        <p class="muted" style="margin:0 0 16px">Mở từ ải thường ≥30. Mỗi màn chủ đề riêng, wave dài, thưởng Title độc bản.</p>
         <div class="boss-picker" id="ch-list">
           ${CHALLENGES.map((c) => {
             const unlocked = isChallengeUnlocked(state, c.id);
@@ -40,7 +40,10 @@ export function renderChallenges(root, ctx) {
                 </div>
                 <div class="meta">${c.blurb}</div>
                 ${!unlocked ? `<div class="boss-lock-hint">${unlockHintChallenge(c, state)}</div>` : ''}
-                <div class="boss-spells"><span class="boss-spell">${CHALLENGE_TITLES[c.reward?.titleId]?.name || ''}</span></div>
+                <div class="boss-spells">
+                  <span class="boss-spell">${(c.wave?.squads || []).reduce((n, s) => n + (s.ids?.length || 0), 0) || c.wave?.ids?.length || 0} hero · Cap ${c.costCap || '—'}</span>
+                  <span class="boss-spell">${CHALLENGE_TITLES[c.reward?.titleId]?.name || ''}</span>
+                </div>
               </button>`;
           }).join('')}
         </div>
