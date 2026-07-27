@@ -150,3 +150,14 @@
     min-width: 130px;
   }
 }
+
+.account-admin-tag {
+  font-size: 0.62rem;
+  font-weight: 800;
+  background: #4527a0;
+  color: #fff;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-left: 4px;
+  vertical-align: middle;
+}

@@ -1,5 +1,5 @@
-import { getHeroProfile } from './profiles.js?v=77';
-import { scoreMonsterForHero, dist } from './targeting.js?v=77';
+import { getHeroProfile } from './profiles.js?v=78';
+import { scoreMonsterForHero, dist } from './targeting.js?v=78';
 import {
   ensureHeroSkillState,
   tryActivateShield,
@@ -7,9 +7,9 @@ import {
   tickStealthRegen,
   tryHealAlly,
   applySlow,
-} from './skills.js?v=77';
-import { findPath, findPathAway, buildBlockedFromMap } from '../pathfinding.js?v=77';
-import { SPELLS } from '../../data/constants.js?v=77';
+} from './skills.js?v=78';
+import { findPath, findPathAway, buildBlockedFromMap } from '../pathfinding.js?v=78';
+import { SPELLS } from '../../data/constants.js?v=78';
 
 /**
  * Decide hero combat intent for this frame.

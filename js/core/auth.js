@@ -1,4 +1,4 @@
-import { apiUrl } from '../config.js?v=77';
+import { apiUrl } from '../config.js?v=78';
 
 const TOKEN_KEY = 'rbg_token';
 const USER_KEY = 'rbg_user';
@@ -31,6 +31,10 @@ export function getUser() {
 
 export function isLoggedIn() {
   return !!currentUser && !!getToken();
+}
+
+export function isAdmin() {
+  return !!currentUser?.isAdmin;
 }
 
 export function onAuthChange(fn) {

@@ -1,15 +1,32 @@
-import { REDEEM_CODES, normalizeRedeemCode } from '../data/redeemCodes.js?v=77';
-import { saveState } from './storage.js?v=77';
+import { REDEEM_CODES, normalizeRedeemCode } from '../data/redeemCodes.js?v=78';
+import { saveState, applySaveData } from './storage.js?v=78';
+import { isLoggedIn } from './auth.js?v=78';
+import { redeemCodeServer } from './adminApi.js?v=78';
 
 /**
- * @returns {{ ok: boolean, reason?: string, reward?: object, label?: string }}
+ * @returns {Promise<{ ok: boolean, reason?: string, reward?: object, label?: string }>}
  */
-export function tryRedeemCode(state, rawCode) {
+export async function tryRedeemCode(state, rawCode) {
   const code = normalizeRedeemCode(rawCode);
   if (!code) return { ok: false, reason: 'Nhập mã quà' };
 
+  if (isLoggedIn()) {
+    try {
+      const res = await redeemCodeServer(code);
+      if (res.ok && res.save) {
+        applySaveData(state, res.save);
+        saveState(state, { syncCloud: false });
+      } else if (res.ok) {
+        saveState(state);
+      }
+      return res;
+    } catch (e) {
+      return { ok: false, reason: e.message || 'Lỗi đổi mã' };
+    }
+  }
+
   const def = REDEEM_CODES[code];
-  if (!def) return { ok: false, reason: 'Mã không hợp lệ' };
+  if (!def) return { ok: false, reason: 'Mã không hợp lệ (Guest: chỉ mã tĩnh; đăng nhập để dùng mã server)' };
 
   if (!state.redeemedCodes) state.redeemedCodes = [];
   if (state.redeemedCodes.includes(def.id)) {

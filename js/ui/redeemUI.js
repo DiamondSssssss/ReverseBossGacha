@@ -1,5 +1,5 @@
-import { tryRedeemCode, formatRedeemReward } from '../core/redeem.js?v=77';
-import { saveState } from '../core/storage.js?v=77';
+import { tryRedeemCode, formatRedeemReward } from '../core/redeem.js?v=78';
+import { saveState } from '../core/storage.js?v=78';
 
 export function showRedeemModal(modalEl, { state, toast, refreshChrome }) {
   if (!modalEl) return;
@@ -33,11 +33,16 @@ export function showRedeemModal(modalEl, { state, toast, refreshChrome }) {
   const input = modalEl.querySelector('#redeem-code');
   input.focus();
 
-  modalEl.querySelector('#redeem-form').onsubmit = (e) => {
+  modalEl.querySelector('#redeem-form').onsubmit = async (e) => {
     e.preventDefault();
     const errEl = modalEl.querySelector('#redeem-error');
+    const btn = modalEl.querySelector('#redeem-submit');
     errEl.hidden = true;
-    const res = tryRedeemCode(state, input.value);
+    btn.disabled = true;
+    btn.textContent = 'Đang xử lý…';
+    const res = await tryRedeemCode(state, input.value);
+    btn.disabled = false;
+    btn.textContent = 'Nhận thưởng';
     if (!res.ok) {
       errEl.hidden = false;
       errEl.textContent = res.reason || 'Không nhận được';

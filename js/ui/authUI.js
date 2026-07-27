@@ -1,17 +1,18 @@
-import { signIn, signUp, signOut, getUser } from '../core/auth.js?v=77';
-import { pullCloudSave, pushCloudSave, pickBetterSave } from '../core/cloudSave.js?v=77';
-import { applySaveData, saveState, saveStateNow } from '../core/storage.js?v=77';
-import { showRedeemModal } from './redeemUI.js?v=77';
+import { signIn, signUp, signOut, getUser } from '../core/auth.js?v=78';
+import { pullCloudSave, pushCloudSave, pickBetterSave } from '../core/cloudSave.js?v=78';
+import { applySaveData, saveState, saveStateNow } from '../core/storage.js?v=78';
+import { showRedeemModal } from './redeemUI.js?v=78';
 
-export function renderAccountBar({ accountEl, modalEl, state, toast, onSaveLoaded, refreshChrome }) {
+export function renderAccountBar({ accountEl, modalEl, state, toast, onSaveLoaded, refreshChrome, go }) {
   const user = getUser();
 
   if (user) {
     const label = user.displayName || user.username || 'Account';
+    const adminBadge = user.isAdmin ? ' <span class="account-admin-tag">Admin</span>' : '';
     accountEl.innerHTML = `
       <button type="button" class="account-btn in" id="btn-account" title="@${escapeHtml(user.username || '')}">
         <span class="account-dot"></span>
-        ${escapeHtml(label)}
+        ${escapeHtml(label)}${adminBadge}
       </button>`;
     accountEl.querySelector('#btn-account').onclick = () =>
       showAccountMenu(modalEl, {
@@ -19,8 +20,9 @@ export function renderAccountBar({ accountEl, modalEl, state, toast, onSaveLoade
         toast,
         onSaveLoaded,
         refreshChrome,
+        go,
         renderBar: () =>
-          renderAccountBar({ accountEl, modalEl, state, toast, onSaveLoaded, refreshChrome }),
+          renderAccountBar({ accountEl, modalEl, state, toast, onSaveLoaded, refreshChrome, go }),
       });
   } else {
     accountEl.innerHTML = `
@@ -31,8 +33,9 @@ export function renderAccountBar({ accountEl, modalEl, state, toast, onSaveLoade
         toast,
         onSaveLoaded,
         refreshChrome,
+        go,
         renderBar: () =>
-          renderAccountBar({ accountEl, modalEl, state, toast, onSaveLoaded, refreshChrome }),
+          renderAccountBar({ accountEl, modalEl, state, toast, onSaveLoaded, refreshChrome, go }),
       });
   }
 }
@@ -128,6 +131,9 @@ function showAuthModal(modalEl, ctx) {
       await syncAfterLogin(ctx);
       ctx.renderBar();
       ctx.refreshChrome();
+      if (res.user?.isAdmin && ctx.go) {
+        ctx.go('admin');
+      }
     };
   }
 
@@ -143,6 +149,7 @@ function showAccountMenu(modalEl, ctx) {
       <p class="muted">@${escapeHtml(user?.username || '')}</p>
       <p class="muted">Tiến trình đồng bộ lên server khi bạn chơi.</p>
       <div class="auth-form">
+        ${user?.isAdmin ? '<button type="button" class="primary" id="btn-admin-dash">Dashboard Admin</button>' : ''}
         <button type="button" class="primary" id="btn-sync-now">Đồng bộ ngay</button>
         <button type="button" id="btn-pull">Tải save từ server</button>
         <button type="button" id="btn-redeem-code">Nhập mã quà</button>
@@ -155,6 +162,11 @@ function showAccountMenu(modalEl, ctx) {
     modalEl.classList.remove('show');
     modalEl.innerHTML = '';
   };
+  modalEl.querySelector('#btn-admin-dash')?.addEventListener('click', () => {
+    modalEl.classList.remove('show');
+    modalEl.innerHTML = '';
+    ctx.go?.('admin');
+  });
   modalEl.querySelector('#btn-redeem-code').onclick = () => {
     showRedeemModal(modalEl, {
       state: ctx.state,
