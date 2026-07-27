@@ -1,4 +1,4 @@
-import { isAdmin } from '../core/auth.js?v=96';
+import { isAdmin } from '../core/auth.js?v=100';
 import {
   fetchAdminStats,
   fetchAdminUsers,
@@ -9,8 +9,8 @@ import {
   createRedeemCodeAdmin,
   updateRedeemCodeAdmin,
   deleteRedeemCodeAdmin,
-} from '../core/adminApi.js?v=96';
-import { formatRedeemReward } from '../core/redeem.js?v=96';
+} from '../core/adminApi.js?v=100';
+import { formatRedeemReward } from '../core/redeem.js?v=100';
 
 function esc(s) {
   return String(s ?? '')

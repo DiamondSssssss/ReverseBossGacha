@@ -1,4 +1,4 @@
-import { MAX_STAGE } from './constants.js?v=96';
+import { MAX_STAGE } from './constants.js?v=100';
 
 /** @typedef {'normal' | 'hard'} StageMode */
 

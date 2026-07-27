@@ -1,17 +1,17 @@
-import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=96';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=96';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=96';
-import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=96';
-import { mapUsedCost } from './dungeon.js?v=96';
-import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=96';
-import { ParticleSystem } from '../render/particles.js?v=96';
+import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=100';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=100';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=100';
+import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=100';
+import { mapUsedCost } from './dungeon.js?v=100';
+import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=100';
+import { ParticleSystem } from '../render/particles.js?v=100';
 import {
   getMonsterSprite,
   getHeroSprite,
   drawSpriteAt,
-} from '../render/sprites.js?v=96';
-import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=96';
-import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=96';
+} from '../render/sprites.js?v=100';
+import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=100';
+import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=100';
 import {
   computeHeroAttackDamage,
   applyIncomingDamage,
@@ -19,6 +19,9 @@ import {
   applyOnHitStatuses,
   applyBurn,
   applyPoison,
+  computeBurnDps,
+  computePoisonDps,
+  dotKitHitMul,
   applyFreeze,
   applyStun,
   applySlow,
@@ -42,10 +45,10 @@ import {
   tryActivateMonsterShield,
   tryMonsterTauntSelf,
   ensureHeroSkillState,
-} from './ai/skills.js?v=96';
-import { getTileModifiers, spawnMonsterStats, elementAuraActive, elementAuraTag } from './ai/tileModifiers.js?v=96';
-import { dist } from './ai/targeting.js?v=96';
-import { getHeroProfile } from './ai/profiles.js?v=96';
+} from './ai/skills.js?v=100';
+import { getTileModifiers, spawnMonsterStats, elementAuraActive, elementAuraTag } from './ai/tileModifiers.js?v=100';
+import { dist } from './ai/targeting.js?v=100';
+import { getHeroProfile } from './ai/profiles.js?v=100';
 import {
   patternForHero,
   patternForMonster,
@@ -53,7 +56,7 @@ import {
   tickAttack,
   ensureAttackState,
   resolveDisplayAnim,
-} from './ai/attackPatterns.js?v=96';
+} from './ai/attackPatterns.js?v=100';
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
@@ -1053,9 +1056,9 @@ export class CombatEngine {
       const mCell = this._unitCell(m);
       const mKey = `${mCell.col},${mCell.row}`;
       if (this.map.hazard?.has(mKey)) {
-        const hzDmg = 8 * dt;
+        const hzDmg = 12 * dt;
         m.hp -= hzDmg;
-        applyBurn(m, this.time, { dps: 10, duration: 2 });
+        applyBurn(m, this.time, { dps: 16, duration: 2.4 });
         m._hazardVfxCd = (m._hazardVfxCd || 0) - dt;
         if (m._hazardVfxCd <= 0) {
           m._hazardVfxCd = 0.38;
@@ -1204,10 +1207,10 @@ export class CombatEngine {
       else h.tileDefMul = 1;
       const terr = this.map.terrain[`${col},${row}`];
       if (terr === 'FIRE' && Math.random() < dt * 1.2) {
-        applyBurn(h, this.time, { dps: 7, duration: 1.2 });
+        applyBurn(h, this.time, { dps: 14, duration: 1.6 });
       }
       if (terr === 'POISON' && Math.random() < dt * 1.0) {
-        applyPoison(h, this.time, { dps: 6, duration: 1.5 });
+        applyPoison(h, this.time, { dps: 12, duration: 2.0 });
       }
     }
     for (const m of this.monsters) {
@@ -1243,10 +1246,10 @@ export class CombatEngine {
       }
       const terr = this.map.terrain[`${col},${row}`];
       if (terr === 'FIRE' && Math.random() < dt * 1.1) {
-        applyBurn(m, this.time, { dps: 8, duration: 1.4 });
+        applyBurn(m, this.time, { dps: 14, duration: 1.8 });
       }
       if (terr === 'POISON' && Math.random() < dt * 0.95) {
-        applyPoison(m, this.time, { dps: 7, duration: 1.6 });
+        applyPoison(m, this.time, { dps: 12, duration: 2.0 });
       }
     }
 
@@ -1280,8 +1283,15 @@ export class CombatEngine {
       for (const h of this.heroes) {
         if (!h.alive) continue;
         if (dist(h, m) > r) continue;
-        applyPoison(h, this.time, { dps: 14, duration: 4.5 });
-        this._float(h.x, h.y - 10, 'Độc văng!', '#9ccc65');
+        const fromAtk = Math.max(36, computePoisonDps(m, { dedicated: true }));
+        const fromHp = Math.round((h.maxHp || 0) * 0.04);
+        const poisonDps = Math.max(fromAtk, fromHp);
+        const burst = Math.round(m.atk * 0.9 + (h.maxHp || 0) * 0.1);
+        let dmg = applyIncomingDamage(h, burst, this.time);
+        dmg = Math.round(dmg / (h.tileDefMul || 1));
+        h.hp -= dmg;
+        applyPoison(h, this.time, { dps: poisonDps, duration: 6.5 });
+        this._float(h.x, h.y - 10, `Độc -${dmg}`, '#9ccc65');
         this.particles.poison?.(h.x, h.y);
       }
       this._float(m.x, m.y - 12, 'NỔ ĐỘC!', m.color);
@@ -1455,22 +1465,29 @@ export class CombatEngine {
       }
       // also apply burn on nearby heroes occasionally
       if (Math.random() < dt * 0.8) {
+        const burnDps = computeBurnDps(m, { dedicated: true });
         for (const h of this.heroes) {
           if (!h.alive) continue;
-          if (dist(h, m) < m.range * 0.9) applyBurn(h, this.time, { dps: 12, duration: 2 });
+          if (dist(h, m) < m.range * 0.9) applyBurn(h, this.time, { dps: burnDps, duration: 2.4 });
         }
       }
     }
     if (m.passive === 'MYTHIC_TOXIN') {
       const r = this.CELL * 2.2;
+      // Drawback: %maxHp như mythic khác (không còn flat 4 HP/s)
       for (const ally of this.monsters) {
         if (!ally.alive || ally === m || ally.isTrap) continue;
         if (dist(ally, m) > r) continue;
-        ally.hp -= 4 * dt;
+        ally.hp -= Math.max(8, ally.maxHp * 0.012) * dt;
+        if (ally.hp <= 0) {
+          ally.alive = false;
+          this._onMonsterDeath(ally, null);
+        }
       }
+      const poisonDps = computePoisonDps(m, { dedicated: true });
       for (const h of this.heroes) {
         if (!h.alive) continue;
-        if (dist(h, m) < m.range) applyPoison(h, this.time, { dps: 10, duration: 2.5 });
+        if (dist(h, m) < m.range) applyPoison(h, this.time, { dps: poisonDps, duration: 2.8 });
       }
     }
     if (m.passive === 'MYTHIC_STASIS') {
@@ -1681,9 +1698,9 @@ export class CombatEngine {
 
       const hz = this._unitCell(hero);
       if (this.map.hazard?.has(`${hz.col},${hz.row}`)) {
-        const hzDmg = 6 * dt;
+        const hzDmg = 10 * dt;
         hero.hp -= hzDmg;
-        applyBurn(hero, this.time, { dps: 8, duration: 1.8 });
+        applyBurn(hero, this.time, { dps: 14, duration: 2.2 });
         hero._hazardVfxCd = (hero._hazardVfxCd || 0) - dt;
         if (hero._hazardVfxCd <= 0) {
           hero._hazardVfxCd = 0.4;
@@ -1921,7 +1938,9 @@ export class CombatEngine {
 
   _triggerTrap(m, hero) {
     const fx = TRAP_EFFECTS[m.passive] || TRAP_EFFECTS.TRAP_SPIKE;
-    let raw = Math.round(m.atk * (fx.dmgMul ?? 1));
+    const fromAtk = Math.round(m.atk * (fx.dmgMul ?? 1));
+    const fromHp = Math.round((hero.maxHp || hero.hp || 0) * (fx.hpRatio ?? 0));
+    let raw = fromAtk + fromHp;
     let dmg = applyIncomingDamage(hero, raw, this.time);
     dmg = Math.round(dmg / (hero.tileDefMul || 1));
     hero.hp -= dmg;
@@ -1943,12 +1962,18 @@ export class CombatEngine {
 
     if (fx.kind === 'slow') applySlow(hero, this.time, { factor: fx.slowFactor, duration: fx.slowDur });
     if (fx.kind === 'burn') {
-      applyBurn(hero, this.time, { dps: fx.burnDps, duration: fx.burnDur });
+      const fromAtkDot = Math.max(fx.burnDps || 32, computeBurnDps(m, { dedicated: true }));
+      const fromHpDot = Math.round((hero.maxHp || 0) * (fx.burnHpRatio || 0));
+      const burnDps = Math.max(fromAtkDot, fromHpDot);
+      applyBurn(hero, this.time, { dps: burnDps, duration: fx.burnDur });
       this.particles.burn?.(hero.x, hero.y);
       this._floatStatusOnce(hero, 'burn', 'ĐỐT', '#ff7043');
     }
     if (fx.kind === 'poison') {
-      applyPoison(hero, this.time, { dps: fx.poisonDps, duration: fx.poisonDur });
+      const fromAtkDot = Math.max(fx.poisonDps || 28, computePoisonDps(m, { dedicated: true }));
+      const fromHpDot = Math.round((hero.maxHp || 0) * (fx.poisonHpRatio || 0));
+      const poisonDps = Math.max(fromAtkDot, fromHpDot);
+      applyPoison(hero, this.time, { dps: poisonDps, duration: fx.poisonDur });
       this.particles.poison?.(hero.x, hero.y);
       this._floatStatusOnce(hero, 'poison', 'ĐỘC', '#9ccc65');
     }
@@ -2559,6 +2584,8 @@ export class CombatEngine {
     m.flash = 0.16;
     this.particles.hit(hero.x, hero.y, elemColor);
     let dmg = m.atk;
+    const hitMul = dotKitHitMul(m);
+    if (hitMul < 1) dmg = Math.round(dmg * hitMul);
 
     // Mythic hiến tế — nuốt ally gần (ưu tiên cost thấp) để amplify đòn
     if (m.passive === 'MYTHIC_BLOOD_TITHE') {

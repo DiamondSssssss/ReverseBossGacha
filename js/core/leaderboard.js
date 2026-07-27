@@ -1,4 +1,4 @@
-import { apiUrl } from '../config.js?v=96';
+import { apiUrl } from '../config.js?v=100';
 
 async function publicApi(path) {
   const res = await fetch(apiUrl(path));

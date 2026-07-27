@@ -66,11 +66,11 @@ export const PASSIVE_INFO = {
   },
   POISON_ON_HIT: {
     name: 'Độc khi đánh',
-    desc: 'Đánh trúng: độc 9 máu/giây trong 4 giây (tổng ~36). Làm mới thời gian nếu đánh lại.',
+    desc: 'Đánh trúng: độc theo ATK (~16% ATK + 6/giây, tối thiểu 9). Kit độc: ~42% ATK + 12/giây, tối thiểu 14, kéo dài 5s. Đòn đánh ×0.55 — độc là chính.',
   },
   BURN_ON_HIT: {
     name: 'Đốt khi đánh',
-    desc: 'Đánh trúng: đốt 10 máu/giây trong 3.2 giây (5★: 14/giây). Tổng ~32–45.',
+    desc: 'Đánh trúng: cháy theo ATK (~14% ATK + 6/giây, tối thiểu 10). Mage/kit lửa: ~34% ATK + 12/giây, tối thiểu 16, kéo dài 4s. Đòn đánh ×0.55 — thiên DoT.',
   },
   SILENCE_ON_HIT: {
     name: 'Câm chú',
@@ -130,7 +130,7 @@ export const PASSIVE_INFO = {
   },
   POTION_POISON: {
     name: 'Bình độc văng',
-    desc: 'Đặt xuống → sau ~1s nổ: độc Heroes trong bán kính (~14 máu/giây ×4.5s). Own ×1.',
+    desc: 'Đặt → ~1s nổ: burst (~90% ATK + 10% maxHp) + độc max(ATK-scale, 4% maxHp/s) ×6.5s trong vùng. Own ×1.',
   },
   POTION_HEAL: {
     name: 'Bình hồi văng',
@@ -170,11 +170,11 @@ export const PASSIVE_INFO = {
   },
   RANGED_POISON: {
     name: 'Tầm xa độc',
-    desc: 'Bắn tầm xa: độc 9 máu/giây trong 4 giây (tổng ~36).',
+    desc: 'Bắn tầm xa: độc mạnh theo ATK (~42% ATK + 12/giây, tối thiểu 14) trong 5 giây. Đòn hit ×0.55 — độc là sát thương chính.',
   },
   RANGED_BURN: {
     name: 'Tầm xa lửa',
-    desc: 'Bắn tầm xa: đốt 10 máu/giây trong 3.2 giây (5★: 14/giây).',
+    desc: 'Bắn tầm xa: cháy mạnh theo ATK (~34% ATK + 12/giây, tối thiểu 16) trong 4 giây. Đòn hit ×0.55.',
   },
   RANGED_VOLLEY: {
     name: 'Volley',
@@ -182,27 +182,27 @@ export const PASSIVE_INFO = {
   },
   TRAP_SPIKE: {
     name: 'Bẫy gai',
-    desc: 'Hero giẫm: nhận 100% ATK bẫy rồi bẫy biến mất.',
+    desc: 'Hero giẫm: 150% ATK bẫy + 14% maxHp rồi bẫy biến mất.',
   },
   TRAP_SLOW: {
     name: 'Bẫy dầu',
-    desc: 'Giẫm: 45% ATK + tốc độ còn 40% trong 3.5 giây. Bẫy biến mất.',
+    desc: 'Giẫm: 85% ATK + 7% maxHp; tốc độ còn 35% trong 4 giây. Bẫy biến mất.',
   },
   TRAP_BURN: {
     name: 'Bẫy lửa',
-    desc: 'Giẫm: 55% ATK + đốt 14 máu/giây trong 4 giây (tổng ~56). Bẫy biến mất.',
+    desc: 'Giẫm: 65% ATK + 9% maxHp; đốt max(ATK-scale, 4% maxHp/s) trong 5.5 giây. Bẫy biến mất.',
   },
   TRAP_POISON: {
     name: 'Bẫy độc',
-    desc: 'Giẫm: 40% ATK + độc 11 máu/giây trong 5 giây (tổng ~55). Bẫy biến mất.',
+    desc: 'Giẫm: 55% ATK + 8% maxHp; độc max(ATK-scale, 3.5% maxHp/s) trong 7 giây. Bẫy biến mất.',
   },
   TRAP_FREEZE: {
     name: 'Bẫy đóng băng',
-    desc: 'Giẫm: 35% ATK + đóng băng 1.6 giây. Bẫy biến mất.',
+    desc: 'Giẫm: 70% ATK + 9% maxHp + đóng băng 1.9 giây. Bẫy biến mất.',
   },
   TRAP_STUN: {
     name: 'Bẫy choáng',
-    desc: 'Giẫm: 50% ATK + choáng 1.3 giây. Bẫy biến mất.',
+    desc: 'Giẫm: 90% ATK + 11% maxHp + choáng 1.55 giây. Bẫy biến mất.',
   },
   SHIELD: {
     name: 'Khiên',
@@ -242,11 +242,11 @@ export const PASSIVE_INFO = {
   },
   MYTHIC_INFERNO: {
     name: 'Địa ngục (Mythic)',
-    desc: 'Không đứng ô lửa: tự cháy 1% maxHp/giây. Gần Hero: đốt 12 máu/giây ×2 giây (theo nhịp).',
+    desc: 'Không đứng ô lửa: tự cháy 1% maxHp/giây. Gần Hero: đốt theo ATK (kit lửa) ×2.4 giây theo nhịp.',
   },
   MYTHIC_TOXIN: {
     name: 'Độc vương (Mythic)',
-    desc: 'Độc tầm xa mạnh. Drawback: đồng minh trong 2.2 ô mất 4 HP/giây; Hero trong tầm dính độc 10/giây ×2.5 giây.',
+    desc: 'Độc tầm xa mạnh theo ATK. Drawback: đồng minh trong 2.2 ô mất max(8, 1.2% maxHp)/giây; Hero trong tầm dính độc theo ATK ×2.8 giây.',
   },
   MYTHIC_STASIS: {
     name: 'Đóng băng thời gian (Mythic)',

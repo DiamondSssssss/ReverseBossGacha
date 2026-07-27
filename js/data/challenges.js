@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Challenge Mode — 10 ải cam go (mở từ ải thường ≥30).
  * Mỗi màn: chủ đề map + wave hero khớp + constraint riêng (không copy cùng 1 kiểu cấm).
  */

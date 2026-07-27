@@ -122,6 +122,77 @@ export function applyPoison(target, time, { dps = 8, duration = 4.5 } = {}) {
   target.poisonDps = Math.max(target.poisonDps || 0, dps);
 }
 
+/**
+ * DoT theo ATK để mid/late không tụt thành số flat.
+ * dedicated = quái/hero thiên độc·cháy (poison/burn kit chính).
+ */
+export function computeBurnDps(attacker, { dedicated = false } = {}) {
+  const atk = Math.max(0, Number(attacker?.atk) || 0);
+  const mageBoost = attacker?.class === 'MAGE' || attacker?.rarity >= 5;
+  if (dedicated || mageBoost) {
+    return Math.max(16, Math.round(atk * 0.34 + 12));
+  }
+  return Math.max(10, Math.round(atk * 0.14 + 6));
+}
+
+export function computePoisonDps(attacker, { dedicated = false } = {}) {
+  const atk = Math.max(0, Number(attacker?.atk) || 0);
+  if (dedicated) {
+    return Math.max(14, Math.round(atk * 0.42 + 12));
+  }
+  return Math.max(9, Math.round(atk * 0.16 + 6));
+}
+
+/** Kit độc/cháy: đòn đánh yếu — DoT mới là chính (vẫn scale DoT theo full ATK). */
+export function dotKitHitMul(attacker) {
+  const skills = attacker?.skills || [];
+  const p = attacker?.passive || '';
+  const hasPoison =
+    p === 'POISON_ON_HIT' ||
+    p === 'RANGED_POISON' ||
+    p === 'MYTHIC_TOXIN' ||
+    p === 'TRAP_POISON' ||
+    p === 'POTION_POISON' ||
+    skills.includes('POISON_ON_HIT');
+  const hasBurn =
+    p === 'BURN_ON_HIT' ||
+    p === 'RANGED_BURN' ||
+    p === 'MYTHIC_INFERNO' ||
+    p === 'TRAP_BURN' ||
+    skills.includes('BURN_ON_HIT') ||
+    skills.includes('AOE_FIRE');
+  if (hasPoison || hasBurn) return 0.55;
+  return 1;
+}
+
+export function isDedicatedBurnSource(attacker) {
+  const skills = attacker?.skills || [];
+  const p = attacker?.passive || '';
+  return (
+    p === 'BURN_ON_HIT' ||
+    p === 'RANGED_BURN' ||
+    p === 'MYTHIC_INFERNO' ||
+    p === 'TRAP_BURN' ||
+    skills.includes('AOE_FIRE') ||
+    skills.includes('BURN_ON_HIT') ||
+    attacker?.class === 'MAGE' ||
+    (attacker?.tags || []).includes('fire')
+  );
+}
+
+export function isDedicatedPoisonSource(attacker) {
+  const skills = attacker?.skills || [];
+  const p = attacker?.passive || '';
+  return (
+    p === 'RANGED_POISON' ||
+    p === 'MYTHIC_TOXIN' ||
+    p === 'TRAP_POISON' ||
+    p === 'POTION_POISON' ||
+    skills.includes('POISON_ON_HIT') ||
+    (attacker?.tags || []).includes('poison')
+  );
+}
+
 export function applyFreeze(target, time, duration = 1.2) {
   target.frozenUntil = Math.max(target.frozenUntil || 0, time + duration);
 }
@@ -259,6 +330,11 @@ export function computeHeroAttackDamage(hero, target, time) {
     return { dmg: Math.round(hero.atk * 0.35), silenced: true, isAoe: false };
   }
 
+  // Mage/DoT kit: đòn đánh thường thấp — burn/poison/AoE mới là trọng tâm
+  const hitMul = dotKitHitMul(hero);
+  if (hitMul < 1) dmg = Math.round(dmg * hitMul);
+  else if (hero.class === 'MAGE') dmg = Math.round(dmg * 0.72);
+
   if (skills.includes('BACKSTAB') || (hero.stealth && !hero.revealed)) {
     const approachingFromBehind =
       (hero.facing >= 0 && target.x >= hero.x) ||
@@ -334,12 +410,15 @@ export function applyOnHitStatuses(attacker, target, time, flags = {}) {
 
   const applied = [];
   if (burn) {
-    const dps = attacker.rarity >= 5 || attacker.class === 'MAGE' ? 14 : 10;
-    applyBurn(target, time, { dps, duration: 3.2 });
+    const dedicated = isDedicatedBurnSource(attacker);
+    const dps = computeBurnDps(attacker, { dedicated });
+    applyBurn(target, time, { dps, duration: dedicated ? 4.0 : 3.5 });
     applied.push('burn');
   }
   if (poison) {
-    applyPoison(target, time, { dps: 9, duration: 4 });
+    const dedicated = isDedicatedPoisonSource(attacker);
+    const dps = computePoisonDps(attacker, { dedicated });
+    applyPoison(target, time, { dps, duration: dedicated ? 5.0 : 4.2 });
     applied.push('poison');
   }
   if (freeze) {
@@ -377,12 +456,36 @@ export function applyOnHitStatuses(attacker, target, time, flags = {}) {
 }
 
 export const TRAP_EFFECTS = {
-  TRAP_SPIKE: { kind: 'spike', dmgMul: 1, consume: true },
-  TRAP_SLOW: { kind: 'slow', dmgMul: 0.45, slowFactor: 0.4, slowDur: 3.5, consume: true },
-  TRAP_BURN: { kind: 'burn', dmgMul: 0.55, burnDps: 14, burnDur: 4, consume: true },
-  TRAP_POISON: { kind: 'poison', dmgMul: 0.4, poisonDps: 11, poisonDur: 5, consume: true },
-  TRAP_FREEZE: { kind: 'freeze', dmgMul: 0.35, freezeDur: 1.6, consume: true },
-  TRAP_STUN: { kind: 'stun', dmgMul: 0.5, stunDur: 1.3, consume: true },
+  // hpRatio = % maxHp hero cộng vào hit; *HpRatio = % maxHp/s cho DoT (cộng với ATK-scale)
+  TRAP_SPIKE: { kind: 'spike', dmgMul: 1.5, hpRatio: 0.14, consume: true },
+  TRAP_SLOW: {
+    kind: 'slow',
+    dmgMul: 0.85,
+    hpRatio: 0.07,
+    slowFactor: 0.35,
+    slowDur: 4,
+    consume: true,
+  },
+  TRAP_BURN: {
+    kind: 'burn',
+    dmgMul: 0.65,
+    hpRatio: 0.09,
+    burnDps: 32,
+    burnDur: 5.5,
+    burnHpRatio: 0.04,
+    consume: true,
+  },
+  TRAP_POISON: {
+    kind: 'poison',
+    dmgMul: 0.55,
+    hpRatio: 0.08,
+    poisonDps: 28,
+    poisonDur: 7,
+    poisonHpRatio: 0.035,
+    consume: true,
+  },
+  TRAP_FREEZE: { kind: 'freeze', dmgMul: 0.7, hpRatio: 0.09, freezeDur: 1.9, consume: true },
+  TRAP_STUN: { kind: 'stun', dmgMul: 0.9, hpRatio: 0.11, stunDur: 1.55, consume: true },
 };
 
 export function isTrapPassive(passive) {
