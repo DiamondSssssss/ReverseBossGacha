@@ -1,17 +1,17 @@
-import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=71';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=71';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=71';
-import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=71';
-import { mapUsedCost } from './dungeon.js?v=71';
-import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=71';
-import { ParticleSystem } from '../render/particles.js?v=71';
+import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=74';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=74';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=74';
+import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=74';
+import { mapUsedCost } from './dungeon.js?v=74';
+import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=74';
+import { ParticleSystem } from '../render/particles.js?v=74';
 import {
   getMonsterSprite,
   getHeroSprite,
   drawSpriteAt,
-} from '../render/sprites.js?v=71';
-import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=71';
-import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=71';
+} from '../render/sprites.js?v=74';
+import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=74';
+import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=74';
 import {
   computeHeroAttackDamage,
   applyIncomingDamage,
@@ -33,10 +33,10 @@ import {
   tryActivateMonsterShield,
   tryMonsterTauntSelf,
   ensureHeroSkillState,
-} from './ai/skills.js?v=71';
-import { getTileModifiers, spawnMonsterStats } from './ai/tileModifiers.js?v=71';
-import { dist } from './ai/targeting.js?v=71';
-import { getHeroProfile } from './ai/profiles.js?v=71';
+} from './ai/skills.js?v=74';
+import { getTileModifiers, spawnMonsterStats } from './ai/tileModifiers.js?v=74';
+import { dist } from './ai/targeting.js?v=74';
+import { getHeroProfile } from './ai/profiles.js?v=74';
 import {
   patternForHero,
   patternForMonster,
@@ -44,7 +44,7 @@ import {
   tickAttack,
   ensureAttackState,
   resolveDisplayAnim,
-} from './ai/attackPatterns.js?v=71';
+} from './ai/attackPatterns.js?v=74';
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
@@ -724,6 +724,7 @@ export class CombatEngine {
       const mod = getTileModifiers(this.map, col, row, 'monster', m);
       m.tileAtkMul = mod.atkMul;
       m.tileDefMul = mod.defMul;
+      m.tileSpeedMul = mod.speedMul;
       if (m.passive === 'MYTHIC_GLASS') {
         m.tileDefMul *= 0.55;
       }
@@ -1718,7 +1719,7 @@ export class CombatEngine {
           m.atkCd = 1 / m.atkSpeed;
         }
       } else if (decision.action === 'chase' && decision.target) {
-        let spd = m.speed * this.CELL * 0.4;
+        let spd = m.speed * this.CELL * 0.4 * (m.tileSpeedMul || 1);
         if (m.stealth && !m.revealed) spd *= 1.4;
         if (m.slowUntil && this.time < m.slowUntil) spd *= m.slowFactor ?? 0.55;
         const dx = decision.target.x - m.x;
@@ -1730,7 +1731,7 @@ export class CombatEngine {
         const dx = m.homeX - m.x;
         const dy = m.homeY - m.y;
         const d = Math.hypot(dx, dy) || 1;
-        let spd = m.speed * this.CELL * 0.35;
+        let spd = m.speed * this.CELL * 0.35 * (m.tileSpeedMul || 1);
         if (m.slowUntil && this.time < m.slowUntil) spd *= m.slowFactor ?? 0.55;
         this._moveMonster(m, (dx / d) * spd * dt, (dy / d) * spd * dt);
       }

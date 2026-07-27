@@ -64,18 +64,33 @@ export const PASSIVE_INFO = {
     name: 'Đòn mở đầu',
     desc: 'Đòn đánh đầu tiên gây gấp đôi sát thương.',
   },
-  WATER_BUFF: { name: 'Buff nước', desc: 'Đứng trên ô nước: mạnh hơn rõ (máu/công).' },
-  DARK_BUFF: { name: 'Buff tối', desc: 'Đứng trên ô tối: sát thương tăng mạnh.' },
-  FIRE_BUFF: { name: 'Buff lửa', desc: 'Đứng trên ô lửa: máu và công tăng.' },
-  ICE_BUFF: { name: 'Buff băng', desc: 'Đứng trên ô băng: máu và công tăng.' },
-  POISON_BUFF: { name: 'Buff độc', desc: 'Đứng trên ô độc: máu và công tăng.' },
+  WATER_BUFF: {
+    name: 'Buff nước',
+    desc: 'Đứng trên ô nước (~): +40% ATK & HP. Đứng chỗ khác (cạn): −30% ATK, −15% HP/giáp, chậm nhẹ.',
+  },
+  DARK_BUFF: {
+    name: 'Buff tối',
+    desc: 'Đứng trên ô tối (d): +100% ATK. Đứng chỗ khác: −35% ATK.',
+  },
+  FIRE_BUFF: {
+    name: 'Buff lửa',
+    desc: 'Đứng trên ô lửa (f): +45% ATK, +20% HP. Ô nước/băng: −45% ATK. Sàn khác: −25% ATK.',
+  },
+  ICE_BUFF: {
+    name: 'Buff băng',
+    desc: 'Đứng trên ô băng (i): +40% ATK, +20% HP. Ô lửa: −45% ATK. Sàn khác: −25% ATK, chậm nhẹ.',
+  },
+  POISON_BUFF: {
+    name: 'Buff độc',
+    desc: 'Đứng trên ô độc (p): +40% ATK, +15% HP. Đứng chỗ khác: −28% ATK, giáp yếu hơn.',
+  },
   ANTI_WARRIOR_BURST: {
     name: 'Nghiền chiến sĩ',
     desc: 'Gây sát thương cực mạnh khi đánh Chiến sĩ / Warrior.',
   },
   BUFF_IN_LOW_CEILING_ROOM: {
     name: 'Sợ trần cao',
-    desc: 'Ô trần thấp/tối: công tăng rất mạnh. Ô trần cao: công giảm.',
+    desc: 'Ô trần thấp (l) hoặc tối (d): +200% ATK. Ô trần cao (h): −50% ATK. Sàn khác: −20% ATK.',
   },
   FROST_BOLT: { name: 'Băng tiễn', desc: 'Bắn tầm xa — đóng băng ngắn mục tiêu.' },
   RANGED_FROST: { name: 'Tầm xa băng', desc: 'Bắn tầm xa gây đóng băng / làm chậm bằng lạnh.' },

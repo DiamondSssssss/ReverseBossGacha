@@ -1,17 +1,17 @@
-import { MAP_UPGRADE, SPELLS, MAX_STAGE } from '../data/constants.js?v=71';
-import { MONSTERS } from '../data/monsters.js?v=71';
+import { MAP_UPGRADE, SPELLS, MAX_STAGE } from '../data/constants.js?v=74';
+import { MONSTERS } from '../data/monsters.js?v=74';
 import {
   DUNGEON_BOSSES,
   getBoss,
   isBossUnlocked,
   unlockHint,
   syncUnlockedBosses,
-} from '../data/dungeonBosses.js?v=71';
-import { tryUpgradeMap, upgradeMapCost } from '../core/dungeon.js?v=71';
-import { saveState } from '../core/storage.js?v=71';
-import { achievementProgress, isGameCleared, evaluateAchievements } from '../core/achievements.js?v=71';
-import { showTutorial } from './tutorial.js?v=71';
-import { showRedeemModal } from './redeemUI.js?v=71';
+} from '../data/dungeonBosses.js?v=74';
+import { tryUpgradeMap, upgradeMapCost } from '../core/dungeon.js?v=74';
+import { saveState } from '../core/storage.js?v=74';
+import { achievementProgress, isGameCleared, evaluateAchievements } from '../core/achievements.js?v=74';
+import { showTutorial } from './tutorial.js?v=74';
+import { showRedeemModal } from './redeemUI.js?v=74';
 
 const GATE_SVG = `
 <svg viewBox="0 0 200 250" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">

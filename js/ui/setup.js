@@ -3,17 +3,17 @@ import {
   TERRAIN_LABELS,
   RARITY_COLORS,
   HERO_CLASS_LABELS,
-} from '../data/constants.js?v=71';
-import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=71';
-import { monsterScaleForLevel } from '../data/heroes.js?v=71';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=71';
-import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=71';
+} from '../data/constants.js?v=74';
+import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=74';
+import { monsterScaleForLevel } from '../data/heroes.js?v=74';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=74';
+import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=74';
 import {
   mapUsedCost,
   placeMonster,
   removePlacement,
   totalPlacements,
-} from '../core/dungeon.js?v=71';
+} from '../core/dungeon.js?v=74';
 import {
   loadoutMaxPoolCost,
   loadoutPoolCost,
@@ -23,19 +23,19 @@ import {
   suggestLoadout,
   tryAddToLoadout,
   tryRemoveFromLoadout,
-} from '../core/loadout.js?v=71';
-import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=71';
-import { attachSetupBoardFx } from './setupBoardFx.js?v=71';
-import { playGhostWalk } from './setupPreview.js?v=71';
-import { saveState } from '../core/storage.js?v=71';
+} from '../core/loadout.js?v=74';
+import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=74';
+import { attachSetupBoardFx } from './setupBoardFx.js?v=74';
+import { playGhostWalk } from './setupPreview.js?v=74';
+import { saveState } from '../core/storage.js?v=74';
 import {
   hideMonsterTip,
   monsterTipHtml,
-} from './monsterTip.js?v=71';
+} from './monsterTip.js?v=74';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,
-} from '../core/monsterUpgrade.js?v=71';
+} from '../core/monsterUpgrade.js?v=74';
 
 function shortName(name) {
   if (!name) return '?';
@@ -91,15 +91,31 @@ function cellTooltip(map, col, row, ch) {
   const parts = [TERRAIN_LABELS[terrain] || TERRAIN_HINTS[terrain] || 'Sàn'];
   for (const b of buffs) parts.push(formatBuffLine(b));
   if (terrain === 'WATER') {
-    parts.push('Địa hình nước: quái có chiêu Buff nước mạnh hơn khi đứng đây; hero đi qua bị chậm');
+    parts.push(
+      'Ô nước (~): quái Buff nước đứng đây +40% ATK/HP — cạn bị −30% ATK; Hero đi qua bị chậm'
+    );
   } else if (terrain === 'DARK') {
-    parts.push('Ô tối: quái Buff tối mạnh hơn khi đứng đây; hero giảm tầm đánh');
+    parts.push(
+      'Ô tối (d): quái Buff tối đứng đây +100% ATK — ngoài tối −35% ATK; Hero giảm tầm'
+    );
   } else if (terrain === 'FIRE') {
-    parts.push('Ô lửa: quái Buff lửa mạnh hơn khi đứng đây; hero có thể bị đốt');
+    parts.push(
+      'Ô lửa (f): quái Buff lửa đứng đây +45% ATK — nước/băng bị nerf nặng; Hero có thể bị đốt'
+    );
   } else if (terrain === 'ICE') {
-    parts.push('Ô băng: quái Buff băng mạnh hơn khi đứng đây; hero bị chậm');
+    parts.push(
+      'Ô băng (i): quái Buff băng đứng đây +40% ATK — lửa bị nerf; Hero bị chậm'
+    );
   } else if (terrain === 'POISON') {
-    parts.push('Ô độc: quái Buff độc mạnh hơn khi đứng đây; hero có thể nhiễm độc');
+    parts.push(
+      'Ô độc (p): quái Buff độc đứng đây +40% ATK — ngoài độc bị yếu; Hero có thể nhiễm độc'
+    );
+  } else if (terrain === 'LOW_CEILING') {
+    parts.push(
+      'Ô trần thấp (l): quái Sợ trần cao đứng đây +200% ATK — trần cao bị −50%'
+    );
+  } else if (terrain === 'HIGH') {
+    parts.push('Ô trần cao (h): quái Sợ trần cao đứng đây −50% ATK');
   }
   return parts.join(' · ');
 }
@@ -370,40 +386,26 @@ export function renderScout(root, ctx) {
     if (!panel) return;
     const statPanel = panel.querySelector('#loadout-stat-panel');
 
+    let lastPickId = '';
+
     function showPickInfo(el) {
       const id = el?.getAttribute?.('data-mid');
-      if (!id) return;
-      if (statPanel) {
-        const stageLv = run.level || state.dungeonLevel || 1;
-        statPanel.innerHTML = monsterTipHtml(id, state, { stageLevel: stageLv });
-        statPanel.classList.add('has-unit');
-      }
+      if (!id || !statPanel) return;
+      // Giữ tip cuối — không clear khi rời thẻ (tránh panel co/giãn → chớp hover)
+      if (id === lastPickId && statPanel.classList.contains('has-unit')) return;
+      lastPickId = id;
+      const stageLv = run.level || state.dungeonLevel || 1;
+      statPanel.innerHTML = monsterTipHtml(id, state, { stageLevel: stageLv });
+      statPanel.classList.add('has-unit');
     }
 
-    function clearPickInfo() {
-      if (statPanel) {
-        statPanel.classList.remove('has-unit');
-        statPanel.innerHTML =
-          '<p class="muted" style="margin:0;font-size:0.75rem">Chạm / hover thẻ quái để xem mô tả chi tiết.</p>';
-      }
-    }
-
-    // Event delegation — không phụ thuộc bind từng nút
+    // Event delegation — chỉ cập nhật khi vào thẻ mới, không tắt khi rời thẻ
     panel.onpointerover = (e) => {
       const el = e.target.closest?.('[data-mid]');
       if (!el || !panel.contains(el)) return;
       showPickInfo(el);
     };
-    panel.onpointerout = (e) => {
-      const el = e.target.closest?.('[data-mid]');
-      if (!el) return;
-      const to = e.relatedTarget;
-      if (to && (el === to || el.contains(to))) return;
-      if (to && to.closest?.('[data-mid]') && panel.contains(to.closest('[data-mid]'))) {
-        return; // chuyển sang thẻ khác — pointerover sẽ cập nhật
-      }
-      clearPickInfo();
-    };
+    panel.onpointerout = null;
 
     panel.querySelectorAll('[data-add]').forEach((btn) => {
       btn.onclick = (e) => {

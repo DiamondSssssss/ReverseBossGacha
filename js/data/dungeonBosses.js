@@ -1,4 +1,4 @@
-import { SPELLS } from './constants.js?v=71';
+import { SPELLS } from './constants.js?v=74';
 
 /**
  * Boss hầm ngục — mỗi boss = 2 skill passive của “Sếp Tổng”.

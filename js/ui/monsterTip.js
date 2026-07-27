@@ -1,10 +1,10 @@
-import { RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=71';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=71';
-import { describeMonsterKit } from '../data/skillDesc.js?v=71';
+import { RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=74';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=74';
+import { describeMonsterKit } from '../data/skillDesc.js?v=74';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,
-} from '../core/monsterUpgrade.js?v=71';
+} from '../core/monsterUpgrade.js?v=74';
 
 function escapeHtml(str) {
   return String(str ?? '')
@@ -165,7 +165,12 @@ export function bindMonsterTips(root, selector, getId, state, getExtra) {
       if (!id) return;
       showMonsterTip(el, id, state, getExtra?.(el));
     };
-    const hide = () => hideMonsterTip();
+    const hide = (e) => {
+      // Tránh clear khi pointer đi qua con/cháu trong cùng thẻ
+      const to = e?.relatedTarget;
+      if (to && (el === to || el.contains(to))) return;
+      hideMonsterTip();
+    };
 
     el.addEventListener('pointerenter', show);
     el.addEventListener('pointerleave', hide);

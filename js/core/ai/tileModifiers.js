@@ -1,7 +1,94 @@
-import { TERRAIN } from '../../data/rooms.js?v=71';
-import { COMBAT, MONSTER_UPGRADE } from '../../data/constants.js?v=71';
-import { monsterStatMul } from '../monsterUpgrade.js?v=71';
-import { monsterScaleForLevel } from '../../data/heroes.js?v=71';
+import { TERRAIN } from '../../data/rooms.js?v=74';
+import { COMBAT, MONSTER_UPGRADE } from '../../data/constants.js?v=74';
+import { monsterStatMul } from '../monsterUpgrade.js?v=74';
+import { monsterScaleForLevel } from '../../data/heroes.js?v=74';
+
+/**
+ * Buff / debuff địa hình theo passive element.
+ * Đứng đúng ô: mạnh. Sai ô (kể cả sàn thường): bị nerf — ép đổi loadout theo map.
+ */
+export function terrainAffinityMods(passive, terrain) {
+  const out = { atkMul: 1, hpMul: 1, defMul: 1, speedMul: 1 };
+  switch (passive) {
+    case 'WATER_BUFF':
+      if (terrain === TERRAIN.WATER || terrain === 'WATER') {
+        out.atkMul = 1.4;
+        out.hpMul = 1.4;
+      } else {
+        // Cạn / không phải nước → yếu
+        out.atkMul = 0.7;
+        out.hpMul = 0.85;
+        out.defMul = 0.85;
+        out.speedMul = 0.9;
+      }
+      break;
+    case 'DARK_BUFF':
+      if (terrain === TERRAIN.DARK || terrain === 'DARK') {
+        out.atkMul = 2;
+      } else {
+        out.atkMul = 0.65;
+        out.defMul = 0.9;
+      }
+      break;
+    case 'FIRE_BUFF':
+      if (terrain === TERRAIN.FIRE || terrain === 'FIRE') {
+        out.atkMul = 1.45;
+        out.hpMul = 1.2;
+      } else if (terrain === TERRAIN.WATER || terrain === 'WATER' || terrain === TERRAIN.ICE || terrain === 'ICE') {
+        // Lửa gặp nước/băng → nerf nặng
+        out.atkMul = 0.55;
+        out.hpMul = 0.8;
+        out.defMul = 0.8;
+      } else {
+        out.atkMul = 0.75;
+        out.hpMul = 0.9;
+      }
+      break;
+    case 'ICE_BUFF':
+      if (terrain === TERRAIN.ICE || terrain === 'ICE') {
+        out.atkMul = 1.4;
+        out.hpMul = 1.2;
+      } else if (terrain === TERRAIN.FIRE || terrain === 'FIRE') {
+        out.atkMul = 0.55;
+        out.hpMul = 0.8;
+        out.speedMul = 0.85;
+      } else {
+        out.atkMul = 0.75;
+        out.hpMul = 0.9;
+        out.speedMul = 0.92;
+      }
+      break;
+    case 'POISON_BUFF':
+      if (terrain === TERRAIN.POISON || terrain === 'POISON') {
+        out.atkMul = 1.4;
+        out.hpMul = 1.15;
+      } else {
+        out.atkMul = 0.72;
+        out.hpMul = 0.9;
+        out.defMul = 0.88;
+      }
+      break;
+    case 'BUFF_IN_LOW_CEILING_ROOM':
+      if (terrain === TERRAIN.HIGH || terrain === 'HIGH') {
+        out.atkMul = 0.5;
+        out.defMul = 0.85;
+      } else if (
+        terrain === TERRAIN.LOW_CEILING ||
+        terrain === 'LOW_CEILING' ||
+        terrain === TERRAIN.DARK ||
+        terrain === 'DARK'
+      ) {
+        out.atkMul = 3;
+      } else {
+        // Sàn thường / nước / lửa… — không phải hang thấp
+        out.atkMul = 0.8;
+      }
+      break;
+    default:
+      break;
+  }
+  return out;
+}
 
 /**
  * Continuous tile modifiers for a unit standing on a cell.
@@ -30,31 +117,10 @@ export function getTileModifiers(map, col, row, side, unit) {
   }
 
   if (side === 'monster' && unit) {
-    switch (unit.passive) {
-      case 'WATER_BUFF':
-        if (terrain === TERRAIN.WATER) out.atkMul *= 1.4;
-        break;
-      case 'DARK_BUFF':
-        if (terrain === TERRAIN.DARK) out.atkMul *= 2;
-        break;
-      case 'FIRE_BUFF':
-        if (terrain === TERRAIN.FIRE) out.atkMul *= 1.45;
-        break;
-      case 'ICE_BUFF':
-        if (terrain === TERRAIN.ICE) out.atkMul *= 1.4;
-        break;
-      case 'POISON_BUFF':
-        if (terrain === TERRAIN.POISON) out.atkMul *= 1.4;
-        break;
-      case 'BUFF_IN_LOW_CEILING_ROOM':
-        if (terrain === TERRAIN.HIGH) out.atkMul *= 0.5;
-        else if (terrain === TERRAIN.LOW_CEILING || terrain === TERRAIN.DARK) {
-          out.atkMul *= 3;
-        }
-        break;
-      default:
-        break;
-    }
+    const aff = terrainAffinityMods(unit.passive, terrain);
+    out.atkMul *= aff.atkMul;
+    out.defMul *= aff.defMul;
+    out.speedMul *= aff.speedMul;
   }
 
   const buffs = map.buffIndex[key] || [];
@@ -102,47 +168,13 @@ export function getTileModifiers(map, col, row, side, unit) {
   return out;
 }
 
-/** Base stats at spawn — địa hình + cấp nâng quái (vàng) + scale ải */
+/** Base stats at spawn — địa hình ảnh hưởng HP lúc đặt; ATK theo ô mỗi frame qua getTileModifiers */
 export function spawnMonsterStats(template, terrain, upgradeLevel = 0, stageLevel = 1) {
   const stats = { ...template.stats };
+  const aff = terrainAffinityMods(template.passive, terrain || TERRAIN.NORMAL);
+  // ATK gốc không nhân affinity — để getTileModifiers không bị ×2
   let atkMul = 1;
-  let hpMul = 1;
-
-  switch (template.passive) {
-    case 'BUFF_IN_LOW_CEILING_ROOM':
-      if (terrain === 'HIGH') atkMul = 0.5;
-      else if (terrain === 'LOW_CEILING' || terrain === 'DARK') atkMul = 3;
-      break;
-    case 'WATER_BUFF':
-      if (terrain === 'WATER') {
-        atkMul = 1.4;
-        hpMul = 1.4;
-      }
-      break;
-    case 'DARK_BUFF':
-      if (terrain === 'DARK') atkMul = 2;
-      break;
-    case 'FIRE_BUFF':
-      if (terrain === 'FIRE') {
-        atkMul = 1.45;
-        hpMul = 1.2;
-      }
-      break;
-    case 'ICE_BUFF':
-      if (terrain === 'ICE') {
-        atkMul = 1.4;
-        hpMul = 1.2;
-      }
-      break;
-    case 'POISON_BUFF':
-      if (terrain === 'POISON') {
-        atkMul = 1.4;
-        hpMul = 1.15;
-      }
-      break;
-    default:
-      break;
-  }
+  let hpMul = aff.hpMul;
 
   const upMul = monsterStatMul(
     Math.min(MONSTER_UPGRADE.MAX_LEVEL, Math.max(0, upgradeLevel || 0))
@@ -178,7 +210,7 @@ export function spawnMonsterStats(template, terrain, upgradeLevel = 0, stageLeve
     baseAtk: Math.round(stats.atk * atkMul),
     hp: Math.round(stats.hp * hpMul),
     maxHp: Math.round(stats.hp * hpMul),
-    atk: Math.round(stats.atk * atkMul),
+    atk: Math.round(stats.atk * atkMul * aff.atkMul),
     speed: stats.speed * (isAssassin ? 1.1 : 1),
     rangeCells: stats.range,
     atkSpeed: stats.atkSpeed,

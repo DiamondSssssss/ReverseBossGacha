@@ -1,6 +1,6 @@
 /** Hero AI catalog — mỗi ải 1–40 có tổ hợp hero riêng */
 
-import { COMBAT } from './constants.js?v=71';
+import { COMBAT } from './constants.js?v=74';
 
 export const HEROES = [
   // ——— MAGE ———
@@ -1114,13 +1114,12 @@ function heroScaleForLevel(level) {
 }
 
 /**
- * Scale quái theo ải — bám ~55% đà tăng của hero để không bị oneshot muộn game,
- * vẫn yếu hơn hero nếu chưa nâng cấp vàng.
+ * Scale quái theo ải — ~42% đà hero (trước ~72% làm ải 31 ≈ ×3.5 quá cao).
+ * Hero scale giữ nguyên; chỉ nerf hệ số quái.
  */
 export function monsterScaleForLevel(level) {
   const hs = heroScaleForLevel(level);
-  // ~72% đà hero — tank/assassin không còn bị oneshot quá sớm
-  return 1 + (hs - 0.9) * 0.72;
+  return 1 + (hs - 0.9) * 0.42;
 }
 
 export { heroScaleForLevel };

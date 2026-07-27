@@ -1480,12 +1480,13 @@ body.play-fit .screen.active > .combat-wrap {
 
 .loadout-stat-panel {
   margin: 8px 0 10px;
-  min-height: 72px;
+  min-height: 120px;
 }
 
 .loadout-stat-panel.has-unit {
   border-color: var(--seal, #c43c28);
   background: #fffaf0;
+  min-height: 160px;
 }
 
 .loadout-stat-panel.sticky-stat {
