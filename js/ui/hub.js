@@ -1,17 +1,17 @@
-import { MAP_UPGRADE, SPELLS, MAX_STAGE } from '../data/constants.js?v=70';
-import { MONSTERS } from '../data/monsters.js?v=70';
+import { MAP_UPGRADE, SPELLS, MAX_STAGE } from '../data/constants.js?v=71';
+import { MONSTERS } from '../data/monsters.js?v=71';
 import {
   DUNGEON_BOSSES,
   getBoss,
   isBossUnlocked,
   unlockHint,
   syncUnlockedBosses,
-} from '../data/dungeonBosses.js?v=70';
-import { tryUpgradeMap, upgradeMapCost } from '../core/dungeon.js?v=70';
-import { saveState } from '../core/storage.js?v=70';
-import { achievementProgress, isGameCleared, evaluateAchievements } from '../core/achievements.js?v=70';
-import { showTutorial } from './tutorial.js?v=70';
-import { showRedeemModal } from './redeemUI.js?v=70';
+} from '../data/dungeonBosses.js?v=71';
+import { tryUpgradeMap, upgradeMapCost } from '../core/dungeon.js?v=71';
+import { saveState } from '../core/storage.js?v=71';
+import { achievementProgress, isGameCleared, evaluateAchievements } from '../core/achievements.js?v=71';
+import { showTutorial } from './tutorial.js?v=71';
+import { showRedeemModal } from './redeemUI.js?v=71';
 
 const GATE_SVG = `
 <svg viewBox="0 0 200 250" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -77,6 +77,7 @@ export function renderHub(root, ctx) {
             <button type="button" id="btn-gacha">Quay Gacha</button>
             <button type="button" id="btn-redeem">Nhập mã</button>
             <button type="button" id="btn-ach">Ấn chương</button>
+            <button type="button" id="btn-heroes">Catalog Hero</button>
           </div>
         </div>
         <div class="hub-meta">
@@ -132,8 +133,6 @@ export function renderHub(root, ctx) {
           <button type="button" class="ghost" id="btn-help">Xem hướng dẫn</button>
           ·
           <button type="button" class="ghost" id="btn-collection">Kho quái</button>
-          ·
-          <button type="button" class="ghost" id="btn-heroes">Catalog Hero</button>
           ·
           <button type="button" class="ghost" id="btn-reset">Reset</button>
         </p>
