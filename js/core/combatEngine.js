@@ -1,17 +1,17 @@
-import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=74';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=74';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=74';
-import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=74';
-import { mapUsedCost } from './dungeon.js?v=74';
-import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=74';
-import { ParticleSystem } from '../render/particles.js?v=74';
+import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=76';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=76';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=76';
+import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=76';
+import { mapUsedCost } from './dungeon.js?v=76';
+import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=76';
+import { ParticleSystem } from '../render/particles.js?v=76';
 import {
   getMonsterSprite,
   getHeroSprite,
   drawSpriteAt,
-} from '../render/sprites.js?v=74';
-import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=74';
-import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=74';
+} from '../render/sprites.js?v=76';
+import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=76';
+import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=76';
 import {
   computeHeroAttackDamage,
   applyIncomingDamage,
@@ -33,10 +33,10 @@ import {
   tryActivateMonsterShield,
   tryMonsterTauntSelf,
   ensureHeroSkillState,
-} from './ai/skills.js?v=74';
-import { getTileModifiers, spawnMonsterStats } from './ai/tileModifiers.js?v=74';
-import { dist } from './ai/targeting.js?v=74';
-import { getHeroProfile } from './ai/profiles.js?v=74';
+} from './ai/skills.js?v=76';
+import { getTileModifiers, spawnMonsterStats } from './ai/tileModifiers.js?v=76';
+import { dist } from './ai/targeting.js?v=76';
+import { getHeroProfile } from './ai/profiles.js?v=76';
 import {
   patternForHero,
   patternForMonster,
@@ -44,7 +44,7 @@ import {
   tickAttack,
   ensureAttackState,
   resolveDisplayAnim,
-} from './ai/attackPatterns.js?v=74';
+} from './ai/attackPatterns.js?v=76';
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
@@ -1836,7 +1836,12 @@ export class CombatEngine {
     }
 
     dmg = applyIncomingDamage(hero, dmg, this.time);
-    dmg = Math.round(dmg / (hero.tileDefMul || 1));
+    const heroDefMul =
+      (hero.tileDefMul || 1) *
+      (hero.defShredUntil && this.time < hero.defShredUntil
+        ? hero.defShredFactor || 0.7
+        : 1);
+    dmg = Math.round(dmg / heroDefMul);
     hero.hp -= dmg;
     hero.flash = 0.2;
     this._float(hero.x, hero.y, `-${dmg}`, '#ffab91');

@@ -1,18 +1,19 @@
-import { MONSTERS } from '../data/monsters.js?v=74';
+import { MONSTERS } from '../data/monsters.js?v=76';
 import {
   RARITY_COLORS,
   RARITY_LABELS,
   INVENTORY_CAP,
   MONSTER_UPGRADE,
-} from '../data/constants.js?v=74';
-import { monsterDisplayUrl } from '../render/sprites.js?v=74';
+} from '../data/constants.js?v=76';
+import { monsterDisplayUrl } from '../render/sprites.js?v=76';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,
   tryUpgradeMonster,
   upgradeMonsterCost,
-} from '../core/monsterUpgrade.js?v=74';
-import { evaluateAchievements } from '../core/achievements.js?v=74';
+} from '../core/monsterUpgrade.js?v=76';
+import { evaluateAchievements } from '../core/achievements.js?v=76';
+import { describeMonsterKit } from '../data/skillDesc.js?v=76';
 
 const filters = {
   q: '',
@@ -38,6 +39,25 @@ const ROLE_OPTIONS = [
   { id: 'boss', label: 'Boss' },
 ];
 
+function escapeHtml(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function kitHtml(m) {
+  const kit = describeMonsterKit(m);
+  if (!kit.length) return '';
+  return `<div class="card-kit">${kit
+    .map(
+      (k) =>
+        `<div class="card-skill"><b>${escapeHtml(k.name)}</b> — ${escapeHtml(k.desc)}</div>`
+    )
+    .join('')}</div>`;
+}
+
 function matchesRole(m, role) {
   if (role === 'all') return true;
   const tags = m.tags || [];
@@ -57,9 +77,12 @@ function filterList(state) {
     if (!matchesRole(m, filters.role)) return false;
     if (filters.q) {
       const q = filters.q.toLowerCase();
+      const kitText = describeMonsterKit(m)
+        .map((k) => `${k.name} ${k.desc}`)
+        .join(' ');
       const hay =
         count > 0
-          ? `${m.name} ${m.description} ${m.id}`.toLowerCase()
+          ? `${m.name} ${m.description} ${m.id} ${kitText}`.toLowerCase()
           : `${RARITY_LABELS[m.rarity]} ★${m.rarity}`.toLowerCase();
       if (!hay.includes(q) && !(count <= 0 && q.includes('?'))) return false;
     }
@@ -114,10 +137,11 @@ function renderCards(state) {
         <img class="card-sprite" src="${src}" alt="" width="64" height="64" />
         <div class="body">
           <div class="stars" style="color:${RARITY_COLORS[m.rarity]}">${'★'.repeat(m.rarity)} <span class="rarity-tag">${RARITY_LABELS[m.rarity]}</span></div>
-          <div class="name">${m.name}</div>
+          <div class="name">${escapeHtml(m.name)}</div>
           <div class="muted" style="font-size:0.75rem;margin-top:2px">Cost ${m.cost} · HP ${st.hp} · ATK ${st.atk}${upLv ? ` · Lv↑${upLv}` : ''}</div>
-          ${m.drawback ? `<div class="desc drawback-line">⚠ ${m.drawback}</div>` : ''}
-          <div class="desc">${m.description}</div>
+          ${m.drawback ? `<div class="desc drawback-line">⚠ ${escapeHtml(m.drawback)}</div>` : ''}
+          ${kitHtml(m)}
+          <div class="desc">${escapeHtml(m.description || '')}</div>
           <div class="count">Sở hữu ×${count}/${INVENTORY_CAP}</div>
           <div class="upgrade-row">
             <button type="button" class="btn-upgrade-mon" data-upgrade="${m.id}" ${maxed || !canAfford ? 'disabled' : ''}>

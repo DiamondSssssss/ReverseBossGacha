@@ -803,8 +803,29 @@ body.gacha-boss-flash::after {
 .monster-card .desc {
   font-size: 0.75rem;
   color: var(--muted);
-  margin-top: 4px;
+  margin-top: 6px;
   line-height: 1.35;
+}
+
+.monster-card .card-kit {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.monster-card .card-skill {
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--ink);
+  background: rgba(26, 22, 18, 0.06);
+  border-left: 3px solid var(--moss);
+  padding: 5px 8px;
+}
+
+.monster-card .card-skill b {
+  color: var(--moss);
+  font-weight: 800;
 }
 
 .monster-card .count {

@@ -1,4 +1,4 @@
-import { apiUrl } from '../config.js?v=74';
+import { apiUrl } from '../config.js?v=76';
 
 const TOKEN_KEY = 'rbg_token';
 const USER_KEY = 'rbg_user';

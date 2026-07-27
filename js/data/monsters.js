@@ -8,7 +8,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 80, atk: 8, speed: 1.4, range: 1.2, atkSpeed: 1.0 },
     passive: 'BONE_PILE', tags: ['utility', 'slow'], color: '#c8b89a',
-    description: 'Chết rơi xương — Hero đi qua bị giảm 80% tốc độ.',
+    description: 'chết: vùng chậm 8s, còn 20% tốc /1.6 ô',
   },
   {
     id: 'news_rat',
@@ -16,7 +16,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 60, atk: 12, speed: 2.2, range: 1.0, atkSpeed: 1.4 },
     passive: 'KNOCK_BACK_ROOM', tags: ['utility', 'knock'], color: '#8d6e63',
-    description: 'Cắn — đẩy Hero lùi về phía cổng vài ô.',
+    description: 'đẩy Hero lùi 2 ô về cổng',
   },
   {
     id: 'goblin_bait',
@@ -24,7 +24,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 100, atk: 6, speed: 1.6, range: 1.0, atkSpeed: 0.9 },
     passive: 'AURA_TAUNT', tags: ['utility','tankette'], color: '#66bb6a',
-    description: 'Thu hút Hero tấn công mình trước — làm mồi nhử.',
+    description: 'Tank — aura kéo agro ~2.2 ô',
   },
   {
     id: 'mute_mite',
@@ -32,7 +32,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 55, atk: 10, speed: 2.0, range: 1.5, atkSpeed: 1.2 },
     passive: 'STUN_ON_HIT', tags: ['utility','stun'], color: '#7e57c2',
-    description: 'Đánh trúng gây Silence — khắc chế Pháp sư.',
+    description: 'choáng 0.85s mỗi đòn',
   },
   {
     id: 'candle_bug',
@@ -40,7 +40,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 70, atk: 9, speed: 1.5, range: 1.3, atkSpeed: 1.1 },
     passive: 'NONE', tags: ['utility'], color: '#ffcc80',
-    description: 'Nhỏ, rẻ, đông — làm Hero tốn thời gian.',
+    description: 'Filler 1★ — HP 70 / ATK 9. Rẻ, đông, kéo thời gian.',
   },
   {
     id: 'moss_slug',
@@ -48,7 +48,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 120, atk: 5, speed: 0.7, range: 1.0, atkSpeed: 0.7 },
     passive: 'POISON_ON_HIT', tags: ['utility','poison'], color: '#689f38',
-    description: 'Chậm nhưng aura làm chậm nhẹ quanh mình.',
+    description: 'độc 9 HP/s ×4s (~36)',
   },
   {
     id: 'squeak_bat',
@@ -56,7 +56,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 50, atk: 11, speed: 2.5, range: 1.2, atkSpeed: 1.3 },
     passive: 'NONE', tags: ['utility', 'speed'], color: '#5d4037',
-    description: 'Bay nhanh quấy rối — DPS yếu.',
+    description: 'Filler bay — speed 2.4, ATK thấp. Quấy rối rẻ.',
   },
   {
     id: 'pebble_imp',
@@ -64,7 +64,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 75, atk: 14, speed: 1.3, range: 1.8, atkSpeed: 1.0 },
     passive: 'NONE', tags: ['utility'], color: '#90a4ae',
-    description: 'Ném sỏi từ xa — cost rẻ.',
+    description: 'Tầm xa 1★ — range 3.2, ATK thấp. Ném sỏi cost rẻ.',
   },
   {
     id: 'dust_wisp',
@@ -72,7 +72,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 45, atk: 8, speed: 1.8, range: 1.4, atkSpeed: 1.2 },
     passive: 'SILENCE_ON_HIT', tags: ['utility', 'silence'], color: '#b0bec5',
-    description: 'Bụi ma — silence cận chiến 1★ anti-mage.',
+    description: 'Anti-mage — câm Mage hết trận (ATK còn ~35%)',
   },
   {
     id: 'fungus_spore',
@@ -80,7 +80,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 90, atk: 7, speed: 0.9, range: 1.1, atkSpeed: 0.8 },
     passive: 'BONE_PILE', tags: ['utility', 'slow'], color: '#aed581',
-    description: 'Chết bung bào tử — vùng chậm tạm thời.',
+    description: 'chết: vùng chậm 8s, còn 20% tốc /1.6 ô',
   },
   {
     id: 'tin_knight',
@@ -88,7 +88,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 130, atk: 8, speed: 1.0, range: 1.1, atkSpeed: 0.85 },
     passive: 'TAUNT', tags: ['tankette'], color: '#b0bec5',
-    description: 'Khiên mỏng nhưng thích bị đánh.',
+    description: 'Tank — Hero ưu tiên đánh mình',
   },
   {
     id: 'pickpocket_pixie',
@@ -96,7 +96,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 55, atk: 13, speed: 2.3, range: 1.0, atkSpeed: 1.4 },
     passive: 'KNOCK_BACK_ROOM', tags: ['knock'], color: '#f48fb1',
-    description: 'Giật rồi đẩy Hero lùi về phía cổng.',
+    description: 'đẩy Hero lùi 2 ô về cổng',
   },
   {
     id: 'ink_blot',
@@ -104,7 +104,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 65, atk: 10, speed: 1.6, range: 1.5, atkSpeed: 1.1 },
     passive: 'POISON_ON_HIT', tags: ['utility','poison'], color: '#37474f',
-    description: 'Bắn mực bịt miệng Pháp sư.',
+    description: 'độc 9 HP/s ×4s (~36)',
   },
   {
     id: 'crate_mimic_baby',
@@ -112,7 +112,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 110, atk: 12, speed: 0.8, range: 1.0, atkSpeed: 0.9 },
     passive: 'TAUNT', tags: ['tankette'], color: '#a1887f',
-    description: 'Trông như thùng — Hero đánh nhầm.',
+    description: 'Tank — Hero ưu tiên đánh mình',
   },
   {
     id: 'spark_moth',
@@ -120,7 +120,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 48, atk: 15, speed: 2.0, range: 1.6, atkSpeed: 1.25 },
     passive: 'STUN_ON_HIT', tags: ['dps', 'stun'], color: '#ff8a65',
-    description: 'Dame nhỏ tick nhanh — đòn đánh choáng ngắn.',
+    description: 'DPS — choáng 0.85s mỗi đòn',
   },
   {
     id: 'mud_hand',
@@ -128,7 +128,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 95, atk: 9, speed: 1.1, range: 1.2, atkSpeed: 0.95 },
     passive: 'STUN_ON_HIT', tags: ['utility','stun'], color: '#6d4c41',
-    description: 'Nắm chân Hero trong vùng bùn.',
+    description: 'choáng 0.85s mỗi đòn',
   },
   {
     id: 'echo_frog',
@@ -136,7 +136,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 70, atk: 11, speed: 1.7, range: 1.4, atkSpeed: 1.15 },
     passive: 'NONE', tags: ['utility'], color: '#81c784',
-    description: 'Kêu inh ỏi — DPS hỗ trợ rẻ.',
+    description: 'Filler DPS — ATK thấp, hỗ trợ số lượng.',
   },
   {
     id: 'nail_sprite',
@@ -144,7 +144,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 60, atk: 16, speed: 1.9, range: 1.3, atkSpeed: 1.2 },
     passive: 'STUN_ON_HIT', tags: ['dps', 'stun'], color: '#78909c',
-    description: 'Châm chích đau — choáng ngắn khi đánh.',
+    description: 'DPS — choáng 0.85s mỗi đòn',
   },
   {
     id: 'rag_doll',
@@ -152,7 +152,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 140, atk: 4, speed: 1.2, range: 1.0, atkSpeed: 0.7 },
     passive: 'AURA_TAUNT', tags: ['tankette'], color: '#e57373',
-    description: 'Siêu tankette 1★ — gần như không đánh.',
+    description: 'Tank — aura kéo agro ~2.2 ô',
   },
   {
     id: 'coin_scarab',
@@ -160,7 +160,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 55, atk: 10, speed: 2.1, range: 1.1, atkSpeed: 1.3 },
     passive: 'NONE', tags: ['utility'], color: '#ffd54f',
-    description: 'Nhanh, rẻ — filler đội hình.',
+    description: 'Filler nhanh — speed cao, cost 1, lấp slot.',
   },
   {
     id: 'thorn_seed',
@@ -168,7 +168,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 70, atk: 11, speed: 1.2, range: 1.4, atkSpeed: 1.05 },
     passive: 'BURN_ON_HIT', tags: ['utility','fire'], color: '#8bc34a',
-    description: 'Rải gai làm chậm nhẹ quanh chỗ đứng.',
+    description: 'đốt 10 HP/s ×3.2s',
   },
   {
     id: 'cinder_puff',
@@ -176,7 +176,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 50, atk: 13, speed: 2.0, range: 1.3, atkSpeed: 1.25 },
     passive: 'BURN_ON_HIT', tags: ['utility', 'fire'], color: '#ffab91',
-    description: 'Khói tro — đốt khi đánh (không silence; silence thuộc Bụi Wisp).',
+    description: 'đốt 10 HP/s ×3.2s',
   },
   {
     id: 'bucket_crab',
@@ -184,7 +184,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 115, atk: 9, speed: 0.9, range: 1.1, atkSpeed: 0.8 },
     passive: 'TAUNT', tags: ['tankette'], color: '#ef9a9a',
-    description: 'Giáp mỏng nhưng thích kéo agro.',
+    description: 'Tank — Hero ưu tiên đánh mình',
   },
   {
     id: 'loom_spiderling',
@@ -192,7 +192,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 65, atk: 12, speed: 1.9, range: 1.2, atkSpeed: 1.2 },
     passive: 'POISON_ON_HIT', tags: ['utility','poison'], color: '#6d4c41',
-    description: 'Tơ mỏng làm chậm lối đi.',
+    description: 'độc 9 HP/s ×4s (~36)',
   },
   {
     id: 'chalk_ghost',
@@ -200,7 +200,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 55, atk: 10, speed: 1.7, range: 1.6, atkSpeed: 1.15 },
     passive: 'BURN_ON_HIT', tags: ['utility','fire'], color: '#eceff1',
-    description: 'Phết phấn bịt miệng Pháp sư.',
+    description: 'đốt 10 HP/s ×3.2s',
   },
   {
     id: 'bolt_beetle',
@@ -208,7 +208,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 60, atk: 15, speed: 2.4, range: 1.0, atkSpeed: 1.35 },
     passive: 'NONE', tags: ['utility', 'speed'], color: '#ffee58',
-    description: 'Chạy nhanh quấy rối — DPS nhẹ.',
+    description: 'Filler tốc — speed 2.4, DPS nhẹ cost 1.',
   },
   {
     id: 'cork_golem_shard',
@@ -216,7 +216,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 140, atk: 7, speed: 0.75, range: 1.0, atkSpeed: 0.7 },
     passive: 'AURA_TAUNT', tags: ['tankette'], color: '#a1887f',
-    description: 'Khối bần chắn đường rẻ tiền.',
+    description: 'Tank — aura kéo agro ~2.2 ô',
   },
   {
     id: 'whisper_moth',
@@ -224,7 +224,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 48, atk: 9, speed: 2.2, range: 1.5, atkSpeed: 1.2 },
     passive: 'KNOCK_BACK_ROOM', tags: ['knock'], color: '#ce93d8',
-    description: 'Cánh gió nhẹ đẩy Hero lùi về cổng.',
+    description: 'đẩy Hero lùi 2 ô về cổng',
   },
 
   // ——— 2★ Rare (10) ———
@@ -234,7 +234,7 @@ export const MONSTERS = [
     rarity: 2, cost: 2,
     stats: { hp: 140, atk: 18, speed: 1.1, range: 1.2, atkSpeed: 0.85 },
     passive: 'SLIME_EXPLODE_SILENCE', tags: ['rare', 'silence'], color: '#26a69a',
-    description: 'Khi chết nổ nhớt — Silence Pháp sư trong vùng.',
+    description: 'chết: câm Mage trong 2.2 ô',
   },
   {
     id: 'ward_eye',
@@ -242,7 +242,7 @@ export const MONSTERS = [
     rarity: 2, cost: 2,
     stats: { hp: 90, atk: 14, speed: 0.8, range: 3.8, atkSpeed: 0.7 },
     passive: 'REVEAL', tags: ['detect','anti_rogue','ranged'], color: '#29b6f6',
-    description: 'Phát hiện tàng hình — khắc chế Đạo tặc.',
+    description: 'Tầm xa — soi tàng hình trong tầm',
   },
   {
     id: 'spike_trap',
@@ -250,7 +250,7 @@ export const MONSTERS = [
     rarity: 2, cost: 2,
     stats: { hp: 50, atk: 35, speed: 0, range: 0.8, atkSpeed: 0.5 },
     passive: 'TRAP_SPIKE', tags: ['trap', 'anti_rogue'], color: '#78909c',
-    description: 'Bẫy cố định — sát thương lớn khi Hero bước lên.',
+    description: 'Bẫy — giẫm = 100% ATK rồi mất',
   },
   {
     id: 'poison_toad',
@@ -258,7 +258,7 @@ export const MONSTERS = [
     rarity: 2, cost: 2,
     stats: { hp: 150, atk: 22, speed: 1, range: 1.4, atkSpeed: 0.9 },
     passive: 'POISON_ON_HIT', tags: ['rare','poison'], color: '#9ccc65',
-    description: 'Đòn cận chiến gây độc.',
+    description: 'độc 9 HP/s ×4s (~36)',
   },
   {
     id: 'mirror_shade',
@@ -266,7 +266,7 @@ export const MONSTERS = [
     rarity: 2, cost: 2,
     stats: { hp: 100, atk: 20, speed: 1.8, range: 1.4, atkSpeed: 1.2 },
     passive: 'REVEAL', tags: ['detect'], color: '#80deea',
-    description: 'Soi tàng hình và áp sát.',
+    description: 'Anti-rogue — soi tàng hình trong tầm',
   },
   {
     id: 'chain_ghoul',
@@ -275,7 +275,7 @@ export const MONSTERS = [
     stats: { hp: 180, atk: 16, speed: 1.2, range: 1.6, atkSpeed: 0.95 },
     passive: 'TAUNT', tags: ['tank'], color: '#8d6e63',
     skills: ['SHIELD'],
-    description: 'Tank bait — TAUNT + khiên sớm. Niche khiên rẻ.',
+    description: 'Tank — Hero ưu tiên đánh mình — khiên 26% maxHp/3s khi ≤45% HP (CD 11s)',
   },
   {
     id: 'ember_lizard',
@@ -283,7 +283,7 @@ export const MONSTERS = [
     rarity: 2, cost: 2,
     stats: { hp: 130, atk: 26, speed: 1.4, range: 1.7, atkSpeed: 1.05 },
     passive: 'BURN_ON_HIT', tags: ['dps','fire'], color: '#ef6c00',
-    description: 'Phun tro — đốt mục tiêu.',
+    description: 'DPS — đốt 10 HP/s ×3.2s',
   },
   {
     id: 'web_widow',
@@ -291,7 +291,7 @@ export const MONSTERS = [
     rarity: 2, cost: 2,
     stats: { hp: 110, atk: 19, speed: 1.6, range: 1.8, atkSpeed: 1.1 },
     passive: 'POISON_ON_HIT', tags: ['poison'], color: '#4e342e',
-    description: 'Nọc độc khi cắn.',
+    description: 'độc 9 HP/s ×4s (~36)',
   },
   {
     id: 'oil_slick',
@@ -299,7 +299,7 @@ export const MONSTERS = [
     rarity: 2, cost: 2,
     stats: { hp: 80, atk: 12, speed: 0, range: 1.0, atkSpeed: 0.4 },
     passive: 'TRAP_SLOW', tags: ['trap'], color: '#212121',
-    description: 'Bẫy dầu — slow mạnh + dame nhẹ.',
+    description: 'Bẫy — giẫm: 45% ATK + còn 40% tốc /3.5s',
   },
   {
     id: 'bell_wraith',
@@ -307,7 +307,7 @@ export const MONSTERS = [
     rarity: 2, cost: 2,
     stats: { hp: 120, atk: 17, speed: 1.3, range: 2.0, atkSpeed: 0.9 },
     passive: 'SILENCE_ON_HIT', tags: ['silence', 'anti_mage'], color: '#9575cd',
-    description: 'Tiếng chuông cắt đứt niệm chú.',
+    description: 'Anti-mage — câm Mage hết trận (ATK còn ~35%)',
   },
   {
     id: 'ash_hound',
@@ -315,7 +315,7 @@ export const MONSTERS = [
     rarity: 2, cost: 2,
     stats: { hp: 145, atk: 24, speed: 1.7, range: 1.3, atkSpeed: 1.1 },
     passive: 'STUN_ON_HIT', tags: ['dps', 'stun'], color: '#ff7043',
-    description: 'Cắn nóng — DPS + choáng ngắn.',
+    description: 'DPS — choáng 0.85s mỗi đòn',
   },
   {
     id: 'glass_sentry',
@@ -323,7 +323,7 @@ export const MONSTERS = [
     rarity: 2, cost: 2,
     stats: { hp: 110, atk: 18, speed: 0.85, range: 3.7, atkSpeed: 0.8 },
     passive: 'REVEAL', tags: ['detect','ranged'], color: '#4fc3f7',
-    description: 'Soi tàng hình từ xa — anti-rogue.',
+    description: 'Tầm xa — soi tàng hình trong tầm',
   },
   {
     id: 'bramble_boar',
@@ -332,7 +332,7 @@ export const MONSTERS = [
     stats: { hp: 200, atk: 20, speed: 1.15, range: 1.2, atkSpeed: 0.9 },
     passive: 'SLOW_AURA', tags: ['tank'], color: '#8d6e63',
 
-    description: 'Tank chậm — aura slow, không khiên (khiên thuộc Ma Xích).',
+    description: 'Tank — aura: Hero còn 62% tốc',
   },
   {
     id: 'mist_lamprey',
@@ -340,7 +340,7 @@ export const MONSTERS = [
     rarity: 2, cost: 2,
     stats: { hp: 125, atk: 21, speed: 1.5, range: 1.6, atkSpeed: 1.05 },
     passive: 'SILENCE_ON_HIT', tags: ['silence', 'anti_mage'], color: '#80cbc4',
-    description: 'Bám và bịt miệng Pháp sư.',
+    description: 'Anti-mage — câm Mage hết trận (ATK còn ~35%)',
   },
   {
     id: 'cinder_trap',
@@ -348,7 +348,7 @@ export const MONSTERS = [
     rarity: 2, cost: 2,
     stats: { hp: 55, atk: 40, speed: 0, range: 0.9, atkSpeed: 0.55 },
     passive: 'TRAP_BURN', tags: ['trap'], color: '#bf360c',
-    description: 'Bẫy tro — đốt DoT khi Hero bước lên.',
+    description: 'Bẫy — giẫm: 55% ATK + đốt 14/s ×4s',
   },
   {
     id: 'loom_matriarch',
@@ -356,7 +356,7 @@ export const MONSTERS = [
     rarity: 2, cost: 2,
     stats: { hp: 135, atk: 22, speed: 1.45, range: 1.9, atkSpeed: 1.0 },
     passive: 'SLOW_AURA', tags: ['slow','tank'], color: '#5d4037',
-    description: 'Tơ dày — làm chậm cả cụm.',
+    description: 'Tank — aura: Hero còn 62% tốc',
   },
 
   // ——— 3★ Rare+ (8) ———
@@ -366,7 +366,7 @@ export const MONSTERS = [
     rarity: 3, cost: 3,
     stats: { hp: 140, atk: 28, speed: 1.1, range: 3.6, atkSpeed: 0.9 },
     passive: 'FROST_BOLT', tags: ['rare','ranged','ice'], color: '#81d4fa',
-    description: 'Imp băng 3★ — FROST_BOLT mở đầu line băng.',
+    description: 'Tầm xa — đóng băng 1.4s',
   },
   {
     id: 'brute_troll',
@@ -375,7 +375,7 @@ export const MONSTERS = [
     stats: { hp: 420, atk: 40, speed: 0.9, range: 1.3, atkSpeed: 0.75 },
     passive: 'TAUNT', tags: ['tank'], color: '#8bc34a',
     skills: ['SHIELD'],
-    description: 'Tank cổ điển — TAUNT + khiên, chắn đường cơ bản.',
+    description: 'Tank — Hero ưu tiên đánh mình — khiên 26% maxHp/3s khi ≤45% HP (CD 11s)',
   },
   {
     id: 'blade_dancer',
@@ -387,7 +387,7 @@ export const MONSTERS = [
     skills: ['STEALTH', 'BACKSTAB', 'STUN_ON_HIT'],
     tags: ['dps', 'assassin', 'stun'],
     color: '#ec407a',
-    description: 'Sát thủ 3★ — tàng hình + backstab + choáng mở đầu.',
+    description: 'Sát thủ — đòn đầu ×2 ATK — tàng hình — lén đâm ×1.5 ATK — choáng 0.85s',
   },
   {
     id: 'stone_archer',
@@ -395,7 +395,7 @@ export const MONSTERS = [
     rarity: 3, cost: 3,
     stats: { hp: 160, atk: 32, speed: 0.9, range: 3.9, atkSpeed: 0.95 },
     passive: 'RANGED_VOLLEY', tags: ['ranged','dps'], color: '#78909c',
-    description: 'Cung đá tầm xa ngang hero cung — volley splash nhẹ.',
+    description: 'Tầm xa — splash 55% dmg /1.6 ô',
   },
   {
     id: 'hex_cat',
@@ -403,7 +403,7 @@ export const MONSTERS = [
     rarity: 3, cost: 3,
     stats: { hp: 150, atk: 32, speed: 1.9, range: 1.6, atkSpeed: 1.2 },
     passive: 'SILENCE_ON_HIT', tags: ['anti_mage'], color: '#7e57c2',
-    description: 'Yểm bùa câm — khắc Mage.',
+    description: 'Anti-mage — câm Mage hết trận (ATK còn ~35%)',
   },
   {
     id: 'barnacle_brute',
@@ -412,7 +412,7 @@ export const MONSTERS = [
     stats: { hp: 380, atk: 30, speed: 0.7, range: 1.2, atkSpeed: 0.7 },
     passive: 'WATER_BUFF', tags: ['tank', 'water'], color: '#4db6ac',
     skills: ['SHIELD', 'TAUNT_SELF'],
-    description: 'Tank nước 3★ — khiên + khiêu khích trên nước (choáng để San Hô).',
+    description: 'Tank — ô nước +40% ATK/HP; cạn −30% ATK — khiên 26% maxHp/3s khi ≤45% HP (CD 11s) — taunt 2.4s /3.2 ô (CD 12s)',
   },
   {
     id: 'lantern_keeper',
@@ -420,7 +420,7 @@ export const MONSTERS = [
     rarity: 3, cost: 3,
     stats: { hp: 190, atk: 28, speed: 1.2, range: 2.5, atkSpeed: 0.95 },
     passive: 'REVEAL', tags: ['detect', 'anti_rogue'], color: '#ffa726',
-    description: 'Đèn soi mọi góc tối — anti Rogue.',
+    description: 'Anti-rogue — soi tàng hình trong tầm',
   },
   {
     id: 'bone_captain',
@@ -428,7 +428,7 @@ export const MONSTERS = [
     rarity: 3, cost: 3,
     stats: { hp: 280, atk: 35, speed: 1.1, range: 1.4, atkSpeed: 0.9 },
     passive: 'BONE_PILE', tags: ['tank', 'slow'], color: '#d7ccc8',
-    description: 'Chết để lại chiến trường xương chậm.',
+    description: 'Tank — chết: vùng chậm 8s, còn 20% tốc /1.6 ô',
   },
   {
     id: 'gale_archer',
@@ -436,7 +436,7 @@ export const MONSTERS = [
     rarity: 3, cost: 3,
     stats: { hp: 180, atk: 36, speed: 1, range: 4.1, atkSpeed: 1.05 },
     passive: 'RANGED_FROST', tags: ['dps','ranged'], color: '#81c784',
-    description: 'Cung gió — RANGED_FROST làm chậm/đóng nhẹ tầm xa.',
+    description: 'Tầm xa — đóng băng 1.15s',
   },
   {
     id: 'rune_ogre',
@@ -445,7 +445,7 @@ export const MONSTERS = [
     stats: { hp: 340, atk: 38, speed: 0.95, range: 1.3, atkSpeed: 0.8 },
     passive: 'TAUNT', tags: ['tank'], color: '#8e24aa',
     skills: ['SHIELD', 'STUN_ON_HIT'],
-    description: 'Tank rune — khiên + choáng, không element. Niche CC tường.',
+    description: 'Tank — Hero ưu tiên đánh mình — khiên 26% maxHp/3s khi ≤45% HP (CD 11s) — choáng 0.85s',
   },
   {
     id: 'venom_dancer',
@@ -457,7 +457,7 @@ export const MONSTERS = [
     skills: ['STEALTH', 'BACKSTAB'],
     tags: ['dps', 'poison', 'assassin'],
     color: '#c0ca33',
-    description: 'Sát thủ độc — tàng hình + backstab + độc (không choáng).',
+    description: 'Sát thủ — độc 9 HP/s ×4s (~36) — tàng hình — lén đâm ×1.5 ATK',
   },
   {
     id: 'cipher_owl',
@@ -465,7 +465,7 @@ export const MONSTERS = [
     rarity: 3, cost: 3,
     stats: { hp: 200, atk: 30, speed: 1, range: 3.7, atkSpeed: 0.9 },
     passive: 'SILENCE_ON_HIT', tags: ['silence','anti_mage','ranged'], color: '#5c6bc0',
-    description: 'Cú silence tầm xa.',
+    description: 'Tầm xa — câm Mage hết trận (ATK còn ~35%)',
   },
   {
     id: 'reef_guardian',
@@ -474,7 +474,7 @@ export const MONSTERS = [
     stats: { hp: 300, atk: 32, speed: 0.85, range: 1.5, atkSpeed: 0.85 },
     passive: 'WATER_BUFF', tags: ['tank', 'water'], color: '#26a69a',
     skills: ['TAUNT_SELF', 'STUN_ON_HIT'],
-    description: 'Tank nước 3★ — khiêu khích + choáng trên nước (không khiên).',
+    description: 'Tank — ô nước +40% ATK/HP; cạn −30% ATK — taunt 2.4s /3.2 ô (CD 12s) — choáng 0.85s',
   },
 
   // ——— 4★ Epic ———
@@ -488,7 +488,7 @@ export const MONSTERS = [
     skills: ['STEALTH', 'BACKSTAB', 'STUN_ON_HIT'],
     tags: ['epic', 'dps', 'assassin', 'stun'],
     color: '#5c6bc0',
-    description: 'Sát thủ CC — tàng hình + backstab + choáng. Burst thuộc Đao Phủ Đêm.',
+    description: 'Sát thủ — choáng 0.85s mỗi đòn — tàng hình — lén đâm ×1.5 ATK',
   },
   {
     id: 'crystal_golem',
@@ -497,7 +497,7 @@ export const MONSTERS = [
     stats: { hp: 650, atk: 45, speed: 0.7, range: 1.5, atkSpeed: 0.65 },
     passive: 'WATER_BUFF', tags: ['epic', 'tank'], color: '#4dd0e1',
     skills: ['SHIELD'],
-    description: 'Tank nước epic — Buff nước + khiên. Khiêu khích thuộc Hàu / San Hô.',
+    description: 'Tank — ô nước +40% ATK/HP; cạn −30% ATK — khiên 26% maxHp/3s khi ≤45% HP (CD 11s)',
   },
   {
     id: 'iron_howler',
@@ -505,7 +505,7 @@ export const MONSTERS = [
     rarity: 4, cost: 5,
     stats: { hp: 520, atk: 78, speed: 1.9, range: 1.5, atkSpeed: 1.2 },
     passive: 'STUN_ON_HIT', tags: ['epic', 'dps', 'stun'], color: '#546e7a',
-    description: 'Đấu sĩ — máu khá + choáng ngắn khi đánh.',
+    description: 'DPS — choáng 0.85s mỗi đòn',
   },
   {
     id: 'plague_doctor',
@@ -513,7 +513,7 @@ export const MONSTERS = [
     rarity: 4, cost: 4,
     stats: { hp: 320, atk: 42, speed: 1, range: 3.8, atkSpeed: 0.95 },
     passive: 'RANGED_POISON', tags: ['epic','ranged','poison'], color: '#455a64',
-    description: 'Y sĩ dịch — ranged poison thuần, chip DoT ổn định.',
+    description: 'Tầm xa — độc 9 HP/s ×4s',
   },
   {
     id: 'obsidian_guard',
@@ -521,7 +521,7 @@ export const MONSTERS = [
     rarity: 4, cost: 5,
     stats: { hp: 720, atk: 40, speed: 0.7, range: 1.3, atkSpeed: 0.7 },
     passive: 'AURA_STUN', auraRadius: 2.4, tags: ['epic','tank'], color: '#263238',
-    description: 'Tank aura choáng định kỳ.',
+    description: 'Tank — mỗi 4.5s choáng 0.55s (bán kính 2.4 ô)',
   },
   {
     id: 'storm_harpy',
@@ -533,7 +533,7 @@ export const MONSTERS = [
     skills: ['STEALTH', 'STUN_ON_HIT'],
     tags: ['epic', 'dps', 'assassin', 'stun'],
     color: '#29b6f6',
-    description: 'Sát thủ gió — tàng hình + đòn đầu + choáng, không backstab (niche riêng).',
+    description: 'Sát thủ — đòn đầu ×2 ATK — tàng hình — choáng 0.85s',
   },
   {
     id: 'grave_monk',
@@ -541,7 +541,7 @@ export const MONSTERS = [
     rarity: 4, cost: 5,
     stats: { hp: 320, atk: 60, speed: 1.3, range: 1.8, atkSpeed: 1.05 },
     passive: 'DARK_BUFF', tags: ['epic', 'dark'], color: '#6a1b9a',
-    description: 'Ô tối +100% ATK; ngoài tối −35% ATK — phải đặt trên d.',
+    description: 'ô tối +100% ATK; ngoài −35% ATK',
   },
   {
     id: 'basalt_colossus',
@@ -549,7 +549,7 @@ export const MONSTERS = [
     rarity: 4, cost: 5,
     stats: { hp: 780, atk: 48, speed: 0.55, range: 1.4, atkSpeed: 0.55 },
     passive: 'AURA_TAUNT', tags: ['epic','tank'], color: '#37474f',
-    description: 'Tường thịt epic — chỉ aura kéo agro, không khiên/choáng. Siêu trâu thuần.',
+    description: 'Tank — aura kéo agro ~2.2 ô',
   },
   {
     id: 'night_reaver',
@@ -561,7 +561,7 @@ export const MONSTERS = [
     skills: ['STEALTH', 'BACKSTAB'],
     tags: ['epic', 'dps', 'assassin'],
     color: '#4527a0',
-    description: 'Sát thủ dame — tàng hình + backstab + đòn đầu x2. Choáng thuộc Báo Bóng.',
+    description: 'Sát thủ — đòn đầu ×2 ATK — tàng hình — lén đâm ×1.5 ATK',
   },
   {
     id: 'arc_sphinx',
@@ -569,7 +569,7 @@ export const MONSTERS = [
     rarity: 4, cost: 5,
     stats: { hp: 380, atk: 48, speed: 0.95, range: 3.9, atkSpeed: 0.9 },
     passive: 'SILENCE_ON_HIT', tags: ['epic','anti_mage','ranged'], color: '#fdd835',
-    description: 'Sphinx tầm xa silence mage.',
+    description: 'Tầm xa — câm Mage hết trận (ATK còn ~35%)',
   },
   {
     id: 'mire_serpent',
@@ -577,7 +577,7 @@ export const MONSTERS = [
     rarity: 4, cost: 5,
     stats: { hp: 400, atk: 65, speed: 1.5, range: 1.8, atkSpeed: 1.1 },
     passive: 'WATER_BUFF', tags: ['epic', 'water', 'dps'], color: '#00695c',
-    description: 'Ô nước +40% HP/ATK; cạn bị −30% ATK — DPS nước epic.',
+    description: 'DPS — ô nước +40% ATK/HP; cạn −30% ATK',
   },
   {
     id: 'umbra_seer',
@@ -585,7 +585,7 @@ export const MONSTERS = [
     rarity: 4, cost: 4,
     stats: { hp: 300, atk: 35, speed: 0.9, range: 3.8, atkSpeed: 0.85 },
     passive: 'REVEAL', tags: ['epic','anti_rogue','detect','ranged'], color: '#7e57c2',
-    description: 'Soi tàng hình diện rộng + dame ổn.',
+    description: 'Tầm xa — soi tàng hình trong tầm',
   },
 
   // ——— 5★ Legendary / Boss ———
@@ -595,7 +595,7 @@ export const MONSTERS = [
     rarity: 5, cost: 7,
     stats: { hp: 900, atk: 150, speed: 1.2, range: 2.8, atkSpeed: 0.9 },
     passive: 'BUFF_IN_LOW_CEILING_ROOM', tags: ['boss', 'dps'], color: '#ef5350',
-    description: 'Ô trần cao −50% ATK; ô trần thấp/tối +200% ATK.',
+    description: 'DPS — ô l/d +200% ATK; ô h −50%',
   },
   {
     id: 'abyss_hydra',
@@ -603,7 +603,7 @@ export const MONSTERS = [
     rarity: 5, cost: 8,
     stats: { hp: 1200, atk: 95, speed: 1.0, range: 2.0, atkSpeed: 1.1 },
     passive: 'ANTI_WARRIOR_BURST', tags: ['boss', 'anti_warrior'], color: '#7b1fa2',
-    description: 'Hydra — ANTI_WARRIOR_BURST thuần, xả đơn mục tiêu Chiến sĩ.',
+    description: 'DPS — vs Chiến sĩ (WARRIOR): mỗi đòn ×2.2 ATK. Không khiên/taunt.',
   },
   {
     id: 'void_wraith',
@@ -615,7 +615,7 @@ export const MONSTERS = [
     skills: ['STEALTH', 'BACKSTAB'],
     tags: ['boss', 'dps', 'assassin'],
     color: '#311b92',
-    description: 'Boss sát thủ — tàng hình + backstab. Ô tối +100% ATK; ngoài tối −35%.',
+    description: 'Sát thủ — ô tối +100% ATK; ngoài −35% ATK — tàng hình — lén đâm ×1.5 ATK',
   },
   {
     id: 'tide_leviathan',
@@ -623,7 +623,7 @@ export const MONSTERS = [
     rarity: 5, cost: 8,
     stats: { hp: 1100, atk: 100, speed: 0.9, range: 2.4, atkSpeed: 0.85 },
     passive: 'WATER_BUFF', tags: ['boss', 'water'], color: '#0277bd',
-    description: 'Boss nước — ô nước +40% HP/ATK; cạn bị yếu nặng.',
+    description: 'ô nước +40% ATK/HP; cạn −30% ATK',
   },
   {
     id: 'crown_behemoth',
@@ -631,7 +631,7 @@ export const MONSTERS = [
     rarity: 5, cost: 7,
     stats: { hp: 1200, atk: 80, speed: 0.8, range: 1.6, atkSpeed: 0.75 },
     passive: 'ANTI_WARRIOR_BURST', tags: ['boss', 'tank'], color: '#bf360c',
-    description: 'Tank boss nghiền Chiến sĩ — không khiên/taunt, dame anti-warrior thuần.',
+    description: 'Tank — vs Chiến sĩ mỗi đòn ×2.2 ATK. Không khiên/taunt — tường HP + nghiền Warrior.',
   },
   {
     id: 'solar_phoenix',
@@ -640,7 +640,7 @@ export const MONSTERS = [
     stats: { hp: 850, atk: 160, speed: 1.6, range: 2.5, atkSpeed: 1.05 },
     passive: 'BURST_FIRST_HIT', tags: ['boss', 'dps', 'stun'], color: '#ff6f00',
     skills: ['STUN_ON_HIT'],
-    description: 'Phượng — burst + choáng, bay DPS legendary.',
+    description: 'DPS — đòn đầu ×2 ATK — choáng 0.85s',
   },
   {
     id: 'frost_tyrant',
@@ -648,7 +648,7 @@ export const MONSTERS = [
     rarity: 5, cost: 7,
     stats: { hp: 900, atk: 70, speed: 0.85, range: 4, atkSpeed: 0.9 },
     passive: 'RANGED_FROST', tags: ['boss','ranged','ice'], color: '#4fc3f7',
-    description: 'Bạo chúa băng — frost bolt tầm xa.',
+    description: 'Tầm xa — đóng băng 1.15s',
   },
   {
     id: 'chaos_chimera',
@@ -657,7 +657,7 @@ export const MONSTERS = [
     stats: { hp: 1150, atk: 135, speed: 1.35, range: 2.0, atkSpeed: 1.1 },
     passive: 'BURST_FIRST_HIT', tags: ['boss', 'anti_warrior', 'dps'], color: '#d500f9',
     skills: ['STUN_ON_HIT'],
-    description: 'Chimera — đòn đầu hủy diệt + choáng (anti-warrior để Hydra/Behemoth).',
+    description: 'DPS — đòn đầu ×2 ATK — choáng 0.85s — vs Chiến sĩ ×2.2 ATK — đòn đầu vs Warrior ≈ ×4.4 ATK',
   },
   {
     id: 'eclipse_serpent',
@@ -665,7 +665,7 @@ export const MONSTERS = [
     rarity: 5, cost: 8,
     stats: { hp: 1000, atk: 145, speed: 1.45, range: 2.6, atkSpeed: 1.15 },
     passive: 'DARK_BUFF', tags: ['boss', 'dark', 'dps'], color: '#1a237e',
-    description: 'Boss bóng tối — ô tối +100% ATK; ngoài tối bị −35% ATK.',
+    description: 'DPS — ô tối +100% ATK; ngoài −35% ATK',
   },
   {
     id: 'storm_colossus',
@@ -673,7 +673,7 @@ export const MONSTERS = [
     rarity: 5, cost: 7,
     stats: { hp: 1050, atk: 72, speed: 0.85, range: 1.8, atkSpeed: 0.8 },
     passive: 'WATER_BUFF', tags: ['boss', 'tank', 'water'], color: '#0277bd',
-    description: 'Tank nước legendary — Buff nước + tường HP (không khiên/taunt — khiên thuộc Golem Tinh Thể).',
+    description: 'Tank — ô nước +40% ATK/HP; cạn −30% ATK',
   },
   {
     id: 'venom_empress',
@@ -681,7 +681,7 @@ export const MONSTERS = [
     rarity: 5, cost: 7,
     stats: { hp: 850, atk: 68, speed: 0.9, range: 3.9, atkSpeed: 0.95 },
     passive: 'RANGED_POISON', tags: ['boss','ranged','poison'], color: '#9ccc65',
-    description: 'Nữ hoàng độc — ranged poison.',
+    description: 'Tầm xa — độc 9 HP/s ×4s',
   },
   {
     id: 'mirror_paladin',
@@ -690,7 +690,7 @@ export const MONSTERS = [
     stats: { hp: 1100, atk: 90, speed: 1.1, range: 1.5, atkSpeed: 0.9 },
     passive: 'REVEAL', tags: ['boss', 'tank', 'anti_rogue'], color: '#b0bec5',
     skills: ['TAUNT_SELF'],
-    description: 'Tank soi tàng hình — REVEAL + khiêu khích. Khiên để rarity thấp hơn.',
+    description: 'Tank — soi tàng hình trong tầm — taunt 2.4s /3.2 ô (CD 12s)',
   },
   {
     id: 'cinder_wyrm',
@@ -699,7 +699,7 @@ export const MONSTERS = [
     stats: { hp: 880, atk: 155, speed: 1.5, range: 2.2, atkSpeed: 1.05 },
     passive: 'BURST_FIRST_HIT', tags: ['boss', 'dps', 'stun'], color: '#e65100',
     skills: ['STUN_ON_HIT'],
-    description: 'Wyrm — burst + choáng DPS lửa (không tank).',
+    description: 'DPS — đòn đầu ×2 ATK — choáng 0.85s',
   },
   {
     id: 'night_oracle',
@@ -707,7 +707,7 @@ export const MONSTERS = [
     rarity: 5, cost: 7,
     stats: { hp: 520, atk: 55, speed: 1, range: 4, atkSpeed: 0.95 },
     passive: 'SILENCE_ON_HIT', tags: ['boss','silence','ranged'], color: '#4a148c',
-    description: 'Silence mạnh — anti-mage legendary.',
+    description: 'Tầm xa — câm Mage hết trận (ATK còn ~35%)',
   },
 
   // ——— 6★ Mythic (mạnh nhưng drawback rõ) ———
@@ -718,7 +718,7 @@ export const MONSTERS = [
     stats: { hp: 1100, atk: 220, speed: 1.55, range: 2.8, atkSpeed: 1.2 },
     passive: 'MYTHIC_SELF_DRAIN', tags: ['mythic', 'dps', 'drawback'], color: '#311b92',
     drawback: 'Tự mất ~4% HP/giây — phải kết thúc nhanh.',
-    description: 'Mythic DPS cực mạnh. Drawback: tự rút máu liên tục.',
+    description: 'DPS — tự mất 4% maxHp/s',
   },
   {
     id: 'blood_idol',
@@ -727,7 +727,7 @@ export const MONSTERS = [
     stats: { hp: 2000, atk: 95, speed: 0.9, range: 2.2, atkSpeed: 0.85 },
     passive: 'MYTHIC_TREASURE_TAX', tags: ['mythic', 'tank', 'heal', 'drawback'], color: '#b71c1c',
     drawback: 'Khi còn sống, kho mất ~3 HP/giây.',
-    description: 'Mythic tank siêu trâu + heal pulse. Drawback: rút máu Kho.',
+    description: 'Tank — Kho −3 HP/s khi còn sống',
   },
   {
     id: 'doom_bell',
@@ -736,7 +736,7 @@ export const MONSTERS = [
     stats: { hp: 950, atk: 140, speed: 1.2, range: 3.0, atkSpeed: 1.05 },
     passive: 'MYTHIC_ALLY_SLOW', tags: ['mythic', 'anti_mage', 'drawback'], color: '#6a1b9a',
     drawback: 'Aura làm chậm quái đồng minh gần đó.',
-    description: 'Silence mạnh + chống mage. Drawback: chậm đồng đội.',
+    description: 'Anti-mage — câm Mage; đồng minh gần ATK×0.82',
   },
   {
     id: 'ash_apocalypse',
@@ -745,7 +745,7 @@ export const MONSTERS = [
     stats: { hp: 1600, atk: 180, speed: 1.25, range: 2.0, atkSpeed: 1.1 },
     passive: 'MYTHIC_DEATH_CURSE', tags: ['mythic', 'anti_warrior', 'dps', 'drawback'], color: '#bf360c',
     drawback: 'Chết gây nổ sát thương đồng minh quanh mình.',
-    description: 'Anti-warrior hủy diệt. Drawback: chết hại team.',
+    description: 'DPS — chết: đồng minh −20% maxHp /2.4 ô — vs Chiến sĩ ×2.2 ATK',
   },
   {
     id: 'chronos_fang',
@@ -754,7 +754,7 @@ export const MONSTERS = [
     stats: { hp: 900, atk: 200, speed: 2.0, range: 2.4, atkSpeed: 1.35 },
     passive: 'MYTHIC_GLASS', tags: ['mythic', 'dps', 'drawback'], color: '#00bcd4',
     drawback: 'Nhận ~1.8× sát thương — thủy tinh.',
-    description: 'Mythic tốc độ + dame. Drawback: máu mỏng thật sự.',
+    description: 'DPS — nhận dmg ×~1.8 (def×0.55)',
   },
 
   // ——— Heal support (đa rarity) ———
@@ -764,7 +764,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 200, atk: 6, speed: 1.0, range: 1.4, atkSpeed: 0.65 },
     passive: 'HEAL_AURA', auraRadius: 2.2, tags: ['utility', 'heal', 'tankette'], color: '#81c784',
-    description: 'Y tá rêu — HEAL_AURA 1★ mở đầu.',
+    description: 'Tank — aura hồi ~2.8% maxHp/s',
   },
   {
     id: 'salve_sprite',
@@ -772,7 +772,7 @@ export const MONSTERS = [
     rarity: 2, cost: 2,
     stats: { hp: 260, atk: 12, speed: 1.15, range: 1.5, atkSpeed: 0.75 },
     passive: 'HEAL_AURA', auraRadius: 2.4, tags: ['utility', 'heal', 'tankette'], color: '#a5d6a7',
-    description: 'Tiên dược — HEAL_AURA 2★ liên tục (khác xung của Cleric Bào Tử).',
+    description: 'Tank — aura hồi ~4% maxHp/s',
   },
   {
     id: 'vita_toad',
@@ -780,7 +780,7 @@ export const MONSTERS = [
     rarity: 3, cost: 3,
     stats: { hp: 380, atk: 18, speed: 0.95, range: 1.5, atkSpeed: 0.7 },
     passive: 'HEAL_PULSE', auraRadius: 2.6, tags: ['utility', 'heal', 'tankette'], color: '#66bb6a',
-    description: 'Cóc sinh lực — HEAL_PULSE 3★, xung hồi theo nhịp.',
+    description: 'Tank — xung hồi mỗi 2.4s (~6–20% maxHp theo ★)',
   },
   {
     id: 'bloom_dryad',
@@ -788,7 +788,7 @@ export const MONSTERS = [
     rarity: 4, cost: 5,
     stats: { hp: 640, atk: 28, speed: 1.0, range: 1.6, atkSpeed: 0.8 },
     passive: 'HEAL_AURA', auraRadius: 2.8, tags: ['utility', 'heal', 'support', 'tankette'], color: '#43a047',
-    description: 'Dryad — HEAL_AURA epic bán kính lớn, thuần hỗ trợ.',
+    description: 'Tank — aura hồi ~7% maxHp/s',
   },
   {
     id: 'sanctum_angel',
@@ -797,7 +797,7 @@ export const MONSTERS = [
     stats: { hp: 980, atk: 42, speed: 1.05, range: 1.7, atkSpeed: 0.85 },
     passive: 'HEAL_PULSE', auraRadius: 3, tags: ['boss', 'heal', 'utility', 'tank'], color: '#fdd835',
     skills: ['SHIELD'],
-    description: 'Thiên sứ — HEAL_PULSE boss + khiên. Heal tank hạng nặng.',
+    description: 'Tank — xung hồi mỗi 2.4s (~6–20% maxHp theo ★) — khiên 26% maxHp/3s khi ≤45% HP (CD 11s)',
   },
   {
     id: 'spore_cleric',
@@ -805,7 +805,7 @@ export const MONSTERS = [
     rarity: 2, cost: 2,
     stats: { hp: 280, atk: 10, speed: 1.05, range: 1.4, atkSpeed: 0.7 },
     passive: 'HEAL_PULSE', auraRadius: 2.3, tags: ['utility', 'heal', 'tankette'], color: '#9ccc65',
-    description: 'Hồi xung 2★ — HEAL_PULSE (khác aura liên tục của Tiên Dược).',
+    description: 'Tank — xung hồi mỗi 2.4s (~6–20% maxHp theo ★)',
   },
   {
     id: 'resin_monk',
@@ -814,7 +814,7 @@ export const MONSTERS = [
     stats: { hp: 420, atk: 16, speed: 0.95, range: 1.5, atkSpeed: 0.65 },
     passive: 'HEAL_AURA', auraRadius: 2.5, tags: ['utility', 'heal', 'tankette'], color: '#7cb342',
     skills: ['SHIELD'],
-    description: 'Tu sĩ nhựa — heal aura + khiên, sống dai hơn healer thuần.',
+    description: 'Tank — aura hồi ~5.5% maxHp/s — khiên 26% maxHp/3s khi ≤45% HP (CD 11s)',
   },
   {
     id: 'lotus_warden',
@@ -822,7 +822,7 @@ export const MONSTERS = [
     rarity: 4, cost: 5,
     stats: { hp: 620, atk: 26, speed: 1.0, range: 1.6, atkSpeed: 0.75 },
     passive: 'HEAL_PULSE', auraRadius: 2.8, tags: ['utility', 'heal', 'support', 'tankette'], color: '#558b2f',
-    description: 'Hộ liên — HEAL_PULSE epic bán kính lớn (không khiên — khiên thuộc Thiên Sứ).',
+    description: 'Tank — xung hồi mỗi 2.4s (~6–20% maxHp theo ★)',
   },
 
   // ——— Giảm hồi (anti-heal) — khắc chế healer Hero ———
@@ -832,7 +832,7 @@ export const MONSTERS = [
     rarity: 1, cost: 1,
     stats: { hp: 200, atk: 8, speed: 0.9, range: 1.3, atkSpeed: 0.8 },
     passive: 'ANTI_HEAL_AURA', auraRadius: 2.2, tags: ['utility', 'anti_heal', 'tankette'], color: '#8d6e63',
-    description: 'Tankette cắt hồi — máu dày để aura kịp hoạt động.',
+    description: 'Tank — aura: Hero còn nhận 55% hồi',
   },
   {
     id: 'wound_wasp',
@@ -842,7 +842,7 @@ export const MONSTERS = [
     passive: 'HEAL_CUT_ON_HIT', tags: ['dps', 'anti_heal', 'assassin'], color: '#a1887f',
     skills: ['STEALTH'],
     stealth: true,
-    description: 'Sát thủ cắt hồi — tàng hình áp sát rồi đánh để giảm hồi Hero.',
+    description: 'Sát thủ — cắt hồi còn 40%/4s — tàng hình',
   },
   {
     id: 'blight_toad',
@@ -851,7 +851,7 @@ export const MONSTERS = [
     stats: { hp: 520, atk: 22, speed: 0.85, range: 1.5, atkSpeed: 0.75 },
     passive: 'ANTI_HEAL_AURA', auraRadius: 2.5, tags: ['utility', 'anti_heal', 'tank'], color: '#6d4c41',
     skills: ['SHIELD'],
-    description: 'Tank cắt hồi 3★ — aura + khiên (taunt thuộc Tượng Chí Mạng).',
+    description: 'Tank — aura: Hero còn nhận 42% hồi — khiên 26% maxHp/3s khi ≤45% HP (CD 11s)',
   },
   {
     id: 'null_nurse',
@@ -859,7 +859,7 @@ export const MONSTERS = [
     rarity: 4, cost: 5,
     stats: { hp: 420, atk: 48, speed: 1.0, range: 3.4, atkSpeed: 0.95 },
     passive: 'HEAL_CUT_BOLT', tags: ['utility', 'anti_heal', 'ranged'], color: '#5d4037',
-    description: 'Bắn tầm trung — tia cắt hồi lan nhẹ quanh mục tiêu (không còn aura giấy).',
+    description: 'Tầm xa — tia cắt hồi + splash 35% dmg /1.5 ô',
   },
   {
     id: 'grievous_idol',
@@ -868,7 +868,7 @@ export const MONSTERS = [
     stats: { hp: 1050, atk: 45, speed: 0.7, range: 1.7, atkSpeed: 0.6 },
     passive: 'ANTI_HEAL_AURA', auraRadius: 3.0, tags: ['boss', 'anti_heal', 'tank'], color: '#3e2723',
     skills: ['TAUNT_SELF'],
-    description: 'Boss cắt hồi — aura + khiêu khích. Khiên thuộc Cóc Ô Uế (3★).',
+    description: 'Tank — aura: Hero còn nhận 22% hồi — taunt 2.4s /3.2 ô (CD 12s)',
   },
 
   // ——— Sát thủ sớm / tự nổ / sống lại / phá khiên ———
@@ -882,7 +882,7 @@ export const MONSTERS = [
     skills: ['STEALTH', 'BACKSTAB'],
     tags: ['dps', 'assassin'],
     color: '#7e57c2',
-    description: 'Sát thủ 1★ — tàng hình áp sát, đòn đầu x2.',
+    description: 'Sát thủ — đòn đầu ×2 ATK — tàng hình — lén đâm ×1.5 ATK',
   },
   {
     id: 'boom_spore',
@@ -892,7 +892,7 @@ export const MONSTERS = [
     passive: 'SELF_DESTRUCT',
     tags: ['utility', 'explode'],
     color: '#ff8a65',
-    description: 'Chết là nổ — gây sát thương quanh chỗ đứng.',
+    description: 'chết nổ r=2 ô',
   },
   {
     id: 'ghost_lantern',
@@ -904,7 +904,7 @@ export const MONSTERS = [
     skills: ['STEALTH', 'BACKSTAB'],
     tags: ['dps', 'assassin'],
     color: '#5c6bc0',
-    description: 'Sát thủ 2★ — tàng hình + lén đâm + xé giáp (DEF_SHRED).',
+    description: 'Sát thủ — phá giáp: def ×0.65 /4.5s — tàng hình — lén đâm ×1.5 ATK',
   },
   {
     id: 'powder_keg',
@@ -914,7 +914,7 @@ export const MONSTERS = [
     passive: 'SELF_DESTRUCT',
     tags: ['utility', 'explode', 'tankette'],
     color: '#bf360c',
-    description: 'Chết nổ mạnh hơn — đặt gần lối Hero đi qua.',
+    description: 'Tank — chết nổ r=2 ô',
   },
   {
     id: 'phoenix_mite',
@@ -924,7 +924,7 @@ export const MONSTERS = [
     passive: 'REVIVE',
     tags: ['utility', 'revive'],
     color: '#ffb74d',
-    description: 'Chết lần đầu sống lại với một phần máu — vẫn chiếm cost đến khi chết hẳn.',
+    description: 'chết lần 1: hồi 40% HP + khiên 15%/2.5s',
   },
   {
     id: 'shield_eater',
@@ -934,7 +934,7 @@ export const MONSTERS = [
     passive: 'SHIELD_BREAK',
     tags: ['dps', 'shield_break'],
     color: '#4fc3f7',
-    description: 'Đánh trúng phá ngay lớp khiên của Hero.',
+    description: 'DPS — xóa sạch khiên Hero',
   },
   {
     id: 'ash_bomber',
@@ -944,7 +944,7 @@ export const MONSTERS = [
     passive: 'SELF_DESTRUCT',
     tags: ['utility', 'explode'],
     color: '#e64a19',
-    description: 'Tự nổ khi chết — sát thương vùng rõ rệt.',
+    description: 'chết nổ r=2 ô',
   },
   {
     id: 'second_life_golem',
@@ -955,7 +955,7 @@ export const MONSTERS = [
     tags: ['tank', 'revive'],
     skills: ['TAUNT_SELF'],
     color: '#8d6e63',
-    description: 'Tank sống lại — REVIVE + khiêu khích. Khiên thuộc Khổng Lồ Phượng.',
+    description: 'Tank — chết lần 1: hồi 40% HP + khiên 15%/2.5s — taunt 2.4s /3.2 ô (CD 12s)',
   },
   {
     id: 'rift_breaker',
@@ -966,7 +966,7 @@ export const MONSTERS = [
     tags: ['epic', 'dps', 'shield_break'],
     skills: ['STUN_ON_HIT'],
     color: '#29b6f6',
-    description: 'Phá khiên + choáng — khắc Warrior/Tank có khiên.',
+    description: 'DPS — xóa sạch khiên Hero — choáng 0.85s',
   },
   {
     id: 'phoenix_colossus',
@@ -977,7 +977,7 @@ export const MONSTERS = [
     tags: ['boss', 'tank', 'revive'],
     skills: ['SHIELD'],
     color: '#ff6f00',
-    description: 'Boss sống lại — khiên + REVIVE. Khiêu khích thuộc Golem Hai Mạng (4★).',
+    description: 'Tank — chết lần 1: hồi 40% HP + khiên 15%/2.5s — khiên 26% maxHp/3s khi ≤45% HP (CD 11s)',
   },
   {
     id: 'void_bomber',
@@ -989,7 +989,7 @@ export const MONSTERS = [
     skills: ['STEALTH'],
     tags: ['boss', 'assassin', 'explode'],
     color: '#311b92',
-    description: 'Tàng hình áp sát rồi chết nổ — sát thương vùng lớn.',
+    description: 'Sát thủ — chết nổ r=2.4 ô — tàng hình',
   },
   {
     id: 'mythic_reaper',
@@ -1001,7 +1001,7 @@ export const MONSTERS = [
     skills: ['STEALTH', 'BACKSTAB', 'SHIELD_BREAK'],
     tags: ['mythic', 'assassin', 'dps', 'shield_break', 'drawback'],
     drawback: 'Máu mỏng Mythic — chết nhanh nếu lộ hình.',
-    description: 'Mythic sát thủ — tàng hình, phá khiên, backstab; máu mỏng.',
+    description: 'Sát thủ — nhận dmg ×~1.8 (def×0.55) — tàng hình — lén đâm ×1.5 ATK — phá khiên',
   },
 
   {
@@ -1010,7 +1010,7 @@ export const MONSTERS = [
     rarity: 3, cost: 3,
     stats: { hp: 70, atk: 18, speed: 0, range: 0.9, atkSpeed: 0.4 },
     passive: 'TRAP_FREEZE', tags: ['trap', 'ice'], color: '#81d4fa',
-    description: 'Bẫy đóng băng Hero khi bước lên.',
+    description: 'Bẫy — giẫm: 35% ATK + đóng băng 1.6s',
   },
   {
     id: 'venom_plate',
@@ -1018,7 +1018,7 @@ export const MONSTERS = [
     rarity: 3, cost: 3,
     stats: { hp: 75, atk: 16, speed: 0, range: 1.0, atkSpeed: 0.4 },
     passive: 'TRAP_POISON', tags: ['trap', 'poison'], color: '#9ccc65',
-    description: 'Bẫy độc — DoT kéo dài.',
+    description: 'Bẫy — giẫm: 40% ATK + độc 11/s ×5s',
   },
   {
     id: 'shock_rune',
@@ -1026,7 +1026,7 @@ export const MONSTERS = [
     rarity: 4, cost: 5,
     stats: { hp: 90, atk: 28, speed: 0, range: 1.0, atkSpeed: 0.4 },
     passive: 'TRAP_STUN', tags: ['trap', 'stun'], color: '#ffe082',
-    description: 'Bẫy choáng mạnh — Epic trap.',
+    description: 'Bẫy — giẫm: 50% ATK + choáng 1.3s',
   },
   {
     id: 'cinder_ballista',
@@ -1034,7 +1034,7 @@ export const MONSTERS = [
     rarity: 4, cost: 5,
     stats: { hp: 340, atk: 55, speed: 0.85, range: 4.0, atkSpeed: 0.85 },
     passive: 'RANGED_BURN', tags: ['epic', 'ranged', 'fire'], color: '#ff7043',
-    description: 'Pháo lửa tầm xa ngang cung hero.',
+    description: 'Tầm xa — đốt 10 HP/s ×3.2s',
   },
   {
     id: 'glacier_sniper',
@@ -1042,7 +1042,7 @@ export const MONSTERS = [
     rarity: 4, cost: 5,
     stats: { hp: 300, atk: 52, speed: 0.9, range: 4.2, atkSpeed: 0.8 },
     passive: 'FROST_BOLT', tags: ['epic', 'ranged', 'ice'], color: '#4fc3f7',
-    description: 'Sniper băng — FROST_BOLT range cực xa, freeze rõ.',
+    description: 'Tầm xa — đóng băng 1.4s',
   },
   {
     id: 'toxin_mortar',
@@ -1051,7 +1051,7 @@ export const MONSTERS = [
     stats: { hp: 360, atk: 48, speed: 0.8, range: 3.8, atkSpeed: 0.75 },
     passive: 'RANGED_POISON', tags: ['epic', 'ranged', 'poison'], color: '#8bc34a',
     skills: ['DEF_SHRED'],
-    description: 'Cối độc — bắn độc + xé giáp. Y Sĩ Dịch chỉ độc thuần.',
+    description: 'Tầm xa — độc 9 HP/s ×4s — phá giáp def×0.65/4.5s',
   },
   {
     id: 'magma_brute',
@@ -1061,7 +1061,7 @@ export const MONSTERS = [
     passive: 'FIRE_BUFF', tags: ['epic', 'tank', 'fire'], color: '#e64a19',
     auraRadius: 2.3,
     skills: ['SHIELD', 'STUN_ON_HIT'],
-    description: 'Tank lửa 4★ — khiên + choáng trên lửa (taunt thuộc Khổng Lồ Tro).',
+    description: 'Tank — ô lửa +45% ATK/+20% HP — khiên 26% maxHp/3s khi ≤45% HP (CD 11s) — choáng 0.85s',
   },
   {
     id: 'rime_warden',
@@ -1071,7 +1071,7 @@ export const MONSTERS = [
     passive: 'ICE_BUFF', tags: ['epic', 'tank', 'ice'], color: '#80deea',
     auraRadius: 2.4,
     skills: ['SHIELD', 'TAUNT_SELF'],
-    description: 'Tank băng 4★ — khiên + khiêu khích trên băng.',
+    description: 'Tank — ô băng +40% ATK/+20% HP — khiên 26% maxHp/3s khi ≤45% HP (CD 11s) — taunt 2.4s /3.2 ô (CD 12s)',
   },
   {
     id: 'miasma_golem',
@@ -1081,7 +1081,7 @@ export const MONSTERS = [
     passive: 'POISON_BUFF', tags: ['epic', 'tank', 'poison'], color: '#689f38',
     auraRadius: 2.3,
     skills: ['TAUNT_SELF'],
-    description: 'Tank độc — chỉ khiêu khích + Buff độc. Khiên để rarity khác.',
+    description: 'Tank — ô độc +40% ATK/+15% HP — taunt 2.4s /3.2 ô (CD 12s)',
   },
   {
     id: 'storm_golem',
@@ -1091,7 +1091,7 @@ export const MONSTERS = [
     passive: 'NONE', tags: ['epic', 'tank'], color: '#ffd54f',
     skills: ['SHIELD'],
     auraRadius: 2.5,
-    description: 'Tank khiên epic — chỉ khiên siêu dày. Taunt thuộc Quỷ Núi / Ma Xích; choáng thuộc Obsidian.',
+    description: 'Tank — khiên 26% maxHp/3s khi ≤45% HP (CD 11s)',
   },
   {
     id: 'ash_artillery',
@@ -1099,7 +1099,7 @@ export const MONSTERS = [
     rarity: 4, cost: 5,
     stats: { hp: 280, atk: 60, speed: 0.8, range: 4.1, atkSpeed: 0.7 },
     passive: 'RANGED_VOLLEY', tags: ['epic', 'ranged', 'fire'], color: '#bf360c',
-    description: 'Volley lửa tầm xa.',
+    description: 'Tầm xa — splash 55% dmg /1.6 ô',
   },
   {
     id: 'crystal_archer',
@@ -1107,7 +1107,7 @@ export const MONSTERS = [
     rarity: 4, cost: 5,
     stats: { hp: 310, atk: 50, speed: 0.95, range: 4.0, atkSpeed: 1.0 },
     passive: 'FROST_BOLT', tags: ['epic', 'ranged', 'ice'], color: '#b3e5fc',
-    description: 'Cung tinh thể — FROST_BOLT đóng băng (khác frost chậm của Cung Gió).',
+    description: 'Tầm xa — đóng băng 1.4s',
   },
   {
     id: 'solar_ballista',
@@ -1115,7 +1115,7 @@ export const MONSTERS = [
     rarity: 5, cost: 7,
     stats: { hp: 520, atk: 85, speed: 0.85, range: 4.3, atkSpeed: 0.88 },
     passive: 'RANGED_BURN', tags: ['boss', 'ranged', 'fire'], color: '#ff6f00',
-    description: 'Legendary pháo mặt trời — burn tầm cực xa.',
+    description: 'Tầm xa — đốt 14 HP/s ×3.2s',
   },
   {
     id: 'blizzard_cannon',
@@ -1123,7 +1123,7 @@ export const MONSTERS = [
     rarity: 5, cost: 7,
     stats: { hp: 560, atk: 78, speed: 0.8, range: 4.2, atkSpeed: 0.82 },
     passive: 'FROST_BOLT', tags: ['boss', 'ranged', 'ice'], color: '#0288d1',
-    description: 'Legendary frost artillery.',
+    description: 'Tầm xa — đóng băng 1.4s',
   },
   {
     id: 'plague_howitzer',
@@ -1131,7 +1131,7 @@ export const MONSTERS = [
     rarity: 5, cost: 7,
     stats: { hp: 540, atk: 72, speed: 0.82, range: 4.0, atkSpeed: 0.8 },
     passive: 'RANGED_POISON', tags: ['boss', 'ranged', 'poison'], color: '#558b2f',
-    description: 'Legendary độc tầm xa.',
+    description: 'Tầm xa — độc 9 HP/s ×4s',
   },
   {
     id: 'thunder_bastion',
@@ -1140,7 +1140,7 @@ export const MONSTERS = [
     stats: { hp: 1100, atk: 55, speed: 0.55, range: 1.45, atkSpeed: 0.6 },
     passive: 'AURA_STUN', tags: ['boss', 'tank', 'stun'], color: '#fbc02d',
     auraRadius: 2.8,
-    description: 'Tank sấm legendary — aura choáng rộng (niche riêng). Không ghép khiên/taunt.',
+    description: 'Tank — mỗi 4.5s choáng 0.55s (bán kính 2.8 ô)',
   },
   {
     id: 'ember_colossus',
@@ -1150,7 +1150,7 @@ export const MONSTERS = [
     passive: 'FIRE_BUFF', tags: ['boss', 'tank', 'fire'], color: '#d84315',
     auraRadius: 2.6,
     skills: ['TAUNT_SELF'],
-    description: 'Tank lửa legendary — chỉ khiêu khích + Buff lửa. Khiên/choáng thuộc Magma Brute.',
+    description: 'Tank — ô lửa +45% ATK/+20% HP — taunt 2.4s /3.2 ô (CD 12s)',
   },
   {
     id: 'glacier_sentinel',
@@ -1160,7 +1160,7 @@ export const MONSTERS = [
     passive: 'ICE_BUFF', tags: ['boss', 'tank', 'ice'], color: '#0277bd',
     auraRadius: 2.7,
     skills: ['SHIELD'],
-    description: 'Tank băng legendary — khiên + Buff băng. Khiêu khích để Hộ Vệ Sương (4★).',
+    description: 'Tank — ô băng +40% ATK/+20% HP — khiên 26% maxHp/3s khi ≤45% HP (CD 11s)',
   },
   {
     id: 'inferno_sovereign',
@@ -1169,7 +1169,7 @@ export const MONSTERS = [
     stats: { hp: 1400, atk: 160, speed: 1.1, range: 3.6, atkSpeed: 1.05 },
     passive: 'MYTHIC_INFERNO', tags: ['mythic', 'ranged', 'fire', 'drawback'], color: '#ff3d00',
     drawback: 'Tự đốt 1% max HP/s khi không đứng trên ô lửa.',
-    description: 'Mythic burn artillery — tự cháy nếu lệch địa hình.',
+    description: 'Tầm xa — lệch ô lửa: −1% maxHp/s',
   },
   {
     id: 'toxin_sovereign',
@@ -1178,7 +1178,7 @@ export const MONSTERS = [
     stats: { hp: 1100, atk: 150, speed: 1.15, range: 3.8, atkSpeed: 1.1 },
     passive: 'MYTHIC_TOXIN', tags: ['mythic', 'ranged', 'poison', 'drawback'], color: '#33691e',
     drawback: 'Đồng minh gần bị nhiễm độc nhẹ.',
-    description: 'Mythic poison ranged — drawback hại team nhẹ.',
+    description: 'Tầm xa — độc mạnh; đồng minh gần −4 HP/s',
   },
   {
     id: 'stasis_oracle',
@@ -1187,7 +1187,7 @@ export const MONSTERS = [
     stats: { hp: 1000, atk: 130, speed: 0.95, range: 3.5, atkSpeed: 0.95 },
     passive: 'MYTHIC_STASIS', tags: ['mythic', 'ranged', 'stun', 'drawback'], color: '#5c6bc0',
     drawback: 'Bản thân đứng yên lâu hơn sau mỗi stun.',
-    description: 'Mythic stun đơn mục tiêu cực mạnh.',
+    description: 'Tầm xa — choáng 1.4s; tự khóa ~1.8s',
   },
 ];
 
