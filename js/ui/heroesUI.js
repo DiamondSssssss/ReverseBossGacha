@@ -1,6 +1,6 @@
-import { HEROES } from '../data/heroes.js?v=78';
-import { HERO_CLASS_LABELS } from '../data/constants.js?v=78';
-import { heroSpriteUrl } from '../render/sprites.js?v=78';
+import { HEROES } from '../data/heroes.js?v=80';
+import { HERO_CLASS_LABELS } from '../data/constants.js?v=80';
+import { heroSpriteUrl } from '../render/sprites.js?v=80';
 
 const filters = {
   q: '',
@@ -22,6 +22,8 @@ const CLASS_ORDER = {
   HEXER: 5,
   HEALER: 6,
   ROGUE: 7,
+  SCOUT: 8,
+  BOSS: 9,
 };
 
 function filterList() {
@@ -61,10 +63,16 @@ function skillTags(h) {
   if (skills.includes('TAUNT_SELF')) tags.push('Khiêu khích');
   if (skills.includes('SHIELD')) tags.push('Khiên');
   if (skills.includes('HEAL_ALLY')) tags.push('Hồi máu');
+  if (skills.includes('HERO_AURA_ATK')) tags.push('Buff công');
+  if (skills.includes('HERO_AURA_SHIELD')) tags.push('Buff khiên');
+  if (skills.includes('HERO_AURA_SPEED')) tags.push('Buff tốc chạy');
   if (skills.includes('AOE_FIRE') || skills.includes('AOE_FROST')) tags.push('AoE');
   if (skills.includes('FREEZE')) tags.push('Đóng băng');
   if (skills.includes('BACKSTAB')) tags.push('Lén đánh');
+  if (skills.includes('REVEAL')) tags.push('Soi hình');
   if (h.class === 'ARCHER') tags.push('Tầm xa');
+  if (h.class === 'SCOUT') tags.push('Trinh sát');
+  if (h.class === 'BOSS' || h.isBoss) tags.push('Hero Boss');
   if (h.class === 'TANK') tags.push('Thuần tank');
   return tags;
 }

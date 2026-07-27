@@ -408,6 +408,78 @@ export const HERO_PROFILES = {
     holdFight: true,
     preferLowHp: true,
   },
+  hero_scout_01: {
+    archetype: 'scout',
+    idealRange: 4.0,
+    kiteBelow: 1.8,
+    engageBias: 0.35,
+    preferStealth: true,
+  },
+  hero_scout_02: {
+    archetype: 'scout',
+    idealRange: 4.2,
+    kiteBelow: 1.9,
+    engageBias: 0.4,
+    preferStealth: true,
+  },
+  hero_boss_40: {
+    archetype: 'boss',
+    engageBias: 1.8,
+    holdFight: true,
+    tauntSelf: true,
+    shieldAt: 0.55,
+  },
+  hero_boss_45: {
+    archetype: 'boss',
+    stealthRush: true,
+    engageBias: 1.2,
+    holdFight: true,
+    preferStealth: true,
+  },
+  hero_boss_50: {
+    archetype: 'boss',
+    idealRange: 3.8,
+    kiteBelow: 1.4,
+    aoePrefer: true,
+    engageBias: 1.0,
+    holdFight: true,
+  },
+  hero_boss_55: {
+    archetype: 'boss',
+    idealRange: 5.0,
+    kiteBelow: 2.2,
+    engageBias: 0.6,
+    preferHighAtk: true,
+  },
+  hero_boss_60: {
+    archetype: 'boss',
+    engageBias: 2.0,
+    holdFight: true,
+    shieldAt: 0.5,
+    preferLowHp: true,
+  },
+  hero_support_01: {
+    archetype: 'healer',
+    idealRange: 3.0,
+    kiteBelow: 1.4,
+    engageBias: 0.2,
+    healPriority: true,
+  },
+  hero_support_02: {
+    archetype: 'healer',
+    idealRange: 2.9,
+    kiteBelow: 1.4,
+    engageBias: 0.2,
+    healPriority: true,
+    shieldAt: 0.45,
+  },
+  hero_support_03: {
+    archetype: 'scout',
+    idealRange: 3.8,
+    kiteBelow: 1.7,
+    engageBias: 0.35,
+    preferStealth: true,
+  },
 };
 
 export function getHeroProfile(heroId, heroClass) {
@@ -417,6 +489,12 @@ export function getHeroProfile(heroId, heroClass) {
   }
   if (heroClass === 'ARCHER') {
     return { archetype: 'archer', idealRange: 3.6, kiteBelow: 1.9, engageBias: 0.4 };
+  }
+  if (heroClass === 'SCOUT') {
+    return { archetype: 'scout', idealRange: 4.0, kiteBelow: 1.8, engageBias: 0.35, preferStealth: true };
+  }
+  if (heroClass === 'BOSS') {
+    return { archetype: 'boss', engageBias: 1.6, holdFight: true, shieldAt: 0.5 };
   }
   if (heroClass === 'HEALER') {
     return { archetype: 'healer', idealRange: 2.8, kiteBelow: 1.5, engageBias: 0.2, healPriority: true };

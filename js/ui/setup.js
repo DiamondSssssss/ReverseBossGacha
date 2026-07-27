@@ -3,39 +3,40 @@ import {
   TERRAIN_LABELS,
   RARITY_COLORS,
   HERO_CLASS_LABELS,
-} from '../data/constants.js?v=78';
-import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=78';
-import { monsterScaleForLevel } from '../data/heroes.js?v=78';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=78';
-import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=78';
+} from '../data/constants.js?v=80';
+import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=80';
+import { monsterScaleForLevel } from '../data/heroes.js?v=80';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=80';
+import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=80';
 import {
   mapUsedCost,
   placeMonster,
   removePlacement,
   totalPlacements,
-} from '../core/dungeon.js?v=78';
+} from '../core/dungeon.js?v=80';
 import {
   loadoutMaxPoolCost,
   loadoutPoolCost,
   loadoutUnitCount,
   loadoutTypeCount,
+  loadoutPoolMultForLevel,
   sanitizeLoadout,
   suggestLoadout,
   tryAddToLoadout,
   tryRemoveFromLoadout,
-} from '../core/loadout.js?v=78';
-import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=78';
-import { attachSetupBoardFx } from './setupBoardFx.js?v=78';
-import { playGhostWalk } from './setupPreview.js?v=78';
-import { saveState } from '../core/storage.js?v=78';
+} from '../core/loadout.js?v=80';
+import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=80';
+import { attachSetupBoardFx } from './setupBoardFx.js?v=80';
+import { playGhostWalk } from './setupPreview.js?v=80';
+import { saveState } from '../core/storage.js?v=80';
 import {
   hideMonsterTip,
   monsterTipHtml,
-} from './monsterTip.js?v=78';
+} from './monsterTip.js?v=80';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,
-} from '../core/monsterUpgrade.js?v=78';
+} from '../core/monsterUpgrade.js?v=80';
 
 function shortName(name) {
   if (!name) return '?';
@@ -242,12 +243,12 @@ export function renderScout(root, ctx) {
   const vault = state.inventory || {};
 
   if (!run.loadout) {
-    run.loadout = sanitizeLoadout(state.lastLoadout, vault, loadoutRefCap(map));
+    run.loadout = sanitizeLoadout(state.lastLoadout, vault, loadoutRefCap(map), run.level);
     if (!loadoutUnitCount(run.loadout)) {
-      run.loadout = suggestLoadout(vault, loadoutRefCap(map));
+      run.loadout = suggestLoadout(vault, loadoutRefCap(map), run.level);
     }
   } else {
-    run.loadout = sanitizeLoadout(run.loadout, vault, loadoutRefCap(map));
+    run.loadout = sanitizeLoadout(run.loadout, vault, loadoutRefCap(map), run.level);
   }
 
   let filterRole = 'all';
@@ -270,21 +271,24 @@ export function renderScout(root, ctx) {
   }
   if (classes.includes('HEALER')) tips.push('Có Healer → ưu tiên hạ hồi máu / mang anti-heal');
   if (classes.includes('HEXER')) tips.push('Có Diệt hồi → heal quái bị giảm — vẫn focus hexer nếu cần');
+  if (classes.includes('BOSS')) tips.push('Hero Boss — focus boss, map dài, pool mang ×5');
+  if (classes.includes('SCOUT')) tips.push('Có Trinh sát → quái tàng hình dễ bị lộ');
 
   function loadoutPanelHtml() {
     const loadout = run.loadout || {};
+    const stageLv = run.level || state.dungeonLevel || 1;
     const pool = loadoutPoolCost(loadout);
-    const maxPool = loadoutMaxPoolCost(loadoutRefCap(map));
+    const maxPool = loadoutMaxPoolCost(loadoutRefCap(map), stageLv);
+    const poolMult = loadoutPoolMultForLevel(stageLv);
     const units = loadoutUnitCount(loadout);
     const types = loadoutTypeCount(loadout);
     const placeCap = map.costCap;
-    const stageLv = run.level || state.dungeonLevel || 1;
     const owned = ownedList(vault).filter((m) => {
       if (filterRole === 'all') return true;
       const tags = m.tags || [];
-      if (filterRole === 'trap') return tags.includes('trap');
+      if (filterRole === 'trap') return tags.includes('trap') || tags.includes('potion');
       if (filterRole === 'utility') {
-        return tags.some((t) => ['utility', 'silence', 'detect', 'slow'].includes(t));
+        return tags.some((t) => ['utility', 'silence', 'detect', 'slow', 'potion', 'aura', 'rainbow'].includes(t));
       }
       if (filterRole === 'dps') return tags.includes('dps') || tags.includes('boss');
       if (filterRole === 'tank') return tags.includes('tank') || tags.includes('tankette');
@@ -345,7 +349,7 @@ export function renderScout(root, ctx) {
               · ${units} quái
             </p>
             <p class="muted" style="margin:4px 0 0;font-size:0.72rem">
-              Pool mang 3× Cap gốc — trên sân chỉ ≤ Cap ${placeCap}; phần dư thả khi có slot.
+              Pool mang ${poolMult}× Cap gốc — trên sân chỉ ≤ Cap ${placeCap}; phần dư thả khi có slot.
             </p>
             <p class="stat-stage-banner">
               Chỉ số HP/ATK đang hiện theo <strong>ải ${stageLv}</strong>
@@ -416,7 +420,7 @@ export function renderScout(root, ctx) {
         }
         showPickInfo(btn);
         const id = btn.getAttribute('data-add');
-        const res = tryAddToLoadout(run.loadout, vault, id, loadoutRefCap(map));
+        const res = tryAddToLoadout(run.loadout, vault, id, loadoutRefCap(map), run.level);
         if (!res.ok) {
           toast(res.reason);
           return;
@@ -452,7 +456,7 @@ export function renderScout(root, ctx) {
 
     panel.querySelector('#btn-loadout-suggest').onclick = (e) => {
       e.preventDefault();
-      run.loadout = suggestLoadout(vault, loadoutRefCap(map));
+      run.loadout = suggestLoadout(vault, loadoutRefCap(map), run.level);
       refreshLoadout();
       toast('Đã gợi ý loadout');
     };
@@ -531,7 +535,7 @@ export function renderScout(root, ctx) {
 
   root.querySelector('#btn-to-setup').onclick = () => {
     hideMonsterTip(true);
-    const clean = sanitizeLoadout(run.loadout, vault, loadoutRefCap(map));
+    const clean = sanitizeLoadout(run.loadout, vault, loadoutRefCap(map), run.level);
     if (!loadoutUnitCount(clean)) {
       toast('Chọn ít nhất 1 quái vào loadout');
       return;

@@ -82,7 +82,7 @@ export const PASSIVE_INFO = {
   },
   REVEAL: {
     name: 'Soi hình',
-    desc: 'Hero tàng hình trong tầm đánh bị lộ hình ngay.',
+    desc: 'Đơn vị tàng hình trong tầm đánh bị lộ hình ngay (quái soi Hero / Hero soi quái).',
   },
   BURST_FIRST_HIT: {
     name: 'Đòn mở đầu',
@@ -107,6 +107,50 @@ export const PASSIVE_INFO = {
   POISON_BUFF: {
     name: 'Buff độc',
     desc: 'Ô độc (p): +40% ATK, +15% HP. Ngoài độc: −28% ATK, giáp yếu hơn.',
+  },
+  AURA_WATER_ALLY: {
+    name: 'Aura thủy đồng',
+    desc: 'Đứng ô nước: buff quái nước trong tầm (+20% ATK, +12% giáp). Sai ô: tắt aura + bản thân yếu.',
+  },
+  AURA_FIRE_ALLY: {
+    name: 'Aura hỏa đồng',
+    desc: 'Đứng ô lửa: buff quái lửa trong tầm. Sai ô: tắt aura + nerf bản thân.',
+  },
+  AURA_ICE_ALLY: {
+    name: 'Aura băng đồng',
+    desc: 'Đứng ô băng: buff quái băng trong tầm. Sai ô: tắt aura + nerf bản thân.',
+  },
+  AURA_POISON_ALLY: {
+    name: 'Aura độc đồng',
+    desc: 'Đứng ô độc: buff quái độc trong tầm. Sai ô: tắt aura + nerf bản thân.',
+  },
+  AURA_DARK_ALLY: {
+    name: 'Aura ám đồng',
+    desc: 'Đứng ô tối: buff quái tối trong tầm. Sai ô: tắt aura + nerf bản thân.',
+  },
+  POTION_POISON: {
+    name: 'Bình độc văng',
+    desc: 'Đặt xuống → sau ~1s nổ: độc Heroes trong bán kính (~14 máu/giây ×4.5s). Own ×1.',
+  },
+  POTION_HEAL: {
+    name: 'Bình hồi văng',
+    desc: 'Đặt xuống → sau ~1s nổ: hồi ~30% maxHp quái trong vùng. Own ×1.',
+  },
+  POTION_RAGE: {
+    name: 'Bình cuồng văng',
+    desc: 'Đặt xuống → sau ~1s nổ: quái trong vùng ATK ×1.35 trong 4s. Own ×1.',
+  },
+  RAINBOW_MAP_HEAL: {
+    name: 'Cầu vồng hồi',
+    desc: 'Hồi nhẹ mọi quái trên map. Drawback: thuế Kho 5 HP/s + hồi nhỏ Heroes gần.',
+  },
+  RAINBOW_MAP_ATK: {
+    name: 'Cầu vồng nộ',
+    desc: 'Buff ATK toàn map (+28%). Drawback: ally nhận ~×1.35 dame; tự câm định kỳ; atkSpeed chậm.',
+  },
+  RAINBOW_MAP_SHIELD: {
+    name: 'Cầu vồng khiên',
+    desc: 'Pulse khiên toàn map. Drawback: chết → shockwave hại ally; gần như không đánh.',
   },
   ANTI_WARRIOR_BURST: {
     name: 'Nghiền chiến sĩ',
@@ -222,11 +266,24 @@ export const SKILL_INFO = {
     desc: 'Ép Hero trong 3.2 ô phải đánh mình trong 2.4 giây. Hồi chiêu 12 giây.',
   },
   STEALTH: PASSIVE_INFO.STEALTH,
+  REVEAL: PASSIVE_INFO.REVEAL,
   BACKSTAB: PASSIVE_INFO.BACKSTAB,
   STUN_ON_HIT: PASSIVE_INFO.STUN_ON_HIT,
   HEAL_ALLY: {
     name: 'Hồi đồng đội',
     desc: 'Hồi ~10–20% maxHp (có soft-cap) đồng minh thiếu máu trong tầm. CD ~3.0–3.4 giây.',
+  },
+  HERO_AURA_ATK: {
+    name: 'Aura chiến kỳ',
+    desc: 'Hero gần được buff công khoảng ×1.22 khi đứng trong aura.',
+  },
+  HERO_AURA_SHIELD: {
+    name: 'Aura hộ ấn',
+    desc: 'Mỗi ~5 giây, Hero gần nhận một lớp khiên nhỏ (~12% máu tối đa).',
+  },
+  HERO_AURA_SPEED: {
+    name: 'Aura phong hành',
+    desc: 'Hero gần được buff tốc chạy khoảng ×1.28 khi ở trong aura.',
   },
   HEAL_CUT: {
     name: 'Aura cắt hồi',

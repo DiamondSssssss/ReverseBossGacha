@@ -1,7 +1,7 @@
-import { GACHA, RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=78';
-import { tryPull } from '../core/gacha.js?v=78';
-import { evaluateAchievements } from '../core/achievements.js?v=78';
-import { monsterSpriteUrl, getLockedMonsterSprite, getSpriteDataUrl } from '../render/sprites.js?v=78';
+import { GACHA, RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=80';
+import { tryPull } from '../core/gacha.js?v=80';
+import { evaluateAchievements } from '../core/achievements.js?v=80';
+import { monsterSpriteUrl, getLockedMonsterSprite, getSpriteDataUrl } from '../render/sprites.js?v=80';
 
 const CHARGE_MS = {
   1: 700,
@@ -60,15 +60,22 @@ export function renderGacha(root, ctx) {
 
   function paintChrome() {
     if (state.mythicPityCounter == null) state.mythicPityCounter = 0;
+    if (state.rainbowPityCounter == null) state.rainbowPityCounter = 0;
     const pityPct = Math.min(100, (state.pityCounter / GACHA.PITY_THRESHOLD) * 100);
     const mythicPct = Math.min(
       100,
       (state.mythicPityCounter / GACHA.MYTHIC_PITY_THRESHOLD) * 100
     );
+    const rainbowPct = Math.min(
+      100,
+      (state.rainbowPityCounter / GACHA.RAINBOW_PITY_THRESHOLD) * 100
+    );
     const pityEl = root.querySelector('#pity-count');
     const pityBar = root.querySelector('#pity-bar-fill');
     const mythicEl = root.querySelector('#mythic-pity-count');
     const mythicBar = root.querySelector('#mythic-pity-bar-fill');
+    const rainbowEl = root.querySelector('#rainbow-pity-count');
+    const rainbowBar = root.querySelector('#rainbow-pity-bar-fill');
     const soulsHint = root.querySelector('#souls-hint');
     if (pityEl) pityEl.textContent = `${state.pityCounter}/${GACHA.PITY_THRESHOLD}`;
     if (pityBar) pityBar.style.width = `${pityPct}%`;
@@ -76,6 +83,10 @@ export function renderGacha(root, ctx) {
       mythicEl.textContent = `${state.mythicPityCounter}/${GACHA.MYTHIC_PITY_THRESHOLD}`;
     }
     if (mythicBar) mythicBar.style.width = `${mythicPct}%`;
+    if (rainbowEl) {
+      rainbowEl.textContent = `${state.rainbowPityCounter}/${GACHA.RAINBOW_PITY_THRESHOLD}`;
+    }
+    if (rainbowBar) rainbowBar.style.width = `${rainbowPct}%`;
     if (soulsHint) {
       soulsHint.innerHTML =
         state.souls < GACHA.PULL_COST_SOULS
@@ -88,7 +99,7 @@ export function renderGacha(root, ctx) {
     <div class="gacha-hero">
       <p class="section-label" style="margin-top:0">Gacha</p>
       <h2>Quay ấn quái</h2>
-      <p class="muted">Dùng <strong>Linh Hồn</strong>. Pity ${GACHA.PITY_THRESHOLD} → 5★ · Pity Mythic ${GACHA.MYTHIC_PITY_THRESHOLD} → 6★ (mạnh nhưng có drawback).</p>
+      <p class="muted">Dùng <strong>Linh Hồn</strong>. Pity ${GACHA.PITY_THRESHOLD} → 5★ · Pity Mythic ${GACHA.MYTHIC_PITY_THRESHOLD} → 6★ · Pity Cầu vồng ${GACHA.RAINBOW_PITY_THRESHOLD} → 7★.</p>
       <div id="souls-hint"></div>
     </div>
 
@@ -113,6 +124,11 @@ export function renderGacha(root, ctx) {
         <span class="muted">6★ · có drawback</span>
       </div>
       <div class="pity-bar mythic"><span id="mythic-pity-bar-fill" style="width:${Math.min(100, ((state.mythicPityCounter || 0) / GACHA.MYTHIC_PITY_THRESHOLD) * 100)}%"></span></div>
+      <div class="row spread" style="margin-top:8px">
+        <span><strong>Pity Cầu vồng</strong> <span id="rainbow-pity-count">${state.rainbowPityCounter || 0}/${GACHA.RAINBOW_PITY_THRESHOLD}</span></span>
+        <span class="muted">7★ · không xóa pity Mythic</span>
+      </div>
+      <div class="pity-bar mythic"><span id="rainbow-pity-bar-fill" style="width:${Math.min(100, ((state.rainbowPityCounter || 0) / GACHA.RAINBOW_PITY_THRESHOLD) * 100)}%"></span></div>
     </div>
 
     <div class="pull-actions">
@@ -167,9 +183,9 @@ export function renderGacha(root, ctx) {
             ${r.isNew ? '<span class="new-badge">MỚI</span>' : ''}
             ${r.refunded ? `<span class="refund-badge">+${r.soulsRefunded} LH</span>` : ''}
             <img class="pull-sprite" src="${monsterSpriteUrl(m.id, m.color, m.rarity)}" alt="" width="52" height="52" />
-            <div class="stars" style="color:${m.rarity >= 5 ? (m.rarity >= 6 ? '#ef5350' : '#e6b84a') : RARITY_COLORS[m.rarity]}">${stars}</div>
+            <div class="stars" style="color:${m.rarity >= 7 ? '#e040fb' : m.rarity >= 5 ? (m.rarity >= 6 ? '#ef5350' : '#e6b84a') : RARITY_COLORS[m.rarity]}">${stars}</div>
             <div style="font-weight:700;font-family:var(--font-display)">${m.name}</div>
-            <div class="muted" style="font-size:0.75rem">${RARITY_LABELS[m.rarity]}${r.mythicPityHit ? ' · Mythic Pity' : r.naturalMythic ? ' · Mythic (reset pity)' : r.pityHit ? ' · Pity' : ''}${r.refunded ? ' · Trùng' : ''}${m.drawback ? ' · ⚠' : ''}</div>
+            <div class="muted" style="font-size:0.75rem">${RARITY_LABELS[m.rarity]}${r.rainbowPityHit ? ' · Rainbow Pity' : r.mythicPityHit ? ' · Mythic Pity' : r.naturalMythic ? ' · Mythic (reset pity)' : r.pityHit ? ' · Pity' : ''}${r.refunded ? ' · Trùng' : ''}${m.drawback ? ' · ⚠' : ''}</div>
           </div>`;
       })
       .join('');

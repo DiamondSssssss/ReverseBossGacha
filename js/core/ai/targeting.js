@@ -9,10 +9,13 @@ function dist(a, b) {
  */
 export function scoreMonsterForHero(hero, monster, profile, cellSize) {
   if (!monster.alive || monster.isTrap) return Infinity;
-  // Quái tàng hình: hero không lock được trừ khi sát gần / đã lộ / taunt
+  // Quái tàng hình: hero không lock được trừ khi sát gần / đã lộ / taunt / có REVEAL
   if (monster.stealth && !monster.revealed) {
     const d = dist(hero, monster);
-    if (monster.passive !== 'TAUNT' && d > cellSize * 0.9) return Infinity;
+    const revealRange = hero.effectiveRange ?? hero.range ?? cellSize * 3;
+    const canReveal =
+      (hero.skills || []).includes('REVEAL') && d <= revealRange;
+    if (monster.passive !== 'TAUNT' && d > cellSize * 0.9 && !canReveal) return Infinity;
   }
   let score = dist(hero, monster);
 
@@ -26,6 +29,9 @@ export function scoreMonsterForHero(hero, monster, profile, cellSize) {
   }
   if (profile.preferFreeze && monster.frozenUntil) {
     score += cellSize; // already frozen — less priority
+  }
+  if (profile.preferStealth && monster.stealth) {
+    score -= cellSize * 1.2;
   }
   if (profile.clusterSeek) {
     // prefer denser packs — approximated by atk as proxy for worth

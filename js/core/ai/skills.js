@@ -279,7 +279,7 @@ export const TRAP_EFFECTS = {
 };
 
 export function isTrapPassive(passive) {
-  return !!TRAP_EFFECTS[passive];
+  return !!TRAP_EFFECTS[passive] || String(passive || '').startsWith('POTION_');
 }
 
 export function tickStealthRegen(hero, profile, time, dt) {

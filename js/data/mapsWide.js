@@ -1,4 +1,5 @@
 /** Wide stage maps (20 cols) — ải 40–60
+ * Boss fights 40/45/50/55/60: 60 cols (×3).
  * Thiết kế theo element: ép đổi loadout (nước / tối / lửa / băng / độc / trần thấp).
  */
 
@@ -7,6 +8,7 @@ function M(id, name, costCap, tiles, extras = {}) {
 }
 
 const WW = '####################';
+const BBB = '############################################################';
 
 function row(tail) {
   const t = `${tail}`.padEnd(14, '.').slice(0, 14);
@@ -27,9 +29,36 @@ function W(id, name, costCap, rows, extras = {}) {
   return M(id, name, costCap, [WW, ...rows, WW], extras);
 }
 
+/** Boss corridor: 60 cols = G/# + xxxx + 54 mid + T/# */
+function bossRow(mid) {
+  const t = `${mid}`.padEnd(54, '.').slice(0, 54);
+  return `#xxxx${t}#`;
+}
+
+function bossGate(mid) {
+  const t = `${mid}`.padEnd(54, '.').slice(0, 54);
+  return `Gxxxx${t}T`;
+}
+
+function WB(id, name, costCap, rows, extras = {}) {
+  for (let i = 0; i < rows.length; i++) {
+    if (rows[i].length !== 60) {
+      throw new Error(`Boss map ${id} row ${i} width ${rows[i].length} !== 60: ${rows[i]}`);
+    }
+  }
+  return M(id, name, costCap, [BBB, ...rows, BBB], extras);
+}
+
 const H_NEAR = [
   { cells: ['1,3', '2,3', '1,4', '2,4'], side: 'hero', kind: 'SPEED_UP', value: 1.4 },
   { cells: ['3,3', '3,4'], side: 'hero', kind: 'ATK_UP', value: 1.25 },
+];
+
+/** Buff hero gần gate trên map dài */
+const H_BOSS_NEAR = [
+  { cells: ['1,3', '2,3', '1,4', '2,4'], side: 'hero', kind: 'SPEED_UP', value: 1.45 },
+  { cells: ['3,3', '3,4', '4,3'], side: 'hero', kind: 'ATK_UP', value: 1.3 },
+  { cells: ['5,2', '5,5'], side: 'hero', kind: 'DEF_UP', value: 1.15 },
 ];
 
 /** Ô quái đứng gần kho — chỉ số cụ thể */
@@ -41,27 +70,32 @@ function mDef(...cells) {
 }
 
 export const RAW_WIDE_MAPS = {
-  // Intro: nhiều element nhỏ — học đặt đúng ô
-  40: W(
+  // Boss fight: map ×3 dài — đa nguyên tố
+  40: WB(
     'stage_40',
-    'Ngai Đa Nguyên Tố',
-    10,
+    'Ngai Boss Đa Nguyên Tố',
+    12,
     [
-      row('~~~~..ff..~~~~'),
-      row('.oooo......oo.'),
-      gate('..~~..dd..~~..'),
-      gate('..ii..pp..ii..'),
-      row('.oooo......oo.'),
-      row('~~~~..ff..~~~~'),
+      bossRow('~~~~ffff....iiii....pppp....dddd....~~~~....ffff..'),
+      bossRow('.oooo......oooo......oooo......oooo......oooo.....'),
+      bossGate('..~~..ff..ii..pp..dd......~~..ff..ii..pp..dd......'),
+      bossGate('..~~..ff..ii..pp..dd......~~..ff..ii..pp..dd......'),
+      bossRow('.oooo......oooo......oooo......oooo......oooo.....'),
+      bossRow('~~~~ffff....iiii....pppp....dddd....~~~~....ffff..'),
     ],
     {
-      tip: 'Intro element — đặt Buff nước trên ~, lửa trên f, tối trên d, độc trên p. Sai ô = bị nerf.',
+      tip: 'Boss fight — map ×3 dài. Segment ~ / f / i / p / d. Pool mang ×5. Focus Hero Boss.',
       buffs: [
-        ...H_NEAR,
-        mAtk('12,3', '13,3', '12,4'),
-        mDef('14,3', '15,4'),
-        { cells: ['8,3', '8,4'], side: 'hero', kind: 'SILENCE_ZONE', value: 1 },
-        { cells: ['6,3', '6,4'], side: 'both', kind: 'HEAL_TICK', value: 6 },
+        ...H_BOSS_NEAR,
+        { cells: ['18,3', '19,4'], side: 'hero', kind: 'ATK_UP', value: 1.2 },
+        { cells: ['28,3', '28,4'], side: 'hero', kind: 'SILENCE_ZONE', value: 1 },
+        { cells: ['38,3', '39,4'], side: 'hero', kind: 'SPEED_DOWN', value: 0.7 },
+        { cells: ['22,2', '22,5'], side: 'both', kind: 'HEAL_TICK', value: 7 },
+        mAtk('48,3', '49,3', '48,4'),
+        mDef('52,3', '53,4', '54,3'),
+        { cells: ['12,3', '12,4'], side: 'monster', kind: 'FIRE_ZONE', value: 1.3 },
+        { cells: ['32,3', '32,4'], side: 'monster', kind: 'POISON_ZONE', value: 1.3 },
+        { cells: ['42,3', '42,4'], side: 'monster', kind: 'ICE_ZONE', value: 1.3 },
       ],
     }
   ),
@@ -166,27 +200,31 @@ export const RAW_WIDE_MAPS = {
     }
   ),
 
-  // Poison
-  45: W(
+  // Boss fight: bóng + độc dài
+  45: WB(
     'stage_45',
-    'Vườn Độc',
-    12,
+    'Hành Lang Boss Bóng Độc',
+    13,
     [
-      row('pppppppppppppp'),
-      row('pp........pppp'),
-      gate('pp..........pp'),
-      gate('pp..........pp'),
-      row('pppp........pp'),
-      row('pppppppppppppp'),
+      bossRow('ddddddddpppppp........ddddddddpppppp........dddddd'),
+      bossRow('dd....pp....dd........pp....dd....pp........pp....'),
+      bossGate('dd....pp..............pp....dd..............pp....'),
+      bossGate('pp....dd..............dd....pp..............dd....'),
+      bossRow('pp....dd....pp........dd....pp....dd........dd....'),
+      bossRow('ppppppdddddddd........ppppppdddddddd........pppppp'),
     ],
     {
-      tip: 'Toàn độc — Buff độc trên p (+40% ATK). Ngoài p quái độc bị yếu.',
+      tip: 'Boss fight — map ×3. Nửa đầu tối/độc, giữa mixed, gần kho ATK quái. Pool ×5. Focus boss ẩn.',
       buffs: [
-        ...H_NEAR,
-        mAtk('10,3', '11,3', '10,4'),
-        mDef('13,3', '14,4'),
-        { cells: ['7,3', '8,4'], side: 'monster', kind: 'POISON_ZONE', value: 1.35 },
-        { cells: ['6,2', '6,5'], side: 'both', kind: 'HEAL_TICK', value: 5 },
+        ...H_BOSS_NEAR,
+        { cells: ['14,3', '15,4'], side: 'hero', kind: 'SPEED_DOWN', value: 0.65 },
+        { cells: ['24,3', '24,4'], side: 'hero', kind: 'SILENCE_ZONE', value: 1 },
+        { cells: ['34,2', '34,5'], side: 'both', kind: 'HEAL_TICK', value: 6 },
+        { cells: ['44,3', '44,4'], side: 'hero', kind: 'ATK_UP', value: 1.2 },
+        mAtk('50,3', '51,3', '50,4'),
+        mDef('54,3', '55,4', '56,3'),
+        { cells: ['10,3', '11,4'], side: 'monster', kind: 'POISON_ZONE', value: 1.4 },
+        { cells: ['40,3', '40,4'], side: 'monster', kind: 'POISON_ZONE', value: 1.35 },
       ],
     }
   ),
@@ -292,27 +330,32 @@ export const RAW_WIDE_MAPS = {
     }
   ),
 
-  // All elements corridors
-  50: W(
+  // Boss fight: pháp trận hỗn loạn dài
+  50: WB(
     'stage_50',
-    'Ngã Sáu Nguyên Tố',
-    12,
+    'Pháp Trận Boss Hỗn Nguyên',
+    13,
     [
-      row('~~~~ffffiiii~~'),
-      row('.pp..dd..ll..p'),
-      gate('..............'),
-      gate('..............'),
-      row('.pp..dd..ll..p'),
-      row('~~~~ffffiiii~~'),
+      bossRow('~~~~ffffiiii~~~~ffffiiii~~~~ffffiiii~~~~ffffiiii~~'),
+      bossRow('.pp..dd..##..ll..pp..dd......ll..pp..dd..##..ll..p'),
+      bossGate('........##..................##....................'),
+      bossGate('........##..................##....................'),
+      bossRow('.pp..dd..##..ll..pp..dd......ll..pp..dd..##..ll..p'),
+      bossRow('~~~~ffffiiii~~~~ffffiiii~~~~ffffiiii~~~~ffffiiii~~'),
     ],
     {
-      tip: 'Sáu vùng element — đọc ô rồi đặt: ~ nước, f lửa, i băng, p độc, d tối, l trần thấp.',
+      tip: 'Boss fight — map ×3. Xen i/f/~ + tường choke. Pool ×5. Focus Pháp vương.',
       buffs: [
-        ...H_NEAR,
-        mAtk('12,3', '13,3', '12,4'),
-        mDef('15,3', '16,4'),
-        { cells: ['8,3', '8,4'], side: 'hero', kind: 'SILENCE_ZONE', value: 1 },
-        { cells: ['10,3', '10,4'], side: 'both', kind: 'HEAL_TICK', value: 8 },
+        ...H_BOSS_NEAR,
+        { cells: ['16,3', '16,4'], side: 'hero', kind: 'SILENCE_ZONE', value: 1 },
+        { cells: ['26,3', '27,4'], side: 'hero', kind: 'SPEED_DOWN', value: 0.7 },
+        { cells: ['36,3', '36,4'], side: 'hero', kind: 'ATK_UP', value: 1.25 },
+        { cells: ['20,2', '20,5'], side: 'both', kind: 'HEAL_TICK', value: 8 },
+        mAtk('48,3', '49,3', '48,4'),
+        mDef('52,3', '53,4', '54,3'),
+        { cells: ['8,3', '8,4'], side: 'monster', kind: 'FIRE_ZONE', value: 1.3 },
+        { cells: ['12,3', '12,4'], side: 'monster', kind: 'ICE_ZONE', value: 1.3 },
+        { cells: ['42,3', '42,4'], side: 'monster', kind: 'FIRE_ZONE', value: 1.35 },
       ],
     }
   ),
@@ -412,26 +455,32 @@ export const RAW_WIDE_MAPS = {
     }
   ),
 
-  55: W(
+  // Boss fight: đường tiễn gió dài
+  55: WB(
     'stage_55',
-    'Kênh Băng Dài',
-    13,
+    'Đường Tiễn Boss Cuồng Phong',
+    14,
     [
-      row('iiii..........'),
-      row('iiii..........'),
-      gate('iiii..........'),
-      gate('iiii..........'),
-      row('iiii..........'),
-      row('iiii..........'),
+      bossRow('ffff..........iiii..........ffff..........iiii....'),
+      bossRow('oooooooooooooooooooooooooooooooooooooooooooooooooo'),
+      bossGate('llll................llll................llll......'),
+      bossGate('llll................llll................llll......'),
+      bossRow('oooooooooooooooooooooooooooooooooooooooooooooooooo'),
+      bossRow('iiii..........ffff..........iiii..........ffff....'),
     ],
     {
-      tip: 'Hành lang băng dài tới kho — chỉ Buff băng mạnh; lửa/nước đặt đây bị yếu.',
+      tip: 'Boss fight — map ×3. Trần thấp giữa + lửa/băng mép. Pool ×5. Gap-close Thiên tiễn.',
       buffs: [
-        ...H_NEAR,
-        { cells: ['5,3', '5,4', '6,3', '6,4'], side: 'monster', kind: 'ICE_ZONE', value: 1.4 },
-        mAtk('10,3', '11,3', '10,4'),
-        mDef('14,3', '15,4', '16,3'),
-        { cells: ['8,3', '8,4'], side: 'hero', kind: 'SPEED_DOWN', value: 0.6 },
+        ...H_BOSS_NEAR,
+        { cells: ['14,3', '15,4'], side: 'hero', kind: 'SPEED_UP', value: 1.35 },
+        { cells: ['28,3', '28,4'], side: 'hero', kind: 'SILENCE_ZONE', value: 1 },
+        { cells: ['40,3', '41,4'], side: 'hero', kind: 'SPEED_DOWN', value: 0.65 },
+        { cells: ['22,2', '22,5'], side: 'both', kind: 'HEAL_TICK', value: 7 },
+        mAtk('50,3', '51,3', '50,4'),
+        mDef('54,3', '55,4', '56,3'),
+        { cells: ['6,2', '6,5'], side: 'monster', kind: 'FIRE_ZONE', value: 1.35 },
+        { cells: ['18,2', '18,5'], side: 'monster', kind: 'ICE_ZONE', value: 1.35 },
+        { cells: ['46,3', '46,4'], side: 'monster', kind: 'FIRE_ZONE', value: 1.3 },
       ],
     }
   ),
@@ -531,29 +580,34 @@ export const RAW_WIDE_MAPS = {
     }
   ),
 
-  60: W(
+  // Boss fight cuối: full palette dài
+  60: WB(
     'stage_60',
-    'Vương Quốc Nguyên Tố',
-    13,
+    'Vương Quốc Boss Tận Thế',
+    14,
     [
-      row('~~~~ffffiiii~~'),
-      row('ppoooo^^oooopp'),
-      gate('..#......#....'),
-      gate('...#....#.....'),
-      row('ddoooo^^oooodd'),
-      row('llllffffiiii~~'),
+      bossRow('~~~~ffffiiii~~~~ppppddddllll~~~~ffffiiii~~~~ppppdd'),
+      bossRow('ppoooo^^ooooppddoooo^^ooooll~~~~oooo^^ooooffffiiii'),
+      bossGate('..#......#........#......#........#......#........'),
+      bossGate('...#....#..........#....#..........#....#.........'),
+      bossRow('ddoooo^^ooooddppoooo^^ooooffiiii~~~~oooo^^oooollll'),
+      bossRow('llllffffiiii~~~~ddddpppp~~~~iiiiffff~~~~ddddpppp~~'),
     ],
     {
-      tip: 'Ải 60 phá đảo — đủ element + gai. Mỗi vùng 1 loại quái affinity; sai ô = nerf nặng.',
+      tip: 'Ải 60 Boss — map ×3 đủ element + gai. Pool ×5. Focus Hoàng đế; đọc từng đoạn trước khi thả.',
       buffs: [
-        ...H_NEAR,
-        { cells: ['2,2', '2,5'], side: 'hero', kind: 'DEF_UP', value: 1.2 },
-        { cells: ['8,3', '8,4'], side: 'hero', kind: 'SILENCE_ZONE', value: 1 },
-        mAtk('12,3', '13,3', '12,4'),
-        mDef('15,3', '16,4'),
-        { cells: ['6,2', '6,5'], side: 'monster', kind: 'FIRE_ZONE', value: 1.3 },
-        { cells: ['14,2', '14,5'], side: 'monster', kind: 'POISON_ZONE', value: 1.3 },
-        { cells: ['10,3', '10,4'], side: 'both', kind: 'HEAL_TICK', value: 10 },
+        ...H_BOSS_NEAR,
+        { cells: ['12,2', '12,5'], side: 'hero', kind: 'DEF_UP', value: 1.2 },
+        { cells: ['24,3', '24,4'], side: 'hero', kind: 'SILENCE_ZONE', value: 1 },
+        { cells: ['36,3', '37,4'], side: 'hero', kind: 'SPEED_DOWN', value: 0.68 },
+        { cells: ['48,3', '48,4'], side: 'hero', kind: 'ATK_UP', value: 1.25 },
+        { cells: ['18,2', '18,5'], side: 'both', kind: 'HEAL_TICK', value: 10 },
+        { cells: ['42,2', '42,5'], side: 'both', kind: 'HEAL_TICK', value: 8 },
+        mAtk('52,3', '53,3', '52,4'),
+        mDef('55,3', '56,4', '57,3'),
+        { cells: ['8,2', '8,5'], side: 'monster', kind: 'FIRE_ZONE', value: 1.3 },
+        { cells: ['28,3', '28,4'], side: 'monster', kind: 'POISON_ZONE', value: 1.35 },
+        { cells: ['40,3', '40,4'], side: 'monster', kind: 'ICE_ZONE', value: 1.3 },
       ],
     }
   ),

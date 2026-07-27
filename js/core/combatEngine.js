@@ -1,17 +1,17 @@
-import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=78';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=78';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=78';
-import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=78';
-import { mapUsedCost } from './dungeon.js?v=78';
-import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=78';
-import { ParticleSystem } from '../render/particles.js?v=78';
+import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=80';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=80';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=80';
+import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=80';
+import { mapUsedCost } from './dungeon.js?v=80';
+import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=80';
+import { ParticleSystem } from '../render/particles.js?v=80';
 import {
   getMonsterSprite,
   getHeroSprite,
   drawSpriteAt,
-} from '../render/sprites.js?v=78';
-import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=78';
-import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=78';
+} from '../render/sprites.js?v=80';
+import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=80';
+import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=80';
 import {
   computeHeroAttackDamage,
   applyIncomingDamage,
@@ -33,10 +33,10 @@ import {
   tryActivateMonsterShield,
   tryMonsterTauntSelf,
   ensureHeroSkillState,
-} from './ai/skills.js?v=78';
-import { getTileModifiers, spawnMonsterStats } from './ai/tileModifiers.js?v=78';
-import { dist } from './ai/targeting.js?v=78';
-import { getHeroProfile } from './ai/profiles.js?v=78';
+} from './ai/skills.js?v=80';
+import { getTileModifiers, spawnMonsterStats, elementAuraActive, elementAuraTag } from './ai/tileModifiers.js?v=80';
+import { dist } from './ai/targeting.js?v=80';
+import { getHeroProfile } from './ai/profiles.js?v=80';
 import {
   patternForHero,
   patternForMonster,
@@ -44,7 +44,7 @@ import {
   tickAttack,
   ensureAttackState,
   resolveDisplayAnim,
-} from './ai/attackPatterns.js?v=78';
+} from './ai/attackPatterns.js?v=80';
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
@@ -239,6 +239,7 @@ export class CombatEngine {
       isTrap:
         isTrapPassive(tpl.passive) ||
         (tpl.tags?.includes('trap') && tpl.stats.speed === 0) ||
+        (tpl.tags?.includes('potion') && tpl.stats.speed === 0) ||
         ai.role === 'trap',
       auraRadius: tpl.auraRadius ?? null,
       ai,
@@ -247,6 +248,9 @@ export class CombatEngine {
       tileAtkMul: 1,
       tileDefMul: 1,
       deployedInCombat: !fromSetup,
+      fuseUntil: String(tpl.passive || '').startsWith('POTION_')
+        ? (fromSetup ? 1.0 : this.time + 1.0)
+        : undefined,
     };
     unit._baseAtkSpeed = unit.atkSpeed;
     this.monsters.push(unit);
@@ -537,6 +541,18 @@ export class CombatEngine {
   snapshot() {
     const focus = this.heroes.find((h) => h.alive) || null;
     const intent = focus ? intentLabel(focus.intent || 'moving') : null;
+    const bosses = this.heroes.filter((h) => h.isBoss);
+    const bossAlive = bosses.find((h) => h.alive) || null;
+    const bossHero =
+      bosses.length === 0
+        ? null
+        : {
+            name: (bossAlive || bosses[0]).name,
+            hp: bossAlive ? bossAlive.hp : 0,
+            maxHp: (bossAlive || bosses[0]).maxHp,
+            alive: !!bossAlive,
+            color: (bossAlive || bosses[0]).color,
+          };
     return {
       time: this.time,
       treasureHp: this.treasureHp,
@@ -548,6 +564,7 @@ export class CombatEngine {
       spellIds: Object.keys(this.spellCd),
       bossId: this.bossId,
       bossName: getBoss(this.bossId).name,
+      bossHero,
       result: this.result,
       globalSlow: this.time < this.globalSlowUntil,
       treasureShield: this.time < this.treasureShieldUntil ? this.treasureShield : 0,
@@ -598,9 +615,29 @@ export class CombatEngine {
     for (const h of this.heroes) if (h.flash > 0) h.flash -= dt;
 
     this._refreshHealRecvMuls();
+      // Clear ephemeral buffs then re-apply auras before tile ATK resolve
+    for (const m of this.monsters) {
+      if (!m.alive) continue;
+      m._elemAuraAtk = 1;
+      m._elemAuraDef = 1;
+      m._rainbowAtkMul = 1;
+      m._rainbowAsMul = 1;
+      m._rainbowFragile = 1;
+      this._tickPotionFuse(m);
+      this._tickElementAllyAura(m, dt);
+      this._tickRainbowAuras(m, dt);
+    }
+    for (const h of this.heroes) {
+      if (!h.alive) continue;
+      h._allyAuraAtk = 1;
+      h._allyAuraMoveSpeed = 1;
+      this._tickHeroSupportAura(h, dt);
+    }
     this._applyTileModifiers(dt);
     for (const h of this.heroes) {
       if (!h.alive) continue;
+      h.atk = Math.round((h.baseAtk || h.atk) * (h._allyAuraAtk || 1));
+      if (h._baseAtkSpeed) h.atkSpeed = h._baseAtkSpeed;
       if (h.tempSilenceUntil && this.time < h.tempSilenceUntil) h.silenced = true;
     }
     this._spawnHeroes();
@@ -733,8 +770,14 @@ export class CombatEngine {
       }
       let atkMul = mod.atkMul;
       if (this.time < this.monsterRageUntil) atkMul *= this.monsterRageMul;
+      if (m.rageUntil && this.time < m.rageUntil) atkMul *= m.rageMul || 1.35;
+      if (m._rainbowAtkMul) atkMul *= m._rainbowAtkMul;
+      if (m._elemAuraAtk) atkMul *= m._elemAuraAtk;
       m.atk = Math.round((m.baseAtk || m.atk) * atkMul);
       if (m._baseAtkSpeed) m.atkSpeed = m._baseAtkSpeed;
+      if (m._rainbowAsMul) m.atkSpeed = (m._baseAtkSpeed || m.atkSpeed) * m._rainbowAsMul;
+      if (m._elemAuraDef && m._elemAuraDef !== 1) m.tileDefMul *= m._elemAuraDef;
+      if (m._rainbowFragile && m._rainbowFragile !== 1) m.tileDefMul *= m._rainbowFragile;
       if (mod.healPerSec > 0) {
         this._applyHealTo(m, mod.healPerSec * dt, { quiet: true });
       }
@@ -757,6 +800,161 @@ export class CombatEngine {
         ally.atk = Math.round((ally.baseAtk || ally.atk) * (ally.tileAtkMul || 1) * 0.82);
         ally.atkSpeed = (ally._baseAtkSpeed || ally.atkSpeed) * 0.85;
       }
+    }
+  }
+
+  _tickPotionFuse(m) {
+    if (!m.alive || !String(m.passive || '').startsWith('POTION_')) return;
+    if (m.fuseUntil == null) m.fuseUntil = this.time + 1;
+    if (this.time < m.fuseUntil) {
+      if (Math.random() < 0.08) {
+        this.particles.magic?.(m.x, m.y - 6, m.color);
+      }
+      return;
+    }
+    if (m._potionFired) return;
+    m._potionFired = true;
+    const r = (m.range || this.CELL * 2.2);
+    this.particles.burst(m.x, m.y, m.color || '#fff');
+    if (m.passive === 'POTION_POISON') {
+      for (const h of this.heroes) {
+        if (!h.alive) continue;
+        if (dist(h, m) > r) continue;
+        applyPoison(h, this.time, { dps: 14, duration: 4.5 });
+        this._float(h.x, h.y - 10, 'Độc văng!', '#9ccc65');
+        this.particles.poison?.(h.x, h.y);
+      }
+      this._float(m.x, m.y - 12, 'NỔ ĐỘC!', m.color);
+    } else if (m.passive === 'POTION_HEAL') {
+      for (const ally of this.monsters) {
+        if (!ally.alive || ally.isTrap) continue;
+        if (dist(ally, m) > r) continue;
+        const raw = ally.maxHp * 0.3;
+        this._applyHealTo(ally, raw);
+        this._float(ally.x, ally.y - 8, 'Hồi!', '#81c784');
+      }
+      this._float(m.x, m.y - 12, 'NỔ HỒI!', m.color);
+    } else if (m.passive === 'POTION_RAGE') {
+      for (const ally of this.monsters) {
+        if (!ally.alive || ally.isTrap) continue;
+        if (dist(ally, m) > r) continue;
+        ally.rageUntil = this.time + 4;
+        ally.rageMul = 1.35;
+        this._float(ally.x, ally.y - 8, 'Cuồng!', '#ef5350');
+      }
+      this._float(m.x, m.y - 12, 'NỔ CUỒNG!', m.color);
+    }
+    m.hp = 0;
+    m.alive = false;
+    this._onMonsterDeath(m, null);
+  }
+
+  _tickHeroSupportAura(hero, dt) {
+    if (!hero.alive) return;
+    const skills = hero.skills || [];
+    const radius = Math.max(this.CELL * 1.8, (hero.range || this.CELL * 3) * 0.9);
+    if (skills.includes('HERO_AURA_ATK')) {
+      for (const ally of this.heroes) {
+        if (!ally.alive) continue;
+        if (dist(ally, hero) > radius) continue;
+        ally._allyAuraAtk = Math.max(ally._allyAuraAtk || 1, 1.22);
+      }
+    }
+    if (skills.includes('HERO_AURA_SPEED')) {
+      for (const ally of this.heroes) {
+        if (!ally.alive) continue;
+        if (dist(ally, hero) > radius) continue;
+        ally._allyAuraMoveSpeed = Math.max(ally._allyAuraMoveSpeed || 1, 1.28);
+      }
+    }
+    if (skills.includes('HERO_AURA_SHIELD')) {
+      hero._shieldAuraCd = (hero._shieldAuraCd || 0) - dt;
+      if (hero._shieldAuraCd <= 0) {
+        for (const ally of this.heroes) {
+          if (!ally.alive) continue;
+          if (dist(ally, hero) > radius) continue;
+          ally.shieldHp = Math.max(ally.shieldHp || 0, Math.round(ally.maxHp * 0.12));
+          ally.shieldUntil = this.time + 3.6;
+          this._float(ally.x, ally.y - 10, 'Khiên!', '#90caf9');
+        }
+        hero._shieldAuraCd = 5.2;
+      }
+    }
+  }
+
+  _tickElementAllyAura(m, dt) {
+    if (!m.alive) return;
+    const tag = elementAuraTag(m.passive);
+    if (!tag) return;
+    const cell = this._unitCell(m);
+    const terr = terrainAt(this.map, cell.col, cell.row);
+    if (!elementAuraActive(m.passive, terr)) return;
+    const radius = auraRadiusCells(m) * this.CELL;
+    for (const ally of this.monsters) {
+      if (!ally.alive || ally === m || ally.isTrap) continue;
+      if (!(ally.tags || []).includes(tag)) continue;
+      if (dist(ally, m) > radius) continue;
+      ally._elemAuraAtk = Math.max(ally._elemAuraAtk || 1, 1.2);
+      ally._elemAuraDef = Math.max(ally._elemAuraDef || 1, 1.12);
+      if (dt > 0 && Math.random() < dt * 0.35) {
+        this._applyHealTo(ally, ally.maxHp * 0.008 * dt * 8, { quiet: true });
+      }
+    }
+  }
+
+  _tickRainbowAuras(m, dt) {
+    if (!m.alive) return;
+    if (m.passive === 'RAINBOW_MAP_HEAL') {
+      for (const ally of this.monsters) {
+        if (!ally.alive || ally.isTrap) continue;
+        this._applyHealTo(ally, ally.maxHp * 0.012 * dt, { quiet: true });
+      }
+      // drawback: small heal to nearby heroes + treasure tax
+      for (const h of this.heroes) {
+        if (!h.alive) continue;
+        if (dist(h, m) < this.CELL * 3.5) {
+          this._applyHealTo(h, h.maxHp * 0.004 * dt, { quiet: true });
+        }
+      }
+      if (this.treasureHp != null) {
+        this.treasureHp = Math.max(0, this.treasureHp - 5 * dt);
+      }
+      m._rainbowAsMul = 0.7;
+      return;
+    }
+    if (m.passive === 'RAINBOW_MAP_ATK') {
+      for (const ally of this.monsters) {
+        if (!ally.alive || ally.isTrap) continue;
+        ally._rainbowAtkMul = 1.28;
+        ally._rainbowFragile = 0.74;
+      }
+      m._rainbowAsMul = 0.55;
+      m._silenceCd = (m._silenceCd || 0) - dt;
+      if (m._silenceCd <= 0) {
+        m.silenced = true;
+        m._silenceUntil = this.time + 1.4;
+        m._silenceCd = 7;
+        this._float(m.x, m.y - 10, 'Tự câm', '#ce93d8');
+      }
+      if (m._silenceUntil && this.time >= m._silenceUntil) {
+        m.silenced = false;
+        m._silenceUntil = 0;
+      }
+      return;
+    }
+    if (m.passive === 'RAINBOW_MAP_SHIELD') {
+      m._shieldPulse = (m._shieldPulse || 0) - dt;
+      if (m._shieldPulse <= 0) {
+        for (const ally of this.monsters) {
+          if (!ally.alive || ally.isTrap) continue;
+          ally.shieldHp = Math.max(ally.shieldHp || 0, Math.round(ally.maxHp * 0.12));
+          ally.shieldUntil = this.time + 3.2;
+        }
+        m._shieldPulse = 5.5;
+        this._float(m.x, m.y - 12, 'Khiên Cầu!', '#7c4dff');
+      }
+      m.atk = Math.max(1, Math.round((m.baseAtk || m.atk) * 0.15));
+      m._rainbowAsMul = 0.4;
     }
   }
 
@@ -882,14 +1080,17 @@ export class CombatEngine {
         waveIndex: wi,
         maxHp: h.maxHp || h.hp,
         hp: h.maxHp || h.hp,
+        baseAtk: h.atk,
         atk: h.atk,
         baseSpeed: h.speed * 0.85,
         speed: h.speed * 0.85,
         range: h.range * this.CELL,
         effectiveRange: h.range * this.CELL,
+        _baseAtkSpeed: h.atkSpeed * 0.9,
         atkSpeed: h.atkSpeed * 0.9,
         aoeRadius: (h.aoeRadius || 0) * this.CELL,
         stealth: !!h.stealth,
+        isBoss: !!(h.isBoss || h.class === 'BOSS'),
         revealed: false,
         silenced: false,
         stunnedUntil: 0,
@@ -1654,6 +1855,24 @@ export class CombatEngine {
         }
       }
       this._float(m.x, m.y, 'Nguyền!', '#bf360c');
+    }
+    if (m.passive === 'RAINBOW_MAP_SHIELD') {
+      const r = this.CELL * 4;
+      for (const ally of this.monsters) {
+        if (!ally.alive || ally === m || ally.isTrap) continue;
+        if (dist(ally, m) > r) continue;
+        ally.shieldHp = 0;
+        ally.shieldUntil = 0;
+        const dmg = Math.max(1, Math.round(ally.maxHp * 0.18));
+        ally.hp -= dmg;
+        this._float(ally.x, ally.y - 8, `Vỡ -${dmg}`, '#7c4dff');
+        this.particles.burst(ally.x, ally.y, '#7c4dff');
+        if (ally.hp <= 0) {
+          ally.alive = false;
+          this._onMonsterDeath(ally, killerHero);
+        }
+      }
+      this._float(m.x, m.y, 'Khiên vỡ!', '#7c4dff');
     }
   }
 

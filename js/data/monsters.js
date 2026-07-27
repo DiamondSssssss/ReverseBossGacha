@@ -1189,6 +1189,103 @@ export const MONSTERS = [
     drawback: 'Bản thân đứng yên lâu hơn sau mỗi stun.',
     description: 'Tầm xa — choáng 1.4s; tự khóa ~1.8s',
   },
+
+  // ——— Legendary splash potions (own ×1) ———
+  {
+    id: 'potion_poison',
+    name: 'Bình Độc Văng',
+    rarity: 5, cost: 7, ownCap: 1,
+    stats: { hp: 40, atk: 20, speed: 0, range: 2.2, atkSpeed: 0.1 },
+    passive: 'POTION_POISON', tags: ['potion', 'trap', 'utility'], color: '#9ccc65',
+    description: 'Đặt → nổ ~1s: độc Heroes trong bán kính 2.2 ô. Chỉ sở hữu ×1.',
+  },
+  {
+    id: 'potion_heal',
+    name: 'Bình Hồi Văng',
+    rarity: 5, cost: 7, ownCap: 1,
+    stats: { hp: 40, atk: 10, speed: 0, range: 2.2, atkSpeed: 0.1 },
+    passive: 'POTION_HEAL', tags: ['potion', 'trap', 'utility', 'heal'], color: '#81c784',
+    description: 'Đặt → nổ ~1s: hồi ~30% maxHp quái trong vùng. Chỉ sở hữu ×1.',
+  },
+  {
+    id: 'potion_rage',
+    name: 'Bình Cuồng Văng',
+    rarity: 5, cost: 7, ownCap: 1,
+    stats: { hp: 40, atk: 10, speed: 0, range: 2.2, atkSpeed: 0.1 },
+    passive: 'POTION_RAGE', tags: ['potion', 'trap', 'utility'], color: '#ef5350',
+    description: 'Đặt → nổ ~1s: quái trong vùng ATK ×1.35 trong 4s. Chỉ sở hữu ×1.',
+  },
+
+  // ——— Epic element ally auras ———
+  {
+    id: 'tide_totem',
+    name: 'Totem Thủy Đồng',
+    rarity: 4, cost: 5,
+    stats: { hp: 420, atk: 28, speed: 0.6, range: 2.5, atkSpeed: 0.7 },
+    passive: 'AURA_WATER_ALLY', auraRadius: 2.5, tags: ['epic', 'water', 'utility', 'aura'], color: '#26a69a',
+    description: 'Aura: quái nước gần +ATK/HP. Phải đứng ô nước; sai ô = tắt aura + nerf.',
+  },
+  {
+    id: 'ember_totem',
+    name: 'Totem Hỏa Đồng',
+    rarity: 4, cost: 5,
+    stats: { hp: 400, atk: 32, speed: 0.6, range: 2.5, atkSpeed: 0.7 },
+    passive: 'AURA_FIRE_ALLY', auraRadius: 2.5, tags: ['epic', 'fire', 'utility', 'aura'], color: '#ff7043',
+    description: 'Aura: quái lửa gần +ATK/HP. Phải đứng ô lửa; sai ô = tắt aura + nerf.',
+  },
+  {
+    id: 'rime_totem',
+    name: 'Totem Băng Đồng',
+    rarity: 4, cost: 5,
+    stats: { hp: 410, atk: 30, speed: 0.55, range: 2.5, atkSpeed: 0.7 },
+    passive: 'AURA_ICE_ALLY', auraRadius: 2.5, tags: ['epic', 'ice', 'utility', 'aura'], color: '#81d4fa',
+    description: 'Aura: quái băng gần +ATK/HP. Phải đứng ô băng; sai ô = tắt aura + nerf.',
+  },
+  {
+    id: 'toxin_totem',
+    name: 'Totem Độc Đồng',
+    rarity: 4, cost: 5,
+    stats: { hp: 390, atk: 34, speed: 0.6, range: 2.5, atkSpeed: 0.7 },
+    passive: 'AURA_POISON_ALLY', auraRadius: 2.5, tags: ['epic', 'poison', 'utility', 'aura'], color: '#9ccc65',
+    description: 'Aura: quái độc gần +ATK/HP. Phải đứng ô độc; sai ô = tắt aura + nerf.',
+  },
+  {
+    id: 'umbra_totem',
+    name: 'Totem Ám Đồng',
+    rarity: 4, cost: 5,
+    stats: { hp: 380, atk: 36, speed: 0.65, range: 2.5, atkSpeed: 0.7 },
+    passive: 'AURA_DARK_ALLY', auraRadius: 2.5, tags: ['epic', 'dark', 'utility', 'aura'], color: '#7e57c2',
+    description: 'Aura: quái tối gần +ATK/HP. Phải đứng ô tối; sai ô = tắt aura + nerf.',
+  },
+
+  // ——— Rainbow (7★) ———
+  {
+    id: 'prism_sanctum',
+    name: 'Lăng Kính Thánh Đường',
+    rarity: 7, cost: 15, ownCap: 1,
+    stats: { hp: 520, atk: 40, speed: 0.5, range: 1.5, atkSpeed: 0.5 },
+    passive: 'RAINBOW_MAP_HEAL', tags: ['rainbow', 'heal', 'utility', 'drawback'], color: '#e040fb',
+    drawback: 'Thuế Kho 5 HP/s + hồi nhỏ Heroes gần. Máu bản thân mỏng.',
+    description: 'Cầu vồng — hồi nhẹ toàn map quái. Cost 15, own ×1. Drawback: thuế kho + heal hero gần.',
+  },
+  {
+    id: 'prism_wrath',
+    name: 'Lăng Kính Thịnh Nộ',
+    rarity: 7, cost: 15, ownCap: 1,
+    stats: { hp: 580, atk: 55, speed: 0.55, range: 1.5, atkSpeed: 0.45 },
+    passive: 'RAINBOW_MAP_ATK', tags: ['rainbow', 'dps', 'utility', 'drawback'], color: '#ff4081',
+    drawback: 'Đồng minh nhận ×1.35 dame; bản thân atkSpeed chậm + tự câm định kỳ.',
+    description: 'Cầu vồng — buff ATK toàn map quái. Cost 15, own ×1. Drawback: ally mỏng + tự câm.',
+  },
+  {
+    id: 'prism_aegis',
+    name: 'Lăng Kính Khiên Cầu',
+    rarity: 7, cost: 16, ownCap: 1,
+    stats: { hp: 700, atk: 18, speed: 0.4, range: 1.2, atkSpeed: 0.35 },
+    passive: 'RAINBOW_MAP_SHIELD', tags: ['rainbow', 'tank', 'utility', 'drawback'], color: '#7c4dff',
+    drawback: 'Chết → shockwave hại ally; gần như không tấn công. Chiếm gần full cap.',
+    description: 'Cầu vồng — pulse khiên toàn map. Cost 16, own ×1. Drawback: chết nổ đồng minh.',
+  },
 ];
 
 /** Explicit AI roles (overrides inference defaults) */
@@ -1340,6 +1437,17 @@ const AI_OVERRIDES = {
   phoenix_colossus: { role: 'boss_elite', leash: 5, hold: true, blocksPath: true },
   void_bomber: { role: 'chaser', leash: 6.5 },
   mythic_reaper: { role: 'chaser', leash: 7 },
+  potion_poison: { role: 'trap', leash: 0, hold: true },
+  potion_heal: { role: 'trap', leash: 0, hold: true },
+  potion_rage: { role: 'trap', leash: 0, hold: true },
+  tide_totem: { role: 'aura_support', leash: 2, hold: true },
+  ember_totem: { role: 'aura_support', leash: 2, hold: true },
+  rime_totem: { role: 'aura_support', leash: 2, hold: true },
+  toxin_totem: { role: 'aura_support', leash: 2, hold: true },
+  umbra_totem: { role: 'aura_support', leash: 2, hold: true },
+  prism_sanctum: { role: 'aura_support', leash: 1.5, hold: true },
+  prism_wrath: { role: 'aura_support', leash: 1.5, hold: true },
+  prism_aegis: { role: 'aura_support', leash: 1.5, hold: true },
 };
 
 for (const m of MONSTERS) {
@@ -1354,5 +1462,6 @@ export function monstersByRarityBucket(bucket) {
   if (bucket === 'epic') return MONSTERS.filter((m) => m.rarity === 4);
   if (bucket === 'legendary') return MONSTERS.filter((m) => m.rarity === 5);
   if (bucket === 'mythic') return MONSTERS.filter((m) => m.rarity === 6);
+  if (bucket === 'rainbow') return MONSTERS.filter((m) => m.rarity === 7);
   return MONSTERS;
 }

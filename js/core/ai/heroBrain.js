@@ -1,5 +1,5 @@
-import { getHeroProfile } from './profiles.js?v=78';
-import { scoreMonsterForHero, dist } from './targeting.js?v=78';
+import { getHeroProfile } from './profiles.js?v=80';
+import { scoreMonsterForHero, dist } from './targeting.js?v=80';
 import {
   ensureHeroSkillState,
   tryActivateShield,
@@ -7,9 +7,9 @@ import {
   tickStealthRegen,
   tryHealAlly,
   applySlow,
-} from './skills.js?v=78';
-import { findPath, findPathAway, buildBlockedFromMap } from '../pathfinding.js?v=78';
-import { SPELLS } from '../../data/constants.js?v=78';
+} from './skills.js?v=80';
+import { findPath, findPathAway, buildBlockedFromMap } from '../pathfinding.js?v=80';
+import { SPELLS } from '../../data/constants.js?v=80';
 
 /**
  * Decide hero combat intent for this frame.
@@ -82,22 +82,36 @@ export function tickHeroBrain(hero, ctx) {
     if (forced) best = forced;
   }
 
-  // Reveal check
+  // Reveal check — quái soi hero tàng hình
   for (const m of monsters) {
     if (!m.alive) continue;
     if (m.passive === 'REVEAL' && dist(hero, m) < m.range) {
       hero.revealed = true;
     }
   }
+  // Hero soi quái tàng hình
+  const heroSkills = hero.skills || [];
+  if (heroSkills.includes('REVEAL')) {
+    const revealRange = hero.effectiveRange ?? hero.range ?? cellSize * 3;
+    for (const m of monsters) {
+      if (!m.alive || !m.stealth || m.revealed) continue;
+      if (dist(hero, m) <= revealRange) {
+        m.revealed = true;
+        m.lastCombatTime = time;
+      }
+    }
+  }
 
   const dToTarget = best ? dist(hero, best) : Infinity;
   const range = hero.effectiveRange ?? hero.range;
 
-  // Mage / Archer / Hexer kite
+  // Mage / Archer / Hexer / Scout / ranged boss kite
   if (
     (profile.archetype === 'mage' ||
       profile.archetype === 'archer' ||
-      profile.archetype === 'hexer') &&
+      profile.archetype === 'hexer' ||
+      profile.archetype === 'scout' ||
+      (profile.archetype === 'boss' && profile.kiteBelow)) &&
     best &&
     dToTarget < (profile.kiteBelow || 1.5) * cellSize &&
     !hero.silenced
@@ -146,6 +160,7 @@ export function heroSpeedMultiplier(hero, ctx) {
     // Slow đã tick qua applySlow trong combatEngine — không nhân thêm lần 2
   }
   if (hero.tileSpeedMul) speedMul *= hero.tileSpeedMul;
+  if (hero._allyAuraMoveSpeed) speedMul *= hero._allyAuraMoveSpeed;
   if (hero.slowUntil && time < hero.slowUntil) {
     speedMul *= hero.slowFactor ?? 0.55;
   }

@@ -1225,7 +1225,12 @@ const HERO_KIND = {
 
 function paintBackground(ctx, rarity) {
   const g = ctx.createRadialGradient(32, 32, 4, 32, 32, 30);
-  if (rarity >= 6) {
+  if (rarity >= 7) {
+    g.addColorStop(0, 'rgba(224,64,251,0.5)');
+    g.addColorStop(0.4, 'rgba(255,64,129,0.3)');
+    g.addColorStop(0.7, 'rgba(124,77,255,0.2)');
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+  } else if (rarity >= 6) {
     g.addColorStop(0, 'rgba(239,83,80,0.4)');
     g.addColorStop(0.55, 'rgba(123,31,162,0.2)');
     g.addColorStop(1, 'rgba(0,0,0,0)');
@@ -1261,7 +1266,7 @@ export function getMonsterSprite(id, color = '#66bb6a', rarity = 1) {
   if (rarity >= 1) {
     ctx.fillStyle = rarity >= 4 ? '#ffd54f' : rarity >= 2 ? '#81c784' : '#a1887f';
     ctx.font = 'bold 9px sans-serif';
-    ctx.fillText('★'.repeat(Math.min(rarity, 5)), 2, 62);
+    ctx.fillText('★'.repeat(Math.min(rarity, 7)), 2, 62);
   }
   cache.set(key, canvas);
   return canvas;
@@ -1295,7 +1300,7 @@ export function getLockedMonsterSprite(rarity = 1) {
 
   ctx.fillStyle = rarity >= 4 ? '#ffd54f' : rarity >= 2 ? '#81c784' : '#a1887f';
   ctx.font = 'bold 9px sans-serif';
-  ctx.fillText('★'.repeat(Math.min(rarity, 5)), 2, 62);
+  ctx.fillText('★'.repeat(Math.min(rarity, 7)), 2, 62);
 
   cache.set(key, canvas);
   return canvas;
@@ -1329,9 +1334,11 @@ export function getHeroSprite(id, heroClass = 'WARRIOR', color = '#ef9a9a') {
       ? 'heroMage'
       : heroClass === 'ROGUE'
         ? 'heroRogue'
-        : heroClass === 'ARCHER'
+        : heroClass === 'ARCHER' || heroClass === 'SCOUT'
           ? 'heroArcher'
-          : heroClass === 'TANK'
+          : heroClass === 'BOSS'
+            ? 'heroTank'
+            : heroClass === 'TANK'
             ? 'heroTank'
             : heroClass === 'BERSERKER'
               ? 'heroBerserker'

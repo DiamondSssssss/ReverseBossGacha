@@ -1,11 +1,11 @@
-import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=78';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=78';
-import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=78';
-import { CombatEngine } from '../core/combatEngine.js?v=78';
-import { saveState } from '../core/storage.js?v=78';
-import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=78';
-import { monsterSpriteUrl } from '../render/sprites.js?v=78';
-import { bindMonsterTips, hideMonsterTip } from './monsterTip.js?v=78';
+import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=80';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=80';
+import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=80';
+import { CombatEngine } from '../core/combatEngine.js?v=80';
+import { saveState } from '../core/storage.js?v=80';
+import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=80';
+import { monsterSpriteUrl } from '../render/sprites.js?v=80';
+import { bindMonsterTips, hideMonsterTip } from './monsterTip.js?v=80';
 
 let engine = null;
 
@@ -73,6 +73,16 @@ export function renderCombat(root, ctx) {
         </div>
       </div>
       <canvas id="combat-canvas"></canvas>
+      <div class="hero-boss-bar" id="hero-boss-bar" hidden>
+        <div class="hero-boss-bar-meta">
+          <span class="hero-boss-label">HERO BOSS</span>
+          <span class="hero-boss-name" id="hero-boss-name">—</span>
+          <span class="hero-boss-hp" id="hero-boss-hp">—</span>
+        </div>
+        <div class="hero-boss-track">
+          <div class="hero-boss-fill" id="hero-boss-fill"></div>
+        </div>
+      </div>
       <div class="combat-intent" id="combat-intent">Đợi Hero vào từ Cổng…</div>
       <div class="combat-hud">
         <div class="stat" id="hud-treasure">Kho báu<b>—</b></div>
@@ -112,6 +122,10 @@ export function renderCombat(root, ctx) {
   const hudW = root.querySelector('#hud-wave');
   const status = root.querySelector('#combat-status');
   const intentEl = root.querySelector('#combat-intent');
+  const bossBar = root.querySelector('#hero-boss-bar');
+  const bossNameEl = root.querySelector('#hero-boss-name');
+  const bossHpEl = root.querySelector('#hero-boss-hp');
+  const bossFillEl = root.querySelector('#hero-boss-fill');
   const handEl = root.querySelector('#deploy-hand');
   const hintEl = root.querySelector('#deploy-hint');
   const spellBtns = [...root.querySelectorAll('.spell-btn')];
@@ -225,6 +239,22 @@ export function renderCombat(root, ctx) {
         hudCost.classList.remove('can-deploy');
       }
       hudW.innerHTML = `Hero còn<b>${snap.heroesAlive}/${snap.heroesTotal}</b>`;
+      if (snap.bossHero) {
+        bossBar.hidden = false;
+        const ratio = Math.max(
+          0,
+          Math.min(1, snap.bossHero.hp / Math.max(1, snap.bossHero.maxHp))
+        );
+        bossNameEl.textContent = snap.bossHero.name;
+        bossHpEl.textContent = snap.bossHero.alive
+          ? `${Math.ceil(snap.bossHero.hp)}/${snap.bossHero.maxHp}`
+          : 'ĐÃ HẠ';
+        bossFillEl.style.width = `${ratio * 100}%`;
+        bossFillEl.style.background = snap.bossHero.color || '#c62828';
+        bossBar.classList.toggle('defeated', !snap.bossHero.alive);
+      } else {
+        bossBar.hidden = true;
+      }
       if (snap.draining) {
         hudT.classList.add('danger');
       } else {

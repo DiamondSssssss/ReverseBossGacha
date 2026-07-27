@@ -4,11 +4,11 @@ import {
   SPELLS,
   INVENTORY_CAP,
   DUPLICATE_SOUL_REFUND,
-} from '../data/constants.js?v=78';
-import { DEFAULT_BOSS_ID, syncUnlockedBosses } from '../data/dungeonBosses.js?v=78';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=78';
-import { isLoggedIn } from './auth.js?v=78';
-import { pushCloudSave } from './cloudSave.js?v=78';
+} from '../data/constants.js?v=80';
+import { DEFAULT_BOSS_ID, syncUnlockedBosses } from '../data/dungeonBosses.js?v=80';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=80';
+import { isLoggedIn } from './auth.js?v=80';
+import { pushCloudSave } from './cloudSave.js?v=80';
 
 const LEGACY_KEYS = ['rbg_save_v1'];
 
@@ -28,13 +28,22 @@ function defaultState() {
     monsterUpgrades: {},
     pityCounter: 0,
     mythicPityCounter: 0,
+    rainbowPityCounter: 0,
     dungeonLevel: 1,
     mapUpgrade: 0,
     roomUpgrades: {},
     unlockedSpells: ['slow_wave', 'heal_monsters'],
     selectedBossId: DEFAULT_BOSS_ID,
     unlockedBosses: [DEFAULT_BOSS_ID],
-    stats: { pulls: 0, wins: 0, losses: 0, pityHits: 0, mythicPityHits: 0, spellsCast: 0 },
+    stats: {
+      pulls: 0,
+      wins: 0,
+      losses: 0,
+      pityHits: 0,
+      mythicPityHits: 0,
+      rainbowPityHits: 0,
+      spellsCast: 0,
+    },
     tutorialDone: false,
     tipsDismissed: {},
     achievements: {},
@@ -45,15 +54,24 @@ function defaultState() {
   };
 }
 
+/** Cap sở hữu theo template (ownCap) hoặc INVENTORY_CAP mặc định. */
+export function inventoryOwnCap(monsterId) {
+  const tpl = MONSTER_BY_ID[monsterId];
+  const n = Number(tpl?.ownCap);
+  if (Number.isFinite(n) && n > 0) return Math.floor(n);
+  return INVENTORY_CAP;
+}
+
 /** Cắt inventory về cap; hoàn LH cho phần dư (migration / cloud). */
 export function clampInventoryToCap(state) {
   let refund = 0;
   const inv = state.inventory || {};
   for (const id of Object.keys(inv)) {
     const have = Number(inv[id]) || 0;
-    if (have <= INVENTORY_CAP) continue;
-    const overflow = have - INVENTORY_CAP;
-    inv[id] = INVENTORY_CAP;
+    const cap = inventoryOwnCap(id);
+    if (have <= cap) continue;
+    const overflow = have - cap;
+    inv[id] = cap;
     const rarity = MONSTER_BY_ID[id]?.rarity || 1;
     refund += overflow * (DUPLICATE_SOUL_REFUND[rarity] || DUPLICATE_SOUL_REFUND[1]);
   }
@@ -84,6 +102,7 @@ export function loadState() {
       gems: Number(parsed.gems) || 0,
       pityCounter: Math.max(0, Number(parsed.pityCounter) || 0),
       mythicPityCounter: Math.max(0, Number(parsed.mythicPityCounter) || 0),
+      rainbowPityCounter: Math.max(0, Number(parsed.rainbowPityCounter) || 0),
       inventory: parsed.inventory
         ? { ...parsed.inventory }
         : { ...STARTING.starterMonsters },
@@ -146,6 +165,7 @@ export function applySaveData(state, data) {
     gems: Number(data.gems) || 0,
     pityCounter: Math.max(0, Number(data.pityCounter) || 0),
     mythicPityCounter: Math.max(0, Number(data.mythicPityCounter) || 0),
+    rainbowPityCounter: Math.max(0, Number(data.rainbowPityCounter) || 0),
     achievementGemRev: Number(data.achievementGemRev) || 0,
     updatedAt: data.updatedAt || Date.now(),
   });
@@ -180,7 +200,7 @@ export function resetState() {
 }
 
 /**
- * Thêm quái vào kho, tối đa INVENTORY_CAP mỗi loại.
+ * Thêm quái vào kho, tối đa ownCap (mặc định INVENTORY_CAP) mỗi loại.
  * Phần dư → hoàn Linh Hồn theo độ hiếm.
  * @returns {{ added: number, overflow: number, soulsRefunded: number, atCap: boolean }}
  */
@@ -190,7 +210,8 @@ export function addToInventory(state, monsterId, count = 1) {
   if (!state.ownedEver.includes(monsterId)) state.ownedEver.push(monsterId);
 
   const have = state.inventory[monsterId] || 0;
-  const room = Math.max(0, INVENTORY_CAP - have);
+  const cap = inventoryOwnCap(monsterId);
+  const room = Math.max(0, cap - have);
   const added = Math.min(n, room);
   const overflow = n - added;
 
@@ -210,7 +231,7 @@ export function addToInventory(state, monsterId, count = 1) {
     added,
     overflow,
     soulsRefunded,
-    atCap: (state.inventory[monsterId] || 0) >= INVENTORY_CAP,
+    atCap: (state.inventory[monsterId] || 0) >= cap,
   };
 }
 

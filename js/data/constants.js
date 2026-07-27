@@ -9,12 +9,15 @@ export const GACHA = {
   PITY_THRESHOLD: 50,
   /** Pity Mythic (6★) */
   MYTHIC_PITY_THRESHOLD: 100,
+  /** Pity Cầu vồng (7★) — rất dài */
+  RAINBOW_PITY_THRESHOLD: 200,
   RATES: {
-    common: 0.58, // 1★
+    common: 0.5792, // 1★
     rare: 0.3, // 2★–3★
     epic: 0.085, // 4★
     legendary: 0.03, // 5★
     mythic: 0.005, // 6★
+    rainbow: 0.0008, // 7★
   },
 };
 
@@ -25,6 +28,7 @@ export const COST_BY_RARITY = {
   4: 5,
   5: 7,
   6: 9,
+  7: 15,
 };
 
 export const COMBAT = {
@@ -125,6 +129,7 @@ export const DUPLICATE_SOUL_REFUND = {
   4: 90,
   5: 160,
   6: 280,
+  7: 500,
 };
 
 /** Nâng cấp quái bằng Vàng */
@@ -134,7 +139,7 @@ export const MONSTER_UPGRADE = {
   STAT_PER_LEVEL: 0.14,
   COST_BASE: 40,
   COST_GROWTH: 1.45,
-  RARITY_MULT: { 1: 1, 2: 1.25, 3: 1.6, 4: 2.2, 5: 3.2, 6: 4.5 },
+  RARITY_MULT: { 1: 1, 2: 1.25, 3: 1.6, 4: 2.2, 5: 3.2, 6: 4.5, 7: 6.5 },
 };
 
 /**
@@ -214,6 +219,8 @@ export const HERO_CLASS_LABELS = {
   TANK: 'Thuần tank',
   BERSERKER: 'Berserker',
   HEXER: 'Diệt hồi',
+  SCOUT: 'Trinh sát',
+  BOSS: 'Hero Boss',
 };
 
 export const LANE_LABELS = ['Trên', 'Giữa', 'Dưới'];
@@ -225,6 +232,7 @@ export const RARITY_LABELS = {
   4: 'Epic',
   5: 'Legendary',
   6: 'Mythic',
+  7: 'Cầu vồng',
 };
 
 export const RARITY_COLORS = {
@@ -234,4 +242,8 @@ export const RARITY_COLORS = {
   4: '#5b4a7a',
   5: '#9a6b2a',
   6: '#c62828',
+  7: '#e040fb',
 };
+
+/** Ải Hero Boss — pool mang ×5, map dài */
+export const BOSS_FIGHT_STAGES = [40, 45, 50, 55, 60];

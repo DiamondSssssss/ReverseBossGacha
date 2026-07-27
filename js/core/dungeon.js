@@ -1,8 +1,13 @@
-import { getStageMap, isPlaceable } from '../data/maps.js?v=78';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=78';
-import { MAP_UPGRADE } from '../data/constants.js?v=78';
-import { buildWave, getWavePlan, assignHeroFormation } from '../data/heroes.js?v=78';
-import { sanitizeLoadout, suggestLoadout, placeMaxCost } from './loadout.js?v=78';
+import { getStageMap, isPlaceable } from '../data/maps.js?v=80';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=80';
+import { MAP_UPGRADE } from '../data/constants.js?v=80';
+import { buildWave, getWavePlan, assignHeroFormation } from '../data/heroes.js?v=80';
+import {
+  sanitizeLoadout,
+  suggestLoadout,
+  placeMaxCost,
+  loadoutPoolMultForLevel,
+} from './loadout.js?v=80';
 
 export function createRunState(playerState) {
   const level = playerState.dungeonLevel || 1;
@@ -12,15 +17,16 @@ export function createRunState(playerState) {
   /** Cap gốc (sau nâng hầm) — dùng cho pool loadout */
   const refCap = map.baseCostCap + upgradeLv * MAP_UPGRADE.COST_CAP_BONUS;
   map.refCostCap = refCap;
-  /** Cap sân = Cap gốc (1×); pool mang = 3× qua loadoutMaxPoolCost(refCap) */
+  /** Cap sân = Cap gốc (1×); pool mang = 3× hoặc 5× (boss) */
   map.costCap = placeMaxCost(refCap);
   map.upgradeLevel = upgradeLv;
+  map.poolMult = loadoutPoolMultForLevel(level);
 
   const wave = assignHeroFormation(buildWave(level), map);
   const inv = playerState.inventory || {};
-  let loadout = sanitizeLoadout(playerState.lastLoadout, inv, map.refCostCap);
+  let loadout = sanitizeLoadout(playerState.lastLoadout, inv, map.refCostCap, level);
   if (loadoutPoolEmpty(loadout)) {
-    loadout = suggestLoadout(inv, map.refCostCap);
+    loadout = suggestLoadout(inv, map.refCostCap, level);
   }
 
   return {

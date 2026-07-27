@@ -121,6 +121,67 @@
   margin-top: 1px;
 }
 
+.hero-boss-bar {
+  flex-shrink: 0;
+  border: 3px solid var(--ink);
+  background: color-mix(in srgb, #1a1208 12%, var(--bone));
+  padding: 6px 10px 8px;
+  box-shadow: var(--shadow-stamp);
+}
+
+.hero-boss-bar[hidden] {
+  display: none !important;
+}
+
+.hero-boss-bar-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.hero-boss-label {
+  letter-spacing: 0.06em;
+  color: var(--seal);
+  font-size: 0.62rem;
+}
+
+.hero-boss-name {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+}
+
+.hero-boss-hp {
+  font-variant-numeric: tabular-nums;
+  color: #5c5346;
+}
+
+.hero-boss-track {
+  height: 14px;
+  border: 2px solid var(--ink);
+  background: #2a2218;
+  overflow: hidden;
+}
+
+.hero-boss-fill {
+  height: 100%;
+  width: 100%;
+  background: #c62828;
+  transition: width 0.15s linear;
+}
+
+.hero-boss-bar.defeated .hero-boss-fill {
+  width: 0 !important;
+  opacity: 0.35;
+}
+
+.hero-boss-bar.defeated .hero-boss-hp {
+  color: var(--seal);
+}
+
 .deploy-row {
   flex-shrink: 0;
   border: 2px solid var(--ink);

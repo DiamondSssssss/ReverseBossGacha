@@ -1,4 +1,4 @@
-import { api, isLoggedIn } from './auth.js?v=78';
+import { api, isLoggedIn } from './auth.js?v=80';
 
 function sanitize(state) {
   const {
@@ -9,6 +9,7 @@ function sanitize(state) {
     monsterUpgrades,
     pityCounter,
     mythicPityCounter,
+    rainbowPityCounter,
     dungeonLevel,
     roomUpgrades,
     mapUpgrade,
@@ -32,6 +33,7 @@ function sanitize(state) {
     monsterUpgrades: monsterUpgrades || {},
     pityCounter,
     mythicPityCounter: mythicPityCounter || 0,
+    rainbowPityCounter: rainbowPityCounter || 0,
     dungeonLevel,
     roomUpgrades,
     mapUpgrade: mapUpgrade || 0,
@@ -94,6 +96,7 @@ export function pickBetterSave(local, cloud) {
     (s.dungeonLevel || 1) * 10000 +
     (s.stats?.wins || 0) * 100 +
     (s.stats?.pulls || 0) * 50 +
+    (Number(s.rainbowPityCounter) || 0) * 35 +
     (Number(s.mythicPityCounter) || 0) * 25 +
     (Number(s.pityCounter) || 0) * 10 +
     (Number(s.souls) || 0) * 0.01;

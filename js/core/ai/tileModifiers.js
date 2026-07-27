@@ -1,7 +1,7 @@
-import { TERRAIN } from '../../data/rooms.js?v=78';
-import { COMBAT, MONSTER_UPGRADE } from '../../data/constants.js?v=78';
-import { monsterStatMul } from '../monsterUpgrade.js?v=78';
-import { monsterScaleForLevel } from '../../data/heroes.js?v=78';
+import { TERRAIN } from '../../data/rooms.js?v=80';
+import { COMBAT, MONSTER_UPGRADE } from '../../data/constants.js?v=80';
+import { monsterStatMul } from '../monsterUpgrade.js?v=80';
+import { monsterScaleForLevel } from '../../data/heroes.js?v=80';
 
 /**
  * Buff / debuff địa hình theo passive element.
@@ -84,10 +84,91 @@ export function terrainAffinityMods(passive, terrain) {
         out.atkMul = 0.8;
       }
       break;
+    case 'AURA_WATER_ALLY':
+      if (terrain === TERRAIN.WATER || terrain === 'WATER') {
+        out.atkMul = 1.1;
+        out.hpMul = 1.1;
+      } else {
+        out.atkMul = 0.65;
+        out.hpMul = 0.8;
+        out.defMul = 0.85;
+      }
+      break;
+    case 'AURA_FIRE_ALLY':
+      if (terrain === TERRAIN.FIRE || terrain === 'FIRE') {
+        out.atkMul = 1.1;
+        out.hpMul = 1.1;
+      } else {
+        out.atkMul = 0.65;
+        out.hpMul = 0.8;
+      }
+      break;
+    case 'AURA_ICE_ALLY':
+      if (terrain === TERRAIN.ICE || terrain === 'ICE') {
+        out.atkMul = 1.1;
+        out.hpMul = 1.1;
+      } else {
+        out.atkMul = 0.65;
+        out.hpMul = 0.8;
+        out.speedMul = 0.9;
+      }
+      break;
+    case 'AURA_POISON_ALLY':
+      if (terrain === TERRAIN.POISON || terrain === 'POISON') {
+        out.atkMul = 1.1;
+        out.hpMul = 1.1;
+      } else {
+        out.atkMul = 0.65;
+        out.hpMul = 0.8;
+      }
+      break;
+    case 'AURA_DARK_ALLY':
+      if (terrain === TERRAIN.DARK || terrain === 'DARK') {
+        out.atkMul = 1.15;
+      } else {
+        out.atkMul = 0.6;
+        out.defMul = 0.85;
+      }
+      break;
     default:
       break;
   }
   return out;
+}
+
+/** Aura element ally chỉ bật khi totem đứng đúng ô. */
+export function elementAuraActive(passive, terrain) {
+  switch (passive) {
+    case 'AURA_WATER_ALLY':
+      return terrain === TERRAIN.WATER || terrain === 'WATER';
+    case 'AURA_FIRE_ALLY':
+      return terrain === TERRAIN.FIRE || terrain === 'FIRE';
+    case 'AURA_ICE_ALLY':
+      return terrain === TERRAIN.ICE || terrain === 'ICE';
+    case 'AURA_POISON_ALLY':
+      return terrain === TERRAIN.POISON || terrain === 'POISON';
+    case 'AURA_DARK_ALLY':
+      return terrain === TERRAIN.DARK || terrain === 'DARK';
+    default:
+      return false;
+  }
+}
+
+export function elementAuraTag(passive) {
+  switch (passive) {
+    case 'AURA_WATER_ALLY':
+      return 'water';
+    case 'AURA_FIRE_ALLY':
+      return 'fire';
+    case 'AURA_ICE_ALLY':
+      return 'ice';
+    case 'AURA_POISON_ALLY':
+      return 'poison';
+    case 'AURA_DARK_ALLY':
+      return 'dark';
+    default:
+      return null;
+  }
 }
 
 /**

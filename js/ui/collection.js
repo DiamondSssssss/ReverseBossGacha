@@ -1,19 +1,20 @@
-import { MONSTERS } from '../data/monsters.js?v=78';
+import { MONSTERS } from '../data/monsters.js?v=80';
 import {
   RARITY_COLORS,
   RARITY_LABELS,
   INVENTORY_CAP,
   MONSTER_UPGRADE,
-} from '../data/constants.js?v=78';
-import { monsterDisplayUrl } from '../render/sprites.js?v=78';
+} from '../data/constants.js?v=80';
+import { monsterDisplayUrl } from '../render/sprites.js?v=80';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,
   tryUpgradeMonster,
   upgradeMonsterCost,
-} from '../core/monsterUpgrade.js?v=78';
-import { evaluateAchievements } from '../core/achievements.js?v=78';
-import { describeMonsterKit } from '../data/skillDesc.js?v=78';
+} from '../core/monsterUpgrade.js?v=80';
+import { evaluateAchievements } from '../core/achievements.js?v=80';
+import { describeMonsterKit } from '../data/skillDesc.js?v=80';
+import { inventoryOwnCap } from '../core/storage.js?v=80';
 
 const filters = {
   q: '',
@@ -37,6 +38,8 @@ const ROLE_OPTIONS = [
   { id: 'silence', label: 'Silence' },
   { id: 'anti_rogue', label: 'Anti-Rogue' },
   { id: 'boss', label: 'Boss' },
+  { id: 'potion', label: 'Potion' },
+  { id: 'rainbow', label: 'Cầu vồng' },
 ];
 
 function escapeHtml(str) {
@@ -120,7 +123,7 @@ function renderCards(state) {
           <div class="stars" style="color:${RARITY_COLORS[m.rarity]}">${'★'.repeat(m.rarity)} <span class="rarity-tag">${RARITY_LABELS[m.rarity]}</span></div>
           <div class="name">???</div>
           <div class="muted" style="font-size:0.75rem;margin-top:2px">Cost ? · HP ? · ATK ?</div>
-          ${m.rarity >= 6 ? '<div class="desc drawback-line">Mythic — có drawback khi dùng</div>' : ''}
+          ${m.rarity >= 7 ? '<div class="desc drawback-line">Cầu vồng — aura toàn map, drawback nặng</div>' : m.rarity >= 6 ? '<div class="desc drawback-line">Mythic — có drawback khi dùng</div>' : ''}
           <div class="desc">Chưa mở khóa — quay Gacha hoặc thắng ải để nhận.</div>
           <div class="count locked-count">Chưa sở hữu</div>
         </div>
@@ -142,7 +145,7 @@ function renderCards(state) {
           ${m.drawback ? `<div class="desc drawback-line">⚠ ${escapeHtml(m.drawback)}</div>` : ''}
           ${kitHtml(m)}
           <div class="desc">${escapeHtml(m.description || '')}</div>
-          <div class="count">Sở hữu ×${count}/${INVENTORY_CAP}</div>
+          <div class="count">Sở hữu ×${count}/${inventoryOwnCap(m.id)}</div>
           <div class="upgrade-row">
             <button type="button" class="btn-upgrade-mon" data-upgrade="${m.id}" ${maxed || !canAfford ? 'disabled' : ''}>
               ${maxed ? 'MAX' : costOk ? `Nâng Lv ${upLv + 1} · ${upCost} vàng` : 'Không nâng được'}
@@ -222,6 +225,7 @@ export function renderCollection(root, ctx) {
           .map((r) => chip(filters.rarity === String(r), `data-rarity="${r}"`, `${'★'.repeat(r)}`))
           .join('')}
         ${chip(filters.rarity === '6', 'data-rarity="6"', '★★★★★★ Mythic')}
+        ${chip(filters.rarity === '7', 'data-rarity="7"', '★★★★★★★ Cầu vồng')}
       </div>
 
       <div class="filter-row filter-row-scroll" data-group="role">
