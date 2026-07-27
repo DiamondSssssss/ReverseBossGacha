@@ -1,13 +1,13 @@
-import { getStageMap, isPlaceable } from '../data/maps.js?v=89';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=89';
-import { MAP_UPGRADE } from '../data/constants.js?v=89';
-import { buildWave, getWavePlan, assignHeroFormation } from '../data/heroes.js?v=89';
+import { getStageMap, isPlaceable } from '../data/maps.js?v=90';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=90';
+import { MAP_UPGRADE } from '../data/constants.js?v=90';
+import { buildWave, getWavePlan, assignHeroFormation } from '../data/heroes.js?v=90';
 import {
   sanitizeLoadout,
   suggestLoadout,
   placeMaxCost,
   loadoutPoolMultForLevel,
-} from './loadout.js?v=89';
+} from './loadout.js?v=90';
 
 export function createRunState(playerState) {
   const level = playerState.dungeonLevel || 1;
@@ -79,6 +79,10 @@ export function canPlace(map, monsterId, col, row) {
 
 export function placeMonster(run, _roomIndex, monsterId, col, row, inventory) {
   const map = run.map;
+  const maxU = run.challenge?.constraints?.maxUnits;
+  if (maxU != null && map.placements.length >= maxU) {
+    return { ok: false, reason: `Thử thách tối đa ${maxU} unit trên sân` };
+  }
   const check = canPlace(map, monsterId, col, row);
   if (!check.ok) return check;
   if (!(inventory[monsterId] > 0)) {

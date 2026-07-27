@@ -1067,6 +1067,17 @@ body.play-fit #screen-scout.screen.active {
   cursor: default;
 }
 
+.loadout-pick.is-banned {
+  opacity: 0.38;
+  filter: grayscale(0.55);
+}
+
+.loadout-pick .pick-stats.ban {
+  color: var(--seal-deep);
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+
 .tray-loadout-hint {
   font-size: 0.62rem;
   font-weight: 600;

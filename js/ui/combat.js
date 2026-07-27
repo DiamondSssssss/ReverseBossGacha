@@ -1,16 +1,16 @@
-import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=89';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=89';
-import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=89';
-import { CombatEngine } from '../core/combatEngine.js?v=89';
-import { saveState } from '../core/storage.js?v=89';
-import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=89';
+import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=90';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=90';
+import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=90';
+import { CombatEngine } from '../core/combatEngine.js?v=90';
+import { saveState } from '../core/storage.js?v=90';
+import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=90';
 import {
   evaluateChallengeResult,
   grantChallengeReward,
   titleName,
-} from '../core/challenge.js?v=89';
-import { monsterSpriteUrl } from '../render/sprites.js?v=89';
-import { bindMonsterTips, hideMonsterTip } from './monsterTip.js?v=89';
+} from '../core/challenge.js?v=90';
+import { monsterSpriteUrl } from '../render/sprites.js?v=90';
+import { bindMonsterTips, hideMonsterTip } from './monsterTip.js?v=90';
 
 let engine = null;
 

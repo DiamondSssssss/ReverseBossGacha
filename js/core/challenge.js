@@ -1,9 +1,14 @@
-import { CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_TITLES, getChallenge } from '../data/challenges.js?v=89';
-import { getChallengeMap } from '../data/mapsChallenge.js?v=89';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=89';
-import { MAP_UPGRADE } from '../data/constants.js?v=89';
-import { HERO_BY_ID, assignHeroFormation } from '../data/heroes.js?v=89';
-import { placeMaxCost, sanitizeLoadout, suggestLoadout } from './loadout.js?v=89';
+import { CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_TITLES, getChallenge } from '../data/challenges.js?v=90';
+import { getChallengeMap } from '../data/mapsChallenge.js?v=90';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=90';
+import { HERO_BY_ID, assignHeroFormation } from '../data/heroes.js?v=90';
+import {
+  placeMaxCost,
+  sanitizeLoadout,
+  suggestLoadout,
+  tryAddToLoadout,
+  LOADOUT_POOL_MULT,
+} from './loadout.js?v=90';
 
 export { getChallenge, CHALLENGES, CHALLENGE_TITLES };
 
@@ -76,44 +81,40 @@ function buildChallengeWave(ch) {
   return list;
 }
 
-export function createChallengeRunState(playerState, challengeId) {
-  const ch = getChallenge(challengeId);
-  if (!ch) return null;
-  const map = getChallengeMap(ch.mapId);
-  if (!map) return null;
-  const upgradeLv = playerState.mapUpgrade || 0;
-  const refCap = map.baseCostCap + upgradeLv * MAP_UPGRADE.COST_CAP_BONUS;
-  map.refCostCap = refCap;
-  map.costCap = placeMaxCost(refCap);
-  map.upgradeLevel = upgradeLv;
-  map.poolMult = 3;
+/** Lý do cứng — quái này không được mang vào thử thách (không phụ thuộc count). */
+export function challengeHardBlockReason(ch, monster) {
+  if (!ch || !monster) return 'Quái không tồn tại';
+  const cons = ch.constraints || {};
+  const isPotion = !!monster.tags?.includes('potion');
+  const isTrap = !!monster.tags?.includes('trap');
 
-  let wave = buildChallengeWave(ch);
-  wave = assignHeroFormation(wave, map);
-
-  const inv = playerState.inventory || {};
-  let loadout = sanitizeLoadout(playerState.lastLoadout, inv, map.refCostCap, 1);
-  if (!Object.values(loadout || {}).some((n) => n > 0)) {
-    loadout = suggestLoadout(inv, map.refCostCap, 1);
+  if (cons.banMythic && monster.rarity >= 6) return 'Thử thách cấm Mythic/Rainbow';
+  if (cons.banLegendary && monster.rarity === 5 && !isPotion) return 'Thử thách cấm Legendary';
+  if (cons.banRainbow && monster.rarity >= 7) return 'Thử thách cấm Rainbow';
+  if (cons.maxRarity != null && monster.rarity > cons.maxRarity && !isPotion) {
+    return `Thử thách chỉ ≤${cons.maxRarity}★`;
   }
-
-  return {
-    level: challengeId,
-    mode: 'challenge',
-    challengeId,
-    challenge: ch,
-    map,
-    rooms: [map],
-    wave,
-    waveTheme: ch.wave?.theme || ch.name,
-    waveTip: ch.wave?.tip || map.tip,
-    selectedMonsterId: null,
-    loadout,
-    loadoutReady: false,
-    appliedLoadoutKey: null,
-    noBossSpells: !!ch.constraints?.noBossSpells,
-    treasureHpOverride: map.treasureHp,
-  };
+  if (cons.banStealthMythic && monster.rarity >= 6 && (monster.stealth || monster.skills?.includes('STEALTH'))) {
+    return 'Cấm stealth Mythic';
+  }
+  if (cons.banSilenceMythic && monster.rarity >= 6 && monster.passive === 'SILENCE_ON_HIT') {
+    return 'Cấm silence Mythic';
+  }
+  if (
+    cons.fillerMaxRarity != null &&
+    monster.id !== cons.requireMonster &&
+    monster.rarity > cons.fillerMaxRarity
+  ) {
+    return `Filler chỉ ≤${cons.fillerMaxRarity}★`;
+  }
+  if (cons.onlyLowCeilingOrCheap) {
+    const ok =
+      monster.passive === 'BUFF_IN_LOW_CEILING_ROOM' || (monster.cost || 0) <= 2;
+    if (!ok) return 'Chỉ low-ceiling hoặc cost ≤2';
+  }
+  if (cons.allowTrap === false && isTrap) return 'Thử thách không cho bẫy';
+  if (cons.allowPotion === false && isPotion) return 'Thử thách không cho potion';
+  return null;
 }
 
 export function validateChallengeLoadout(ch, loadout, placements = []) {
@@ -127,34 +128,14 @@ export function validateChallengeLoadout(ch, loadout, placements = []) {
     if (!m) return;
     ids.add(id);
     counts.units += n;
-    if (m.rarity >= 7) counts.mythic += n; // treat rainbow as mythic+
-    else if (m.rarity === 6) counts.mythic += n;
+    if (m.rarity >= 6) counts.mythic += n;
     else if (m.rarity === 5) counts.legendary += n;
     else if (m.rarity === 4) counts.epic += n;
     if (m.rarity <= (cons.lowStarMaxRarity || 3)) counts.low += n;
     if (m.tags?.includes('potion')) counts.potion += n;
-    if (cons.maxRarity != null && m.rarity > cons.maxRarity && !m.tags?.includes('potion')) {
-      errors.push(`${m.name} vượt trần ★${cons.maxRarity}`);
-    }
-    if (cons.banMythic && m.rarity >= 6) errors.push('Cấm Mythic/Rainbow');
-    if (cons.banLegendary && m.rarity === 5 && !m.tags?.includes('potion')) {
-      errors.push('Cấm Legendary');
-    }
-    if (cons.banRainbow && m.rarity >= 7) errors.push('Cấm Rainbow');
-    if (cons.banStealthMythic && m.rarity >= 6 && (m.stealth || m.skills?.includes('STEALTH'))) {
-      errors.push('Cấm stealth Mythic');
-    }
-    if (cons.banSilenceMythic && m.rarity >= 6 && m.passive === 'SILENCE_ON_HIT') {
-      errors.push('Cấm silence Mythic');
-    }
-    if (cons.fillerMaxRarity != null && id !== cons.requireMonster && m.rarity > cons.fillerMaxRarity) {
-      errors.push(`Filler chỉ ≤${cons.fillerMaxRarity}★`);
-    }
-    if (cons.onlyLowCeilingOrCheap) {
-      const ok =
-        m.passive === 'BUFF_IN_LOW_CEILING_ROOM' || (m.cost || 0) <= 2;
-      if (!ok) errors.push(`${m.name}: chỉ low-ceiling hoặc cost≤2`);
-    }
+
+    const hard = challengeHardBlockReason(ch, m);
+    if (hard) errors.push(hard);
   }
 
   for (const [id, n] of Object.entries(loadout || {})) {
@@ -182,6 +163,127 @@ export function validateChallengeLoadout(ch, loadout, placements = []) {
   }
 
   return { ok: errors.length === 0, errors: [...new Set(errors)] };
+}
+
+/** Thử thêm 1 copy — kiểm cap pool + constraint thử thách. */
+export function tryAddChallengeLoadout(ch, loadout, inventory, monsterId, costCap, level) {
+  const m = MONSTER_BY_ID[monsterId];
+  const hard = challengeHardBlockReason(ch, m);
+  if (hard) return { ok: false, reason: hard, loadout };
+
+  const res = tryAddToLoadout(loadout, inventory, monsterId, costCap, level);
+  if (!res.ok) return res;
+
+  const check = validateChallengeLoadout(ch, res.loadout, []);
+  // minLowStar / requireMonster chỉ bắt buộc lúc vào trận — bỏ qua khi đang chọn dần
+  const soft = (check.errors || []).filter(
+    (e) => !e.startsWith('Cần ≥') && !e.startsWith('Thiếu quái')
+  );
+  if (soft.length) return { ok: false, reason: soft[0], loadout };
+  return res;
+}
+
+/** Cắt quái cấm / vượt quota khỏi loadout. */
+export function sanitizeChallengeLoadout(ch, loadout) {
+  const out = { ...(loadout || {}) };
+  for (const id of Object.keys(out)) {
+    const m = MONSTER_BY_ID[id];
+    if (!m || challengeHardBlockReason(ch, m)) delete out[id];
+  }
+  const trimKind = (pred, maxKey) => {
+    const cons = ch.constraints || {};
+    const max = cons[maxKey];
+    if (max == null) return;
+    let count = 0;
+    for (const [id, n] of Object.entries(out)) {
+      const m = MONSTER_BY_ID[id];
+      if (m && pred(m)) count += n;
+    }
+    while (count > max) {
+      const id = Object.keys(out).find((k) => {
+        const m = MONSTER_BY_ID[k];
+        return m && pred(m) && out[k] > 0;
+      });
+      if (!id) break;
+      if (out[id] <= 1) delete out[id];
+      else out[id] -= 1;
+      count -= 1;
+    }
+  };
+  trimKind((m) => m.rarity >= 6, 'maxMythic');
+  trimKind((m) => m.rarity === 5 && !m.tags?.includes('potion'), 'maxLegendary');
+  trimKind((m) => m.rarity === 4, 'maxEpic');
+  return out;
+}
+
+export function suggestChallengeLoadout(ch, inventory, costCap, level) {
+  const filtered = {};
+  for (const [id, n] of Object.entries(inventory || {})) {
+    const m = MONSTER_BY_ID[id];
+    if (!m || !(n > 0)) continue;
+    if (challengeHardBlockReason(ch, m)) continue;
+    filtered[id] = n;
+  }
+  let loadout = {};
+  const req = ch.constraints?.requireMonster;
+  if (req && (filtered[req] || 0) > 0) {
+    loadout[req] = 1;
+  }
+  const rest = suggestLoadout(filtered, costCap, level);
+  for (const [id, n] of Object.entries(rest)) {
+    if (id === req) continue;
+    for (let i = 0; i < n; i++) {
+      const res = tryAddChallengeLoadout(ch, loadout, filtered, id, costCap, level);
+      if (!res.ok) break;
+      loadout = res.loadout;
+    }
+  }
+  if (req && !loadout[req] && (filtered[req] || 0) > 0) {
+    loadout = { [req]: 1, ...loadout };
+  }
+  return sanitizeChallengeLoadout(ch, loadout);
+}
+
+export function createChallengeRunState(playerState, challengeId) {
+  const ch = getChallenge(challengeId);
+  if (!ch) return null;
+  const map = getChallengeMap(ch.mapId);
+  if (!map) return null;
+
+  // Cap cố định theo map thử thách — không cộng mapUpgrade người chơi
+  const refCap = Math.max(1, Number(map.baseCostCap) || Number(map.costCap) || 8);
+  map.refCostCap = refCap;
+  map.costCap = placeMaxCost(refCap);
+  map.upgradeLevel = 0;
+  map.poolMult = LOADOUT_POOL_MULT;
+
+  let wave = buildChallengeWave(ch);
+  wave = assignHeroFormation(wave, map);
+
+  const inv = playerState.inventory || {};
+  let loadout = sanitizeLoadout(playerState.lastLoadout, inv, map.refCostCap, challengeId);
+  loadout = sanitizeChallengeLoadout(ch, loadout);
+  if (!Object.values(loadout || {}).some((n) => n > 0)) {
+    loadout = suggestChallengeLoadout(ch, inv, map.refCostCap, challengeId);
+  }
+
+  return {
+    level: challengeId,
+    mode: 'challenge',
+    challengeId,
+    challenge: ch,
+    map,
+    rooms: [map],
+    wave,
+    waveTheme: ch.wave?.theme || ch.name,
+    waveTip: ch.wave?.tip || map.tip,
+    selectedMonsterId: null,
+    loadout,
+    loadoutReady: false,
+    appliedLoadoutKey: null,
+    noBossSpells: !!ch.constraints?.noBossSpells,
+    treasureHpOverride: map.treasureHp,
+  };
 }
 
 /**
@@ -244,4 +346,22 @@ export function grantChallengeReward(state, ch) {
 
 export function titleName(titleId) {
   return CHALLENGE_TITLES[titleId]?.name || titleId || '';
+}
+
+export function challengeConstraintSummary(ch) {
+  const cons = ch?.constraints || {};
+  const parts = [];
+  if (cons.maxRarity != null) parts.push(`≤${cons.maxRarity}★`);
+  if (cons.banMythic) parts.push('cấm Mythic');
+  if (cons.banLegendary) parts.push('cấm Legendary');
+  if (cons.maxMythic != null) parts.push(`≤${cons.maxMythic} Mythic`);
+  if (cons.maxLegendary != null) parts.push(`≤${cons.maxLegendary} Legendary`);
+  if (cons.maxEpic != null) parts.push(`≤${cons.maxEpic} Epic`);
+  if (cons.maxUnits != null) parts.push(`≤${cons.maxUnits} unit sân`);
+  if (cons.onlyLowCeilingOrCheap) parts.push('low-ceiling / cost≤2');
+  if (cons.requireMonster) parts.push('bắt buộc Oan Hồn Hiến Tế');
+  if (cons.fillerMaxRarity != null) parts.push(`filler ≤${cons.fillerMaxRarity}★`);
+  if (cons.minLowStarUnits != null) parts.push(`≥${cons.minLowStarUnits} unit thấp ★`);
+  if (cons.noBossSpells) parts.push('cấm chiêu boss');
+  return parts.join(' · ') || 'Không ràng buộc đặc biệt';
 }
