@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Challenge Mode — 10 ải cam go (mở từ ải thường ≥30).
  * Mỗi màn: chủ đề map + wave hero khớp + constraint riêng (không copy cùng 1 kiểu cấm).
  */
@@ -43,7 +43,6 @@ export const CHALLENGES = [
     unlock: { dungeonLevel: 30 },
     costCap: 16,
     poolMult: 3,
-    scaleLevel: 33,
     constraints: {
       banRoles: ['dps'],
       banMythic: false,
@@ -101,7 +100,6 @@ export const CHALLENGES = [
     unlock: { clearPrev: true },
     costCap: 18,
     poolMult: 3,
-    scaleLevel: 34,
     constraints: {
       banRoles: ['heal'],
       allowPotion: false,
@@ -159,7 +157,6 @@ export const CHALLENGES = [
     unlock: { clearPrev: true },
     costCap: 18,
     poolMult: 3,
-    scaleLevel: 35,
     constraints: {
       banRoles: ['tank'],
       banStealthMythic: true,
@@ -218,7 +215,6 @@ export const CHALLENGES = [
     unlock: { clearPrev: true },
     costCap: 17,
     poolMult: 2,
-    scaleLevel: 36,
     forcedLoadout: {
       goblin_bait: 2,
       tin_knight: 2,
@@ -287,7 +283,6 @@ export const CHALLENGES = [
     unlock: { clearPrev: true, dungeonLevel: 32 },
     costCap: 22,
     poolMult: 3,
-    scaleLevel: 37,
     constraints: {
       banRoles: ['utility'],
       banRainbow: true,
@@ -348,7 +343,6 @@ export const CHALLENGES = [
     unlock: { clearPrev: true },
     costCap: 16,
     poolMult: 4,
-    scaleLevel: 38,
     constraints: {
       onlyLowCeilingOrCheap: true,
     },
@@ -407,7 +401,6 @@ export const CHALLENGES = [
     unlock: { clearPrev: true, dungeonLevel: 35 },
     costCap: 18,
     poolMult: 3,
-    scaleLevel: 39,
     constraints: {
       banRoles: ['silence'],
       maxMythic: 1,
@@ -469,7 +462,6 @@ export const CHALLENGES = [
     unlock: { clearPrev: true },
     costCap: 22,
     poolMult: 3,
-    scaleLevel: 40,
     forcedLoadout: {
       blood_tithe_wraith: 1,
       goblin_bait: 4,
@@ -540,7 +532,6 @@ export const CHALLENGES = [
     unlock: { clearPrev: true, dungeonLevel: 40 },
     costCap: 22,
     poolMult: 3,
-    scaleLevel: 42,
     constraints: {
       banRoles: ['silence'],
       maxLegendary: 2,
@@ -601,7 +592,6 @@ export const CHALLENGES = [
     unlock: { clearPrev: true, dungeonLevel: 45 },
     costCap: 26,
     poolMult: 3,
-    scaleLevel: 44,
     constraints: {
       maxMythic: 1,
       maxLegendary: 1,

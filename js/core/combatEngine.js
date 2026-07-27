@@ -1,17 +1,17 @@
-import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=94';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=94';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=94';
-import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=94';
-import { mapUsedCost } from './dungeon.js?v=94';
-import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=94';
-import { ParticleSystem } from '../render/particles.js?v=94';
+import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=96';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=96';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=96';
+import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=96';
+import { mapUsedCost } from './dungeon.js?v=96';
+import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=96';
+import { ParticleSystem } from '../render/particles.js?v=96';
 import {
   getMonsterSprite,
   getHeroSprite,
   drawSpriteAt,
-} from '../render/sprites.js?v=94';
-import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=94';
-import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=94';
+} from '../render/sprites.js?v=96';
+import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=96';
+import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=96';
 import {
   computeHeroAttackDamage,
   applyIncomingDamage,
@@ -42,10 +42,10 @@ import {
   tryActivateMonsterShield,
   tryMonsterTauntSelf,
   ensureHeroSkillState,
-} from './ai/skills.js?v=94';
-import { getTileModifiers, spawnMonsterStats, elementAuraActive, elementAuraTag } from './ai/tileModifiers.js?v=94';
-import { dist } from './ai/targeting.js?v=94';
-import { getHeroProfile } from './ai/profiles.js?v=94';
+} from './ai/skills.js?v=96';
+import { getTileModifiers, spawnMonsterStats, elementAuraActive, elementAuraTag } from './ai/tileModifiers.js?v=96';
+import { dist } from './ai/targeting.js?v=96';
+import { getHeroProfile } from './ai/profiles.js?v=96';
 import {
   patternForHero,
   patternForMonster,
@@ -53,7 +53,7 @@ import {
   tickAttack,
   ensureAttackState,
   resolveDisplayAnim,
-} from './ai/attackPatterns.js?v=94';
+} from './ai/attackPatterns.js?v=96';
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
@@ -323,26 +323,17 @@ export class CombatEngine {
     const upgrades = this.run?.mode === 'challenge' ? {} : this.hooks.monsterUpgrades || {};
     const terrain = terrainAt(this.map, col, row);
     const upLv = Number(upgrades[monsterId]) || 0;
-    // Challenge: scale cố định theo màn — không dùng run.level (= challengeId) hay dungeonLevel
+    // Challenge: catalog base (stageLevel 0 → không scale ải; monsterStatMul = 1)
     const stageLevel =
-      this.run?.mode === 'challenge'
-        ? Number(this.run.scaleLevel) ||
-          Number(this.run.challenge?.scaleLevel) ||
-          30 + Number(this.run.challengeId || 1)
-        : Number(this.run?.level) || 1;
+      this.run?.mode === 'challenge' ? 0 : Number(this.run?.level) || 1;
     const st = spawnMonsterStats(tpl, terrain, upLv, stageLevel);
-    const hardMul = Number(this.run?.monsterStatMul);
-    if (
-      this.run?.mode !== 'challenge' &&
-      Number.isFinite(hardMul) &&
-      hardMul > 0 &&
-      hardMul !== 1
-    ) {
-      st.baseHp = Math.max(1, Math.round((st.baseHp || st.hp) * hardMul));
-      st.hp = Math.max(1, Math.round(st.hp * hardMul));
-      st.maxHp = Math.max(1, Math.round(st.maxHp * hardMul));
-      st.baseAtk = Math.max(1, Math.round(st.baseAtk * hardMul));
-      st.atk = Math.max(1, Math.round(st.atk * hardMul));
+    const statMul = Number(this.run?.monsterStatMul);
+    if (Number.isFinite(statMul) && statMul > 0 && statMul !== 1) {
+      st.baseHp = Math.max(1, Math.round((st.baseHp || st.hp) * statMul));
+      st.hp = Math.max(1, Math.round(st.hp * statMul));
+      st.maxHp = Math.max(1, Math.round(st.maxHp * statMul));
+      st.baseAtk = Math.max(1, Math.round(st.baseAtk * statMul));
+      st.atk = Math.max(1, Math.round(st.atk * statMul));
     }
     const pos = this._cellCenter(col, row);
     const ai = inferMonsterAi(tpl);

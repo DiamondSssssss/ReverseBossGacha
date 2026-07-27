@@ -3,17 +3,17 @@ import {
   TERRAIN_LABELS,
   RARITY_COLORS,
   HERO_CLASS_LABELS,
-} from '../data/constants.js?v=94';
-import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=94';
-import { monsterScaleForLevel } from '../data/heroes.js?v=94';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=94';
-import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=94';
+} from '../data/constants.js?v=96';
+import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=96';
+import { monsterScaleForLevel } from '../data/heroes.js?v=96';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=96';
+import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=96';
 import {
   mapUsedCost,
   placeMonster,
   removePlacement,
   totalPlacements,
-} from '../core/dungeon.js?v=94';
+} from '../core/dungeon.js?v=96';
 import {
   loadoutMaxPoolCost,
   loadoutPoolCost,
@@ -24,18 +24,18 @@ import {
   suggestLoadout,
   tryAddToLoadout,
   tryRemoveFromLoadout,
-} from '../core/loadout.js?v=94';
-import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=94';
-import { attachSetupBoardFx } from './setupBoardFx.js?v=94';
-import { playGhostWalk } from './setupPreview.js?v=94';
-import { saveState } from '../core/storage.js?v=94';
+} from '../core/loadout.js?v=96';
+import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=96';
+import { attachSetupBoardFx } from './setupBoardFx.js?v=96';
+import { playGhostWalk } from './setupPreview.js?v=96';
+import { saveState } from '../core/storage.js?v=96';
 import {
   hideMonsterTip,
   monsterTipHtml,
-} from './monsterTip.js?v=94';
+} from './monsterTip.js?v=96';
 import {
   displayMonsterStats,
-} from '../core/monsterUpgrade.js?v=94';
+} from '../core/monsterUpgrade.js?v=96';
 import {
   validateChallengeLoadout,
   tryAddChallengeLoadout,
@@ -45,7 +45,8 @@ import {
   challengeConstraintSummary,
   monsterStageLevelForRun,
   monsterUpgradeLevelForRun,
-} from '../core/challenge.js?v=94';
+  monsterStatMulForRun,
+} from '../core/challenge.js?v=96';
 
 function shortName(name) {
   if (!name) return '?';
@@ -318,8 +319,9 @@ export function renderScout(root, ctx) {
     const loadout = run.loadout || {};
     const isChallenge = run.mode === 'challenge' && run.challenge;
     const stageLv = monsterStageLevelForRun(run);
+    const statMul = monsterStatMulForRun(run);
     const stageLabel = isChallenge
-      ? `CH${run.challengeId}`
+      ? `CH${run.challengeId} · base`
       : `${run.mode === 'hard' ? 'Khó' : 'Thường'} · Ải ${stageLv}`;
     const pool = loadoutPoolCost(loadout);
     const refCap = loadoutRefCap(map);
@@ -346,7 +348,7 @@ export function renderScout(root, ctx) {
         const m = MONSTER_BY_ID[id];
         if (!m) return '';
         const upLv = monsterUpgradeLevelForRun(run, state, id);
-        const st = displayMonsterStats(m, upLv, stageLv);
+        const st = displayMonsterStats(m, upLv, stageLv, statMul);
         return `
           <button type="button" class="loadout-chip" data-remove="${id}" data-mid="${id}">
             <img src="${monsterSpriteUrl(id, m.color, m.rarity)}" alt="" width="36" height="36" />
@@ -372,7 +374,7 @@ export function renderScout(root, ctx) {
         const blocked = !!hardBan || (left > 0 && !trial.ok && trial.reason !== 'Hết số lượng trong kho');
         const full = left <= 0 || !!hardBan;
         const upLv = monsterUpgradeLevelForRun(run, state, m.id);
-        const st = displayMonsterStats(m, upLv, stageLv);
+        const st = displayMonsterStats(m, upLv, stageLv, statMul);
         const banTitle = hardBan || (blocked ? trial.reason : '');
         return `
           <button type="button" class="loadout-pick ${full || blocked ? 'is-full' : ''} ${hardBan ? 'is-banned' : ''}" data-add="${m.id}" data-mid="${m.id}" ${full || blocked ? 'aria-disabled="true"' : ''} title="${banTitle || ''}">
@@ -391,7 +393,7 @@ export function renderScout(root, ctx) {
       .join('');
 
     const stageBanner = isChallenge
-      ? `Thử Thách độc lập — HP/ATK theo <strong>CH${run.challengeId}</strong> (×${monsterScaleForLevel(stageLv).toFixed(2)}), không theo ải thường / nâng quái của bạn.`
+      ? `Thử Thách — HP/ATK quái & hero đều <strong>catalog base</strong> (không scale ải / không nâng quái).`
       : `Chỉ số HP/ATK đang hiện theo <strong>ải ${stageLv}</strong> (×${monsterScaleForLevel(stageLv).toFixed(2)}) — đúng như trong trận.`;
 
     return {
@@ -479,6 +481,7 @@ export function renderScout(root, ctx) {
       statPanel.innerHTML = monsterTipHtml(id, state, {
         stageLevel: stageLv,
         upgradeLevel: upLv,
+        statMul: monsterStatMulForRun(run),
         challengeMode: run.mode === 'challenge',
         challengeId: run.challengeId,
       });
@@ -859,11 +862,12 @@ export function renderSetup(root, ctx) {
         const src = monsterSpriteUrl(id, m.color, m.rarity);
         const upLv = monsterUpgradeLevelForRun(run, state, id);
         const stageLv = monsterStageLevelForRun(run);
+        const statMul = monsterStatMulForRun(run);
         const stageLabel =
           run.mode === 'challenge'
-            ? `CH${run.challengeId}`
+            ? `CH${run.challengeId} · base`
             : `${run.mode === 'hard' ? 'K' : 'T'}${stageLv}`;
-        const st = displayMonsterStats(m, upLv, stageLv);
+        const st = displayMonsterStats(m, upLv, stageLv, statMul);
         return `
           <button type="button" class="tray-item ${selectedId === id ? 'selected' : ''}" data-mid="${id}" draggable="true">
             <img class="tray-sprite" src="${src}" alt="" width="40" height="40" draggable="false" />

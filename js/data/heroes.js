@@ -1,6 +1,6 @@
 /** Hero AI catalog — mỗi ải 1–40 có tổ hợp hero riêng */
 
-import { COMBAT } from './constants.js?v=94';
+import { COMBAT } from './constants.js?v=96';
 
 export const HEROES = [
   // ——— MAGE ———

@@ -1,9 +1,12 @@
-import { MONSTERS } from '../data/monsters.js?v=94';
-import { RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=94';
-import { monsterDisplayUrl } from '../render/sprites.js?v=94';
-import { fetchLeaderboard, fetchPlayerProfile } from '../core/leaderboard.js?v=94';
-import { getUser } from '../core/auth.js?v=94';
-import { titleName } from '../core/challenge.js?v=94';
+import { MONSTERS } from '../data/monsters.js?v=96';
+import { RARITY_COLORS, RARITY_LABELS, MAX_STAGE } from '../data/constants.js?v=96';
+import { monsterDisplayUrl } from '../render/sprites.js?v=96';
+import { fetchLeaderboard, fetchPlayerProfile } from '../core/leaderboard.js?v=96';
+import { getUser } from '../core/auth.js?v=96';
+import { titleName } from '../core/challenge.js?v=96';
+import { CHALLENGES } from '../data/challenges.js?v=96';
+
+const CHALLENGE_TOTAL = CHALLENGES.length || 10;
 
 function escapeHtml(str) {
   return String(str ?? '')
@@ -13,10 +16,9 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;');
 }
 
-function stageLabel(stagesCleared) {
-  const n = Number(stagesCleared) || 0;
-  if (n >= 40) return 'Phá đảo';
-  return `${n}/40 ải`;
+function challengeLabel(cleared) {
+  const n = Number(cleared) || 0;
+  return `${n}/${CHALLENGE_TOTAL}`;
 }
 
 function medal(rank) {
@@ -105,7 +107,9 @@ export async function openPlayerProfile(modalEl, username, { toast } = {}) {
           <button type="button" class="ghost" data-close>Đóng</button>
         </div>
         <div class="profile-stats">
-          <div><strong>${stageLabel(profile.stagesCleared)}</strong><span>Tiến độ</span></div>
+          <div><strong>${Number(profile.stagesCleared) >= MAX_STAGE ? 'Phá đảo' : `${Number(profile.stagesCleared) || 0}/${MAX_STAGE}`}</strong><span>Ải thường</span></div>
+          <div><strong>${Number(profile.hardStagesCleared) >= MAX_STAGE ? 'Phá đảo' : `${Number(profile.hardStagesCleared) || 0}/${MAX_STAGE}`}</strong><span>Ải khó</span></div>
+          <div><strong>${challengeLabel(profile.challengesCleared)}</strong><span>Thử thách</span></div>
           <div><strong>${owned}/${MONSTERS.length}</strong><span>Loại quái</span></div>
           <div><strong>${profile.wins || 0}</strong><span>Thắng</span></div>
         </div>
@@ -129,6 +133,9 @@ function rowHtml(entry, meUsername) {
   const rankClass =
     entry.rank === 1 ? 'gold' : entry.rank === 2 ? 'silver' : entry.rank === 3 ? 'bronze' : '';
   const titleHtml = titleBadge(entry.equippedTitle);
+  const n = Number(entry.stagesCleared) || 0;
+  const h = Number(entry.hardStagesCleared) || 0;
+  const c = Number(entry.challengesCleared) || 0;
   return `
     <button type="button" class="lb-row ${isMe ? 'me' : ''} ${rankClass}" data-user="${escapeHtml(entry.username)}">
       <span class="lb-rank">${medal(entry.rank)}</span>
@@ -138,8 +145,16 @@ function rowHtml(entry, meUsername) {
         <span class="muted">@${escapeHtml(entry.username)}</span>
       </span>
       <span class="lb-stat">
-        <strong>${stageLabel(entry.stagesCleared)}</strong>
-        <span>Ải</span>
+        <strong>${n >= MAX_STAGE ? 'Phá đảo' : `${n}/${MAX_STAGE}`}</strong>
+        <span>Thường</span>
+      </span>
+      <span class="lb-stat">
+        <strong>${h >= MAX_STAGE ? 'Phá đảo' : `${h}/${MAX_STAGE}`}</strong>
+        <span>Khó</span>
+      </span>
+      <span class="lb-stat">
+        <strong>${c}/${CHALLENGE_TOTAL}</strong>
+        <span>Challenge</span>
       </span>
       <span class="lb-stat">
         <strong>${entry.uniqueMonsters}</strong>
@@ -156,7 +171,7 @@ export async function renderLeaderboard(root, ctx) {
     <div class="lb-hero">
       <p class="section-label" style="margin:0">Cộng đồng</p>
       <h2>Bảng xếp hạng</h2>
-      <p class="muted">Xếp theo số ải đã vượt · số loại quái unique đã thu thập. Bấm vào người chơi để xem hồ sơ.</p>
+      <p class="muted">Xếp theo ải thường → ải khó → challenge đã vượt → quái unique. Bấm vào người chơi để xem hồ sơ.</p>
     </div>
     <div class="lb-toolbar">
       <button type="button" class="ghost" id="lb-refresh">Làm mới</button>

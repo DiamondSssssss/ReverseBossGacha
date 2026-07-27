@@ -26,6 +26,8 @@ db.exec(`
     save_data TEXT NOT NULL DEFAULT '{}',
     updated_at TEXT NOT NULL DEFAULT (datetime('now')),
     stages_cleared INTEGER NOT NULL DEFAULT 0,
+    hard_stages_cleared INTEGER NOT NULL DEFAULT 0,
+    challenges_cleared INTEGER NOT NULL DEFAULT 0,
     unique_monsters INTEGER NOT NULL DEFAULT 0,
     wins INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -131,6 +133,12 @@ function migrateLeaderboardColumns() {
   if (!cols.has('stages_cleared')) {
     db.exec('ALTER TABLE player_saves ADD COLUMN stages_cleared INTEGER NOT NULL DEFAULT 0');
   }
+  if (!cols.has('hard_stages_cleared')) {
+    db.exec('ALTER TABLE player_saves ADD COLUMN hard_stages_cleared INTEGER NOT NULL DEFAULT 0');
+  }
+  if (!cols.has('challenges_cleared')) {
+    db.exec('ALTER TABLE player_saves ADD COLUMN challenges_cleared INTEGER NOT NULL DEFAULT 0');
+  }
   if (!cols.has('unique_monsters')) {
     db.exec('ALTER TABLE player_saves ADD COLUMN unique_monsters INTEGER NOT NULL DEFAULT 0');
   }
@@ -144,6 +152,15 @@ export function computeLeaderboardStats(saveData) {
   const dungeonLevel = Number(data.dungeonLevel) || 1;
   const stagesCleared = Math.min(Math.max(dungeonLevel - 1, 0), 60);
 
+  const hardDungeonLevel = Number(data.hardDungeonLevel) || 1;
+  const hardStagesCleared = Math.min(Math.max(hardDungeonLevel - 1, 0), 60);
+
+  const clearedMap = data.challengeProgress?.cleared || {};
+  let challengesCleared = 0;
+  for (const v of Object.values(clearedMap)) {
+    if (v) challengesCleared += 1;
+  }
+  challengesCleared = Math.min(challengesCleared, 10);
 
   const owned = new Set();
   for (const id of data.ownedEver || []) {
@@ -157,6 +174,8 @@ export function computeLeaderboardStats(saveData) {
   const wins = Number(data.stats?.wins) || 0;
   return {
     stagesCleared,
+    hardStagesCleared,
+    challengesCleared,
     uniqueMonsters: owned.size,
     wins,
   };
@@ -166,7 +185,8 @@ function backfillLeaderboardStats() {
   const rows = db.prepare('SELECT user_id, save_data FROM player_saves').all();
   const upd = db.prepare(
     `UPDATE player_saves
-     SET stages_cleared = ?, unique_monsters = ?, wins = ?
+     SET stages_cleared = ?, hard_stages_cleared = ?, challenges_cleared = ?,
+         unique_monsters = ?, wins = ?
      WHERE user_id = ?`
   );
   const tx = db.transaction(() => {
@@ -178,7 +198,14 @@ function backfillLeaderboardStats() {
         data = {};
       }
       const stats = computeLeaderboardStats(data);
-      upd.run(stats.stagesCleared, stats.uniqueMonsters, stats.wins, row.user_id);
+      upd.run(
+        stats.stagesCleared,
+        stats.hardStagesCleared,
+        stats.challengesCleared,
+        stats.uniqueMonsters,
+        stats.wins,
+        row.user_id
+      );
     }
   });
   tx();
@@ -241,15 +268,28 @@ export function upsertSave(userId, saveData) {
   const json = JSON.stringify(saveData ?? {});
   const stats = computeLeaderboardStats(saveData);
   db.prepare(
-    `INSERT INTO player_saves (user_id, save_data, updated_at, stages_cleared, unique_monsters, wins)
-     VALUES (?, ?, datetime('now'), ?, ?, ?)
+    `INSERT INTO player_saves (
+       user_id, save_data, updated_at,
+       stages_cleared, hard_stages_cleared, challenges_cleared, unique_monsters, wins
+     )
+     VALUES (?, ?, datetime('now'), ?, ?, ?, ?, ?)
      ON CONFLICT(user_id) DO UPDATE SET
        save_data = excluded.save_data,
        updated_at = datetime('now'),
        stages_cleared = excluded.stages_cleared,
+       hard_stages_cleared = excluded.hard_stages_cleared,
+       challenges_cleared = excluded.challenges_cleared,
        unique_monsters = excluded.unique_monsters,
        wins = excluded.wins`
-  ).run(userId, json, stats.stagesCleared, stats.uniqueMonsters, stats.wins);
+  ).run(
+    userId,
+    json,
+    stats.stagesCleared,
+    stats.hardStagesCleared,
+    stats.challengesCleared,
+    stats.uniqueMonsters,
+    stats.wins
+  );
   mergeStageBestCostsFromSave(userId, saveData);
   return getSave(userId);
 }
@@ -375,6 +415,8 @@ export function listLeaderboard(limit = 50) {
          u.username,
          u.display_name AS displayName,
          COALESCE(s.stages_cleared, 0) AS stagesCleared,
+         COALESCE(s.hard_stages_cleared, 0) AS hardStagesCleared,
+         COALESCE(s.challenges_cleared, 0) AS challengesCleared,
          COALESCE(s.unique_monsters, 0) AS uniqueMonsters,
          COALESCE(s.wins, 0) AS wins,
          s.save_data AS saveData,
@@ -383,6 +425,8 @@ export function listLeaderboard(limit = 50) {
        INNER JOIN player_saves s ON s.user_id = u.id
        ORDER BY
          s.stages_cleared DESC,
+         s.hard_stages_cleared DESC,
+         s.challenges_cleared DESC,
          s.unique_monsters DESC,
          s.wins DESC,
          s.updated_at ASC
@@ -403,6 +447,8 @@ export function listLeaderboard(limit = 50) {
         username: row.username,
         displayName: row.displayName,
         stagesCleared: row.stagesCleared,
+        hardStagesCleared: row.hardStagesCleared,
+        challengesCleared: row.challengesCleared,
         uniqueMonsters: row.uniqueMonsters,
         wins: row.wins,
         equippedTitle,
@@ -435,9 +481,12 @@ export function getPublicProfile(username) {
     displayName: user.display_name,
     createdAt: user.created_at,
     stagesCleared: stats.stagesCleared,
+    hardStagesCleared: stats.hardStagesCleared,
+    challengesCleared: stats.challengesCleared,
     uniqueMonsters: stats.uniqueMonsters,
     wins: stats.wins,
     dungeonLevel: Number(data.dungeonLevel) || 1,
+    hardDungeonLevel: Number(data.hardDungeonLevel) || 1,
     selectedBossId: data.selectedBossId || null,
     equippedTitle: data.equippedTitle || null,
     titles: Array.isArray(data.titles) ? data.titles.filter(Boolean) : [],
@@ -465,6 +514,8 @@ export function listUsersAdmin({ q = '', limit = 50 } = {}) {
       `SELECT u.id, u.username, u.display_name AS displayName, u.created_at AS createdAt,
               u.is_admin AS isAdmin, u.is_banned AS isBanned,
               COALESCE(s.stages_cleared, 0) AS stagesCleared,
+              COALESCE(s.hard_stages_cleared, 0) AS hardStagesCleared,
+              COALESCE(s.challenges_cleared, 0) AS challengesCleared,
               COALESCE(s.unique_monsters, 0) AS uniqueMonsters,
               COALESCE(s.wins, 0) AS wins,
               s.updated_at AS saveUpdatedAt
@@ -478,6 +529,8 @@ export function listUsersAdmin({ q = '', limit = 50 } = {}) {
   return rows.map((r) => ({
     ...userPublicRow(r),
     stagesCleared: r.stagesCleared,
+    hardStagesCleared: r.hardStagesCleared,
+    challengesCleared: r.challengesCleared,
     uniqueMonsters: r.uniqueMonsters,
     wins: r.wins,
     saveUpdatedAt: r.saveUpdatedAt,

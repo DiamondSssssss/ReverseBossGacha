@@ -1,7 +1,7 @@
-import { MONSTER_UPGRADE } from '../data/constants.js?v=94';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=94';
-import { monsterScaleForLevel } from '../data/heroes.js?v=94';
-import { saveState } from './storage.js?v=94';
+import { MONSTER_UPGRADE } from '../data/constants.js?v=96';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=96';
+import { monsterScaleForLevel } from '../data/heroes.js?v=96';
+import { saveState } from './storage.js?v=96';
 
 export function getMonsterUpgradeLevel(state, monsterId) {
   return Math.max(0, Number(state.monsterUpgrades?.[monsterId]) || 0);
@@ -89,10 +89,11 @@ export function tryUpgradeMonster(state, monsterId) {
   return { ok: true, level: lvl + 1, cost };
 }
 
-/** Stats hiển thị kho / tip (nâng cấp + scale ải nếu có) */
-export function displayMonsterStats(template, upgradeLevel = 0, stageLevel = 0) {
+/** Stats hiển thị kho / tip (nâng cấp + scale ải nếu có + mul hard/challenge) */
+export function displayMonsterStats(template, upgradeLevel = 0, stageLevel = 0, statMul = 1) {
   const upMul = monsterStatMul(upgradeLevel);
   const stageMul = stageLevel > 0 ? monsterScaleForLevel(stageLevel) : 1;
+  const extraMul = Number.isFinite(statMul) && statMul > 0 ? statMul : 1;
   const isAssassin =
     template.stealth ||
     template.skills?.includes('STEALTH') ||
@@ -106,8 +107,8 @@ export function displayMonsterStats(template, upgradeLevel = 0, stageLevel = 0) 
     template.passive === 'ANTI_HEAL_AURA' ||
     template.passive === 'HEAL_AURA' ||
     template.passive === 'HEAL_PULSE';
-  let hpMul = upMul * stageMul;
-  let atkMul = upMul * stageMul;
+  let hpMul = upMul * stageMul * extraMul;
+  let atkMul = upMul * stageMul * extraMul;
   if (isAssassin) {
     hpMul *= 1.15;
     atkMul *= 1.28;
@@ -118,8 +119,8 @@ export function displayMonsterStats(template, upgradeLevel = 0, stageLevel = 0) 
   const surv = raritySurvivabilityMul(template);
   hpMul *= surv;
   return {
-    hp: Math.round(template.stats.hp * hpMul),
-    atk: Math.round(template.stats.atk * atkMul),
+    hp: Math.max(1, Math.round(template.stats.hp * hpMul)),
+    atk: Math.max(1, Math.round(template.stats.atk * atkMul)),
     speed: template.stats.speed * (isAssassin ? 1.1 : 1),
     range: template.stats.range,
     atkSpeed: template.stats.atkSpeed,
@@ -127,6 +128,8 @@ export function displayMonsterStats(template, upgradeLevel = 0, stageLevel = 0) 
     stageLevel: stageLevel > 0 ? stageLevel : 0,
     /** Hệ số scale ải (1 = không scale) */
     stageMul,
+    /** Hệ số hard/challenge thêm */
+    statMul: extraMul,
     /** HP/ATK gốc + nâng cấp, chưa nhân ải — để so sánh */
     baseHp: Math.round(
       template.stats.hp * upMul * (isAssassin ? 1.15 : isTank ? 1.4 : 1) * surv
