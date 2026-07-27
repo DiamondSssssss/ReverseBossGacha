@@ -5,6 +5,7 @@ import {
   HERO_CLASS_LABELS,
 } from '../data/constants.js?v=68';
 import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=68';
+import { monsterScaleForLevel } from '../data/heroes.js?v=68';
 import { terrainAt, isPlaceable } from '../data/maps.js?v=68';
 import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=68';
 import {
@@ -47,6 +48,34 @@ function loadoutRefCap(map) {
   return Math.max(1, Number(map.refCostCap) || Number(map.costCap) || 1);
 }
 
+const BUFF_KIND_VI = {
+  ATK_UP: 'tăng công',
+  DEF_UP: 'tăng giáp (nhận ít dame hơn)',
+  SPEED_UP: 'tăng tốc',
+  SPEED_DOWN: 'giảm tốc',
+  HEAL_TICK: 'hồi máu dần',
+  REVEAL_AURA: 'soi tàng hình',
+  SILENCE_ZONE: 'câm chú',
+  FIRE_ZONE: 'vùng lửa',
+  ICE_ZONE: 'vùng băng',
+  POISON_ZONE: 'vùng độc',
+};
+
+function formatBuffLine(b) {
+  const kind = BUFF_KIND_VI[b.kind] || b.kind;
+  const pct =
+    typeof b.value === 'number' && b.value !== 1 && !String(b.kind).includes('HEAL')
+      ? ` ×${b.value}`
+      : '';
+  if (b.side === 'monster') {
+    return `▲ Buff QUÁI (${kind}${pct}): đặt quái đứng trên ô này mới được — rời ô thì mất`;
+  }
+  if (b.side === 'hero') {
+    return `! Buff HERO (${kind}${pct}): hero đi/đứng lên ô này trong trận mới được — bạn không đặt được hero`;
+  }
+  return `◆ Buff CHUNG (${kind}${pct}): ai đang đứng trên ô đều hưởng`;
+}
+
 function cellTooltip(map, col, row, ch) {
   if (ch === '#' || ch === 'o') return ch === 'o' ? 'Chướng ngại' : 'Tường';
   if (ch === 'G') return 'Cổng — Hero vào đây';
@@ -54,20 +83,23 @@ function cellTooltip(map, col, row, ch) {
   if (ch === 'x' || map.noPlace?.has(`${col},${row}`)) {
     const buffs = map.buffIndex[`${col},${row}`] || [];
     const parts = ['Hành lang — không đặt quái'];
-    for (const b of buffs) {
-      if (b.side === 'monster') parts.push('Buff quái');
-      else if (b.side === 'hero') parts.push(`Buff hero: ${b.kind}`);
-      else parts.push('Buff chung');
-    }
+    for (const b of buffs) parts.push(formatBuffLine(b));
     return parts.join(' · ');
   }
   const terrain = terrainAt(map, col, row);
   const buffs = map.buffIndex[`${col},${row}`] || [];
   const parts = [TERRAIN_LABELS[terrain] || TERRAIN_HINTS[terrain] || 'Sàn'];
-  for (const b of buffs) {
-    if (b.side === 'monster') parts.push(`Buff quái: ${b.kind}`);
-    else if (b.side === 'hero') parts.push(`Buff hero: ${b.kind}`);
-    else parts.push(`Buff chung: ${b.kind}`);
+  for (const b of buffs) parts.push(formatBuffLine(b));
+  if (terrain === 'WATER') {
+    parts.push('Địa hình nước: quái có chiêu Buff nước mạnh hơn khi đứng đây; hero đi qua bị chậm');
+  } else if (terrain === 'DARK') {
+    parts.push('Ô tối: quái Buff tối mạnh hơn khi đứng đây; hero giảm tầm đánh');
+  } else if (terrain === 'FIRE') {
+    parts.push('Ô lửa: quái Buff lửa mạnh hơn khi đứng đây; hero có thể bị đốt');
+  } else if (terrain === 'ICE') {
+    parts.push('Ô băng: quái Buff băng mạnh hơn khi đứng đây; hero bị chậm');
+  } else if (terrain === 'POISON') {
+    parts.push('Ô độc: quái Buff độc mạnh hơn khi đứng đây; hero có thể nhiễm độc');
   }
   return parts.join(' · ');
 }
@@ -230,6 +262,7 @@ export function renderScout(root, ctx) {
     const units = loadoutUnitCount(loadout);
     const types = loadoutTypeCount(loadout);
     const placeCap = map.costCap;
+    const stageLv = run.level || state.dungeonLevel || 1;
     const owned = ownedList(vault).filter((m) => {
       if (filterRole === 'all') return true;
       const tags = m.tags || [];
@@ -248,14 +281,14 @@ export function renderScout(root, ctx) {
         const m = MONSTER_BY_ID[id];
         if (!m) return '';
         const upLv = getMonsterUpgradeLevel(state, id);
-        const st = displayMonsterStats(m, upLv);
+        const st = displayMonsterStats(m, upLv, stageLv);
         return `
           <button type="button" class="loadout-chip" data-remove="${id}" data-mid="${id}">
             <img src="${monsterSpriteUrl(id, m.color, m.rarity)}" alt="" width="36" height="36" />
             <span class="loadout-chip-meta">
               <strong>${shortName(m.name)}</strong>
               <span>C${m.cost} · ×${n}${upLv ? ` · ↑${upLv}` : ''}</span>
-              <span class="pick-stats">HP ${st.hp} · ATK ${st.atk}</span>
+              <span class="pick-stats">HP ${st.hp} · ATK ${st.atk} <em class="stat-stage">Ải ${stageLv}</em></span>
             </span>
             <span class="loadout-chip-x">−</span>
           </button>`;
@@ -269,15 +302,15 @@ export function renderScout(root, ctx) {
         const left = have - inLoad;
         const full = left <= 0;
         const upLv = getMonsterUpgradeLevel(state, m.id);
-        const st = displayMonsterStats(m, upLv);
+        const st = displayMonsterStats(m, upLv, stageLv);
         return `
           <button type="button" class="loadout-pick ${full ? 'is-full' : ''}" data-add="${m.id}" data-mid="${m.id}" ${full ? 'aria-disabled="true"' : ''}>
             <img src="${monsterSpriteUrl(m.id, m.color, m.rarity)}" alt="" width="44" height="44" />
             <span class="stars" style="color:${RARITY_COLORS[m.rarity]}">${'★'.repeat(m.rarity)}</span>
             <strong>${shortName(m.name)}</strong>
             <span class="muted">C${m.cost} · kho ×${have}${inLoad ? ` · +${inLoad}` : ''}${upLv ? ` · ↑${upLv}` : ''}</span>
-            <span class="pick-stats">HP ${st.hp} · ATK ${st.atk}</span>
-            <span class="pick-stats dim">SPD ${st.speed} · RNG ${st.range}</span>
+            <span class="pick-stats">HP ${st.hp} · ATK ${st.atk} <em class="stat-stage">Ải ${stageLv}</em></span>
+            <span class="pick-stats dim">SPD ${Number(st.speed).toFixed(2)} · RNG ${st.range} · gốc ${st.baseHp}/${st.baseAtk}</span>
           </button>`;
       })
       .join('');
@@ -297,6 +330,10 @@ export function renderScout(root, ctx) {
             </p>
             <p class="muted" style="margin:4px 0 0;font-size:0.72rem">
               Pool mang 3× Cap gốc — trên sân chỉ ≤ Cap ${placeCap}; phần dư thả khi có slot.
+            </p>
+            <p class="stat-stage-banner">
+              Chỉ số HP/ATK đang hiện theo <strong>ải ${stageLv}</strong>
+              (×${monsterScaleForLevel(stageLv).toFixed(2)}) — đúng như trong trận.
             </p>
           </div>
           <div class="loadout-tools">
@@ -337,7 +374,8 @@ export function renderScout(root, ctx) {
       const id = el?.getAttribute?.('data-mid');
       if (!id) return;
       if (statPanel) {
-        statPanel.innerHTML = monsterTipHtml(id, state);
+        const stageLv = run.level || state.dungeonLevel || 1;
+        statPanel.innerHTML = monsterTipHtml(id, state, { stageLevel: stageLv });
         statPanel.classList.add('has-unit');
       }
     }
@@ -646,9 +684,9 @@ export function renderSetup(root, ctx) {
                         ? '<span class="cell-plus">+</span>'
                         : ''
               }
-              ${buffClass === 'buff-monster' ? '<span class="buff-ico mon" title="Buff quái">▲</span>' : ''}
-              ${buffClass === 'buff-hero' ? '<span class="buff-ico hero" title="Buff hero">!</span>' : ''}
-              ${buffClass === 'buff-both' ? '<span class="buff-ico both" title="Buff chung">◆</span>' : ''}
+              ${buffClass === 'buff-monster' ? '<span class="buff-ico mon" title="Buff quái: đặt quái đứng trên ô này">▲</span>' : ''}
+              ${buffClass === 'buff-hero' ? '<span class="buff-ico hero" title="Buff hero: hero đi/đứng lên ô này trong trận">!</span>' : ''}
+              ${buffClass === 'buff-both' ? '<span class="buff-ico both" title="Buff chung: ai đứng trên ô đều hưởng">◆</span>' : ''}
             </button>`);
         }
       }
@@ -662,7 +700,8 @@ export function renderSetup(root, ctx) {
         const trap = m.tags?.includes('trap');
         const src = monsterSpriteUrl(id, m.color, m.rarity);
         const upLv = getMonsterUpgradeLevel(state, id);
-        const st = displayMonsterStats(m, upLv);
+        const stageLv = run.level || state.dungeonLevel || 1;
+        const st = displayMonsterStats(m, upLv, stageLv);
         return `
           <button type="button" class="tray-item ${selectedId === id ? 'selected' : ''}" data-mid="${id}" draggable="true">
             <img class="tray-sprite" src="${src}" alt="" width="40" height="40" draggable="false" />
@@ -670,6 +709,7 @@ export function renderSetup(root, ctx) {
             <div>${shortName(m.name)}</div>
             <div class="muted">C${m.cost} · ×${count}${trap ? ' · Bẫy' : ''}</div>
             <div class="pick-stats">HP ${st.hp} · ATK ${st.atk}</div>
+            <div class="pick-stats dim"><em class="stat-stage">Ải ${stageLv}</em></div>
           </button>`;
       })
       .join('');
@@ -719,8 +759,11 @@ export function renderSetup(root, ctx) {
               <div class="grid-board map-grid" style="--cols:${map.cols};--rows:${map.rows};grid-template-columns:repeat(${map.cols},minmax(0,1fr));grid-template-rows:repeat(${map.rows},minmax(0,1fr));aspect-ratio:${map.cols}/${map.rows}">${cells.join('')}</div>
           </div>
           <div class="map-legend-mini" aria-hidden="true">
-            <span class="leg wall"></span><span class="leg water"></span><span class="leg dark"></span>
-            <span class="leg bm"></span><span class="leg bh"></span>
+            <span class="leg wall"></span>Tường
+            <span class="leg water"></span>Nước
+            <span class="leg dark"></span>Tối
+            <span class="leg bm"></span>▲ Đặt quái để buff
+            <span class="leg bh"></span>! Hero đi vào để buff
           </div>
         </div>
 

@@ -1,6 +1,7 @@
 import { TERRAIN } from '../../data/rooms.js?v=68';
 import { COMBAT, MONSTER_UPGRADE } from '../../data/constants.js?v=68';
 import { monsterStatMul } from '../monsterUpgrade.js?v=68';
+import { monsterScaleForLevel } from '../../data/heroes.js?v=68';
 
 /**
  * Continuous tile modifiers for a unit standing on a cell.
@@ -101,8 +102,8 @@ export function getTileModifiers(map, col, row, side, unit) {
   return out;
 }
 
-/** Base stats at spawn — địa hình + cấp nâng quái (vàng) */
-export function spawnMonsterStats(template, terrain, upgradeLevel = 0) {
+/** Base stats at spawn — địa hình + cấp nâng quái (vàng) + scale ải */
+export function spawnMonsterStats(template, terrain, upgradeLevel = 0, stageLevel = 1) {
   const stats = { ...template.stats };
   let atkMul = 1;
   let hpMul = 1;
@@ -146,8 +147,31 @@ export function spawnMonsterStats(template, terrain, upgradeLevel = 0) {
   const upMul = monsterStatMul(
     Math.min(MONSTER_UPGRADE.MAX_LEVEL, Math.max(0, upgradeLevel || 0))
   );
-  atkMul *= upMul;
-  hpMul *= upMul;
+  const stageMul = monsterScaleForLevel(stageLevel);
+  atkMul *= upMul * stageMul;
+  hpMul *= upMul * stageMul;
+
+  // Sát thủ tàng hình: nhẹ hơn một chút HP nhưng ATK/spd approach mạnh hơn
+  const isAssassin =
+    template.stealth ||
+    template.skills?.includes('STEALTH') ||
+    template.tags?.includes('assassin');
+  const isTank =
+    template.tags?.includes('tank') ||
+    template.tags?.includes('tankette') ||
+    template.passive === 'TAUNT' ||
+    template.passive === 'AURA_TAUNT' ||
+    template.passive === 'AURA_STUN' ||
+    template.passive === 'ANTI_HEAL_AURA' ||
+    template.passive === 'HEAL_AURA' ||
+    template.passive === 'HEAL_PULSE';
+  if (isAssassin) {
+    hpMul *= 1.15;
+    atkMul *= 1.28;
+  } else if (isTank) {
+    hpMul *= 1.4;
+    atkMul *= 0.95;
+  }
 
   return {
     baseHp: Math.round(stats.hp * hpMul),
@@ -155,9 +179,11 @@ export function spawnMonsterStats(template, terrain, upgradeLevel = 0) {
     hp: Math.round(stats.hp * hpMul),
     maxHp: Math.round(stats.hp * hpMul),
     atk: Math.round(stats.atk * atkMul),
-    speed: stats.speed,
+    speed: stats.speed * (isAssassin ? 1.1 : 1),
     rangeCells: stats.range,
     atkSpeed: stats.atkSpeed,
     upgradeLevel: upgradeLevel || 0,
+    stageLevel: stageLevel || 1,
+    stageMul,
   };
 }

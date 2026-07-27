@@ -22,11 +22,17 @@ import {
   applyFreeze,
   applyStun,
   applySlow,
+  applyShieldBreak,
+  activeShieldHp,
   tickStatusDots,
+  tickStealthRegen,
   TRAP_EFFECTS,
   isTrapPassive,
   statusTelegraphColor,
   auraRadiusCells,
+  tryActivateMonsterShield,
+  tryMonsterTauntSelf,
+  ensureHeroSkillState,
 } from './ai/skills.js?v=68';
 import { getTileModifiers, spawnMonsterStats } from './ai/tileModifiers.js?v=68';
 import { dist } from './ai/targeting.js?v=68';
@@ -130,6 +136,7 @@ export class CombatEngine {
 
     this.monsters = [];
     this.heroes = [];
+    this._waveUnlocked = { 1: 0 };
     this._spawnMonsters();
     this._queueHeroes();
     this._resize();
@@ -194,18 +201,27 @@ export class CombatEngine {
     const upgrades = this.hooks.monsterUpgrades || {};
     const terrain = terrainAt(this.map, col, row);
     const upLv = Number(upgrades[monsterId]) || 0;
-    const st = spawnMonsterStats(tpl, terrain, upLv);
+    const stageLevel = this.run?.level || 1;
+    const st = spawnMonsterStats(tpl, terrain, upLv, stageLevel);
     const pos = this._cellCenter(col, row);
     const ai = inferMonsterAi(tpl);
+    const stealthed =
+      !!tpl.stealth ||
+      (Array.isArray(tpl.skills) && tpl.skills.includes('STEALTH')) ||
+      (tpl.tags || []).includes('assassin');
     const unit = {
       id: uid(),
       templateId: tpl.id,
       name: tpl.name,
       color: tpl.color,
       passive: tpl.passive,
+      skills: Array.isArray(tpl.skills) ? [...tpl.skills] : [],
       rarity: tpl.rarity,
       tags: tpl.tags || [],
       drawback: tpl.drawback || '',
+      stealth: stealthed,
+      revealed: false,
+      hasRevived: false,
       terrain,
       col,
       row,
@@ -430,7 +446,8 @@ export class CombatEngine {
   }
 
   setSpeedMul(mul) {
-    this.speedMul = Math.max(1, Math.min(3, mul | 0));
+    const n = Number(mul);
+    this.speedMul = Number.isFinite(n) ? Math.max(0.5, Math.min(3, n)) : 1;
     this.hooks.onUpdate?.(this.snapshot());
   }
 
@@ -593,9 +610,30 @@ export class CombatEngine {
     for (const m of this.monsters) {
       if (!m.alive || m.isTrap) continue;
       // DoT on monsters
-      const mDot = tickStatusDots(m, this.time, dt);
+      let mDot = tickStatusDots(m, this.time, dt);
       if (mDot > 0) {
-        m.hp -= Math.round(mDot / (m.tileDefMul || 1));
+        mDot = applyIncomingDamage(m, Math.round(mDot / (m.tileDefMul || 1)), this.time);
+        m.hp -= mDot;
+        this._applyDotVfx(m, dt, mDot);
+        if (m.hp <= 0) {
+          m.alive = false;
+          this._onMonsterDeath(m, null);
+          continue;
+        }
+      }
+      const mCell = this._unitCell(m);
+      const mKey = `${mCell.col},${mCell.row}`;
+      if (this.map.hazard?.has(mKey)) {
+        const hzDmg = 8 * dt;
+        m.hp -= hzDmg;
+        applyBurn(m, this.time, { dps: 10, duration: 2 });
+        m._hazardVfxCd = (m._hazardVfxCd || 0) - dt;
+        if (m._hazardVfxCd <= 0) {
+          m._hazardVfxCd = 0.38;
+          this.particles.burst(m.x, m.y - 4, '#ff7043');
+          this._floatStatusOnce(m, 'hazard', 'GAI!', '#ff7043');
+        }
+        this._applyDotVfx(m, dt, hzDmg);
         if (m.hp <= 0) {
           m.alive = false;
           this._onMonsterDeath(m, null);
@@ -699,6 +737,13 @@ export class CombatEngine {
       if (mod.healPerSec > 0) {
         this._applyHealTo(m, mod.healPerSec * dt, { quiet: true });
       }
+      const terr = this.map.terrain[`${col},${row}`];
+      if (terr === 'FIRE' && Math.random() < dt * 1.1) {
+        applyBurn(m, this.time, { dps: 8, duration: 1.4 });
+      }
+      if (terr === 'POISON' && Math.random() < dt * 0.95) {
+        applyPoison(m, this.time, { dps: 7, duration: 1.6 });
+      }
     }
 
     // Ally slow from mythic doom bell
@@ -775,10 +820,50 @@ export class CombatEngine {
     }
   }
 
+  _waveBaseDelay(waveIndex) {
+    const wi = waveIndex || 1;
+    let min = Infinity;
+    for (const h of this.spawnQueue) {
+      if ((h.waveIndex || 1) !== wi) continue;
+      min = Math.min(min, Number(h.spawnDelay) || 0);
+    }
+    return Number.isFinite(min) ? min : 0;
+  }
+
+  _isWaveCleared(waveIndex) {
+    const wi = waveIndex || 1;
+    const anyPending = this.spawnQueue.some(
+      (h) => !h.spawned && (h.waveIndex || 1) === wi
+    );
+    if (anyPending) return false;
+    return !this.heroes.some((h) => h.alive && (h.waveIndex || 1) === wi);
+  }
+
+  _unlockWaves() {
+    if (!this._waveUnlocked) this._waveUnlocked = { 1: 0 };
+    let maxWave = 1;
+    for (const h of this.spawnQueue) {
+      maxWave = Math.max(maxWave, h.waveIndex || 1);
+    }
+    for (let wi = 2; wi <= maxWave; wi++) {
+      if (this._waveUnlocked[wi] != null) continue;
+      if (!this._isWaveCleared(wi - 1)) break;
+      this._waveUnlocked[wi] = this.time + 1.2;
+      this._float(this.CELL * 2, 36, `Đợt ${wi} tiến vào!`, '#ffcc80');
+    }
+  }
+
   _spawnHeroes() {
+    this._unlockWaves();
     for (const h of this.spawnQueue) {
       if (h.spawned) continue;
-      if (this.time < h.spawnDelay) continue;
+      const wi = h.waveIndex || 1;
+      if (this._waveUnlocked?.[wi] == null) continue;
+      const waveBase = this._waveBaseDelay(wi);
+      const relative = Math.max(0, (Number(h.spawnDelay) || 0) - waveBase);
+      const unlockAt = this._waveUnlocked[wi] ?? 0;
+      if (this.time < unlockAt + relative) continue;
+
       h.spawned = true;
       const gate =
         h.formation?.col != null
@@ -793,6 +878,7 @@ export class CombatEngine {
         class: h.class,
         color: h.color,
         skills: h.skills || [],
+        waveIndex: wi,
         maxHp: h.maxHp || h.hp,
         hp: h.maxHp || h.hp,
         atk: h.atk,
@@ -824,6 +910,7 @@ export class CombatEngine {
         flash: 0.35,
         bobPhase: Math.random() * Math.PI * 2,
         spawnProtect: 0.55,
+        hasRevived: false,
       });
       this.particles.magic(gateX, entry.y, h.color);
       this.particles.burst(gateX, entry.y, '#81c784');
@@ -888,20 +975,30 @@ export class CombatEngine {
       }
 
       // status DoTs
-      const heroDot = tickStatusDots(hero, this.time, dt);
+      let heroDot = tickStatusDots(hero, this.time, dt);
       if (heroDot > 0) {
-        hero.hp -= Math.round(heroDot / (hero.tileDefMul || 1));
-        if (Math.random() < dt * 2.2) {
-          if (hero.burnUntil && this.time < hero.burnUntil) this.particles.burn?.(hero.x, hero.y);
-          else this.particles.poison?.(hero.x, hero.y);
-        }
+        heroDot = applyIncomingDamage(
+          hero,
+          Math.round(heroDot / (hero.tileDefMul || 1)),
+          this.time
+        );
+        hero.hp -= heroDot;
+        this._applyDotVfx(hero, dt, heroDot);
       }
 
       // hazard tiles
       const hz = this._unitCell(hero);
       if (this.map.hazard?.has(`${hz.col},${hz.row}`)) {
-        hero.hp -= 6 * dt;
-        if (Math.random() < dt * 1.4) applyBurn(hero, this.time, { dps: 8, duration: 1.5 });
+        const hzDmg = 6 * dt;
+        hero.hp -= hzDmg;
+        applyBurn(hero, this.time, { dps: 8, duration: 1.8 });
+        hero._hazardVfxCd = (hero._hazardVfxCd || 0) - dt;
+        if (hero._hazardVfxCd <= 0) {
+          hero._hazardVfxCd = 0.4;
+          this.particles.burn?.(hero.x, hero.y - 6);
+          this._floatStatusOnce(hero, 'hazard', 'GAI!', '#ff7043');
+        }
+        this._applyDotVfx(hero, dt, hzDmg);
       }
 
       if (atkBusy) {
@@ -909,6 +1006,36 @@ export class CombatEngine {
         const t = this.monsters.find((x) => x.id === hero.atkTargetId);
         if (t) hero.fightTarget = t;
         continue;
+      }
+
+      // Monster TAUNT_SELF: ép hero tiến/đánh tank
+      if (hero.forcedTargetId && this.time < (hero.forcedTargetUntil || 0)) {
+        const forced = this.monsters.find(
+          (x) => x.id === hero.forcedTargetId && x.alive && !x.isTrap
+        );
+        if (forced && !hero.panicking) {
+          const dF = dist(hero, forced);
+          const fr = hero.effectiveRange || hero.range;
+          hero.intent = 'fighting';
+          hero.fightTarget = forced;
+          if (dF <= fr) {
+            const profile = getHeroProfile(hero.templateId, hero.class);
+            const pat = patternForHero(hero, profile);
+            beginAttack(hero, forced, pat, this.time);
+            if (hero.atkPhase === 'windup') hero.atkCd = 1 / hero.atkSpeed;
+          } else {
+            let spd = hero.speed * this.CELL * 0.42 * heroSpeedMultiplier(hero, ctx);
+            if (hero.slowUntil && this.time < hero.slowUntil) spd *= hero.slowFactor ?? 0.55;
+            const dx = forced.x - hero.x;
+            const dy = forced.y - hero.y;
+            const len = Math.hypot(dx, dy) || 1;
+            hero.facing = dx >= 0 ? 1 : -1;
+            hero.x += (dx / len) * spd * dt;
+            hero.y += (dy / len) * spd * dt;
+            hero.path = null;
+          }
+          continue;
+        }
       }
 
       const decision = tickHeroBrain(hero, ctx);
@@ -968,9 +1095,45 @@ export class CombatEngine {
       }
 
       if (hero.hp <= 0) {
-        hero.alive = false;
-        this.particles.death(hero.x, hero.y, hero.color);
-        this._float(hero.x, hero.y, 'Hạ!', '#fff');
+        const canRevive =
+          !hero.hasRevived &&
+          (hero.skills?.includes('REVIVE') || hero.tags?.includes('revive'));
+        if (canRevive) {
+          hero.hasRevived = true;
+          hero.alive = true;
+          hero.hp = Math.max(1, Math.round(hero.maxHp * 0.4));
+          hero.shieldHp = Math.round(hero.maxHp * 0.2);
+          hero.shieldUntil = this.time + 2.8;
+          hero.panicking = false;
+          hero.flash = 0.45;
+          this.particles.magic(hero.x, hero.y - 8, '#fff59d');
+          this._float(hero.x, hero.y - 14, 'Sống lại!', '#fff59d');
+        } else if (
+          hero.skills?.includes('SELF_DESTRUCT') &&
+          !hero._exploded
+        ) {
+          hero._exploded = true;
+          hero.alive = false;
+          const r = this.CELL * 2.2;
+          for (const m of this.monsters) {
+            if (!m.alive || m.isTrap) continue;
+            if (dist(hero, m) > r) continue;
+            let dmg = Math.max(10, Math.round(m.maxHp * 0.22 + hero.atk * 0.9));
+            dmg = applyIncomingDamage(m, dmg, this.time);
+            m.hp -= dmg;
+            this._float(m.x, m.y - 8, `-${dmg}`, '#ff7043');
+            if (m.hp <= 0) {
+              m.alive = false;
+              this._onMonsterDeath(m, hero);
+            }
+          }
+          this.particles.burst(hero.x, hero.y, '#ff7043');
+          this._float(hero.x, hero.y, 'NỔ!', '#ff7043');
+        } else {
+          hero.alive = false;
+          this.particles.death(hero.x, hero.y, hero.color);
+          this._float(hero.x, hero.y, 'Hạ!', '#fff');
+        }
       }
     }
 
@@ -1062,10 +1225,12 @@ export class CombatEngine {
     if (fx.kind === 'burn') {
       applyBurn(hero, this.time, { dps: fx.burnDps, duration: fx.burnDur });
       this.particles.burn?.(hero.x, hero.y);
+      this._floatStatusOnce(hero, 'burn', 'ĐỐT', '#ff7043');
     }
     if (fx.kind === 'poison') {
       applyPoison(hero, this.time, { dps: fx.poisonDps, duration: fx.poisonDur });
       this.particles.poison?.(hero.x, hero.y);
+      this._floatStatusOnce(hero, 'poison', 'ĐỘC', '#9ccc65');
     }
     if (fx.kind === 'freeze') {
       applyFreeze(hero, this.time, fx.freezeDur);
@@ -1088,6 +1253,69 @@ export class CombatEngine {
     if (this.time < (unit._statusFloatCd[key] || 0)) return;
     unit._statusFloatCd[key] = this.time + 1.4;
     this._float(unit.x, unit.y - 14, text, color);
+  }
+
+  /** Particle + số nổi khi đang chịu DoT (đốt/độc). */
+  _applyDotVfx(unit, dt, dotDmg) {
+    if (dotDmg <= 0) return;
+    const burning = unit.burnUntil && this.time < unit.burnUntil && unit.burnDps > 0;
+    const poisoned = unit.poisonUntil && this.time < unit.poisonUntil && unit.poisonDps > 0;
+    if (!burning && !poisoned) return;
+
+    unit._dotAcc = (unit._dotAcc || 0) + dotDmg;
+    unit._dotVfxCd = (unit._dotVfxCd || 0) - dt;
+    if (unit._dotVfxCd <= 0) {
+      unit._dotVfxCd = 0.26;
+      const jx = (Math.random() - 0.5) * 10;
+      const jy = (Math.random() - 0.5) * 6;
+      if (burning) this.particles.burn?.(unit.x + jx, unit.y - 8 + jy);
+      if (poisoned) this.particles.poison?.(unit.x + jx * 0.6, unit.y - 4 + jy);
+    }
+
+    unit._dotFloatCd = (unit._dotFloatCd || 0) - dt;
+    if (unit._dotFloatCd <= 0 && unit._dotAcc >= 0.8) {
+      const shown = Math.max(1, Math.round(unit._dotAcc));
+      unit._dotAcc = 0;
+      unit._dotFloatCd = 0.75;
+      if (burning && poisoned) {
+        this._float(unit.x, unit.y - 20, `-${shown}`, '#c5e1a5');
+      } else if (burning) {
+        this._float(unit.x, unit.y - 20, `-${shown}`, '#ff7043');
+        this._floatStatusOnce(unit, 'burn', 'ĐỐT', '#ff7043');
+      } else {
+        this._float(unit.x, unit.y - 20, `-${shown}`, '#9ccc65');
+        this._floatStatusOnce(unit, 'poison', 'ĐỘC', '#9ccc65');
+      }
+    }
+  }
+
+  _drawStatusAura(ctx, unit) {
+    const burn = unit.burnUntil && this.time < unit.burnUntil && unit.burnDps > 0;
+    const poison = unit.poisonUntil && this.time < unit.poisonUntil && unit.poisonDps > 0;
+    if (!burn && !poison) return;
+    const pulse = 0.32 + 0.22 * Math.sin(this.time * 7 + (unit.bobPhase || 0));
+    ctx.save();
+    if (burn) {
+      ctx.strokeStyle = `rgba(255,112,67,${pulse})`;
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.arc(unit.x, unit.y, 15 + Math.sin(this.time * 5) * 1.5, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = `rgba(255,87,34,${pulse * 0.18})`;
+      ctx.beginPath();
+      ctx.arc(unit.x, unit.y - 4, 10, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    if (poison) {
+      ctx.strokeStyle = `rgba(156,204,101,${pulse * 0.95})`;
+      ctx.lineWidth = 1.8;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.arc(unit.x, unit.y, 12 + Math.cos(this.time * 4) * 1.2, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    ctx.restore();
   }
 
   _heroAttack(hero, target, _pattern) {
@@ -1119,9 +1347,14 @@ export class CombatEngine {
           : 1);
 
     if (silenced) {
-      const dealt = Math.round(dmg / defMul);
+      let dealt = Math.round(dmg / defMul);
+      dealt = applyIncomingDamage(target, dealt, this.time);
       target.hp -= dealt;
       target.flash = 0.2;
+      if (target.stealth) {
+        target.revealed = true;
+        target.lastCombatTime = this.time;
+      }
       this._float(target.x, target.y, 'Câm!', '#b39ddb');
       if (target.hp <= 0) {
         target.alive = false;
@@ -1139,8 +1372,14 @@ export class CombatEngine {
           const mDef =
             (m.tileDefMul || 1) *
             (m.defShredUntil && this.time < m.defShredUntil ? m.defShredFactor || 0.7 : 1);
-          m.hp -= Math.round(dmg / (pierce ? Math.max(0.55, mDef * 0.55) : mDef));
+          let dealt = Math.round(dmg / (pierce ? Math.max(0.55, mDef * 0.55) : mDef));
+          dealt = applyIncomingDamage(m, dealt, this.time);
+          m.hp -= dealt;
           m.flash = 0.15;
+          if (m.stealth) {
+            m.revealed = true;
+            m.lastCombatTime = this.time;
+          }
           applyOnHitStatuses(hero, m, this.time, hitFlags);
           if (m.hp <= 0) {
             m.alive = false;
@@ -1158,8 +1397,14 @@ export class CombatEngine {
       }
       this._float(target.x, target.y, `AoE ${dmg}`, '#ce93d8');
     } else {
-      target.hp -= Math.round(dmg / defMul);
+      let dealt = Math.round(dmg / defMul);
+      dealt = applyIncomingDamage(target, dealt, this.time);
+      target.hp -= dealt;
       target.flash = 0.15;
+      if (target.stealth) {
+        target.revealed = true;
+        target.lastCombatTime = this.time;
+      }
       this._float(target.x, target.y, `-${dmg}`, '#ef9a9a');
       const applied = applyOnHitStatuses(hero, target, this.time, hitFlags);
       if (applied.includes('freeze')) {
@@ -1202,6 +1447,7 @@ export class CombatEngine {
     }
 
     applyHealCutOnHit(hero, target, this.time);
+    applyShieldBreak(hero, target, this.time, this._float?.bind(this));
     if (hero.skills?.includes('HEAL_CUT_HIT') && target.alive) {
       this._float(target.x, target.y + 10, 'Vết!', '#7e57c2');
     }
@@ -1318,7 +1564,50 @@ export class CombatEngine {
   }
 
   _onMonsterDeath(m, killerHero) {
+    // Sống lại lần 1 — vẫn chiếm cost (alive = true trở lại)
+    const canRevive =
+      !m.hasRevived &&
+      (m.passive === 'REVIVE' ||
+        m.skills?.includes('REVIVE') ||
+        m.tags?.includes('revive'));
+    if (canRevive) {
+      m.hasRevived = true;
+      m.alive = true;
+      m.hp = Math.max(1, Math.round(m.maxHp * 0.4));
+      m.shieldHp = Math.round(m.maxHp * 0.15);
+      m.shieldUntil = this.time + 2.5;
+      m.stunnedUntil = 0;
+      m.frozenUntil = 0;
+      m.flash = 0.4;
+      this.particles.magic(m.x, m.y - 8, '#fff59d');
+      this._float(m.x, m.y - 14, 'Sống lại!', '#fff59d');
+      this.costUsed = this.aliveCost();
+      return;
+    }
+
     this.particles.death(m.x, m.y, m.color || '#fff');
+
+    // Tự nổ
+    if (m.passive === 'SELF_DESTRUCT' || m.skills?.includes('SELF_DESTRUCT')) {
+      const r = this.CELL * (m.rarity >= 4 ? 2.4 : 2.0);
+      const ratio = m.rarity >= 5 ? 0.35 : m.rarity >= 3 ? 0.28 : 0.22;
+      for (const h of this.heroes) {
+        if (!h.alive) continue;
+        if (dist(h, m) > r) continue;
+        let dmg = Math.max(8, Math.round(h.maxHp * ratio * 0.45 + m.atk * 0.8));
+        dmg = applyIncomingDamage(h, dmg, this.time);
+        h.hp -= dmg;
+        this._float(h.x, h.y - 8, `-${dmg}`, '#ff7043');
+        this.particles.burst(h.x, h.y, '#ef5350');
+        if (h.hp <= 0) {
+          h.alive = false;
+          this._float(h.x, h.y, 'Hạ!', '#ef5350');
+        }
+      }
+      this._float(m.x, m.y, 'NỔ!', '#ff7043');
+      this.particles.burst(m.x, m.y, '#ff7043');
+    }
+
     const freed = m.cost || MONSTER_BY_ID[m.templateId]?.cost || 0;
     this.costUsed = this.aliveCost();
     if (freed > 0) {
@@ -1334,7 +1623,7 @@ export class CombatEngine {
         if (!h.alive) continue;
         if (dist(h, m) < this.CELL * 2.2 && h.class === 'MAGE') {
           h.silenced = true;
-          this._float(h.x, h.y, 'Silence!', '#26a69a');
+          this._float(h.x, h.y, 'Câm chú!', '#26a69a');
         }
       }
     }
@@ -1359,6 +1648,27 @@ export class CombatEngine {
     }
   }
 
+  /** Vẽ thanh máu + lớp khiên (xanh dương) phía trên */
+  _drawHpBar(ctx, ax, barY, barW, unit, hpColor) {
+    const ratio = Math.max(0, Math.min(1, unit.hp / Math.max(1, unit.maxHp)));
+    const sh = activeShieldHp(unit, this.time);
+    const shieldRatio = sh > 0 ? Math.min(1, sh / Math.max(1, unit.maxHp)) : 0;
+    ctx.fillStyle = '#222';
+    ctx.fillRect(ax - barW / 2, barY, barW, 5);
+    if (shieldRatio > 0) {
+      const total = Math.min(1, ratio + shieldRatio);
+      ctx.fillStyle = '#81d4fa';
+      ctx.fillRect(ax - barW / 2, barY, barW * total, 5);
+    }
+    ctx.fillStyle = hpColor;
+    ctx.fillRect(ax - barW / 2, barY, barW * ratio, 5);
+    if (shieldRatio > 0) {
+      ctx.strokeStyle = 'rgba(129,212,250,0.9)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(ax - barW / 2, barY, barW * Math.min(1, ratio + shieldRatio), 5);
+    }
+  }
+
   _updateMonsters(dt) {
     const ctx = this._brainCtx();
     ctx.dt = dt;
@@ -1370,6 +1680,30 @@ export class CombatEngine {
         continue;
       }
       ensureAttackState(m);
+      ensureHeroSkillState(m, this.time);
+      tickStealthRegen(m, null, this.time, dt);
+      // Hero sát gần → lộ hình
+      if (m.stealth && !m.revealed) {
+        for (const h of this.heroes) {
+          if (!h.alive) continue;
+          if (dist(h, m) < this.CELL * 0.85) {
+            m.revealed = true;
+            m.lastCombatTime = this.time;
+            this._float(m.x, m.y - 10, 'Lộ!', '#ce93d8');
+            break;
+          }
+        }
+      }
+      if (tryActivateMonsterShield(m, this.time)) {
+        this._float(m.x, m.y - 12, 'Khiên!', '#90caf9');
+      }
+      tryMonsterTauntSelf(
+        m,
+        this.time,
+        this.heroes,
+        this.CELL,
+        this._float?.bind(this)
+      );
       m._time = this.time;
       if (m.atkCd > 0) m.atkCd -= dt;
       m.animT = (m.animT || 0) + dt * 2.2;
@@ -1385,6 +1719,7 @@ export class CombatEngine {
         }
       } else if (decision.action === 'chase' && decision.target) {
         let spd = m.speed * this.CELL * 0.4;
+        if (m.stealth && !m.revealed) spd *= 1.4;
         if (m.slowUntil && this.time < m.slowUntil) spd *= m.slowFactor ?? 0.55;
         const dx = decision.target.x - m.x;
         const dy = decision.target.y - m.y;
@@ -1433,7 +1768,8 @@ export class CombatEngine {
   }
 
   _monsterAttack(m, hero, pattern) {
-    const elemColor = statusTelegraphColor(m.passive) || m.color || '#66bb6a';
+    const elemColor =
+      statusTelegraphColor(m.skills?.length ? m.skills : m.passive) || m.color || '#66bb6a';
     this._beam(m, hero, elemColor);
     m.flash = 0.16;
     this.particles.hit(hero.x, hero.y, elemColor);
@@ -1442,6 +1778,21 @@ export class CombatEngine {
       dmg *= 2;
       m.firstHitDone = true;
     }
+    // Backstab / đòn từ tàng hình
+    const mSkills = m.skills || [];
+    if (mSkills.includes('BACKSTAB') || (m.stealth && !m.revealed)) {
+      const fromBehind =
+        (m.facing >= 0 && hero.x >= m.x) || (m.facing < 0 && hero.x < m.x);
+      if (fromBehind || (m.stealth && !m.revealed)) {
+        dmg = Math.round(dmg * 1.5);
+        this._float(hero.x, hero.y - 16, 'Lén đâm!', '#a5d6a7');
+      }
+    }
+    if (m.stealth) {
+      m.revealed = true;
+      m.lastCombatTime = this.time;
+    }
+    m.lastCombatTime = this.time;
     if (
       (m.passive === 'ANTI_WARRIOR_BURST' || m.tags?.includes('anti_warrior')) &&
       hero.class === 'WARRIOR'
@@ -1511,6 +1862,22 @@ export class CombatEngine {
       applyHealCutOnHit(m, hero, this.time);
       this._float(hero.x, hero.y + 10, 'Giảm hồi!', '#a1887f');
     }
+    if (m.passive === 'HEAL_CUT_BOLT') {
+      applyHealCutOnHit(m, hero, this.time);
+      const aoeR = this.CELL * 1.5;
+      for (const h of this.heroes) {
+        if (!h.alive || h === hero) continue;
+        if (dist(m, h) > aoeR) continue;
+        applyHealCutOnHit(m, h, this.time);
+        let splash = Math.round(dmg * 0.35);
+        splash = applyIncomingDamage(h, splash, this.time);
+        h.hp -= splash;
+        h.flash = 0.15;
+      }
+      this._float(hero.x, hero.y + 10, 'Cắt hồi!', '#a1887f');
+      this.particles.magic(hero.x, hero.y - 6, '#8d6e63');
+    }
+    applyShieldBreak(m, hero, this.time, this._float?.bind(this));
   }
 
   _checkEnd() {
@@ -1769,6 +2136,7 @@ export class CombatEngine {
         Math.hypot(m.x - (m.homeX || m.x), m.y - (m.homeY || m.y)) > 2;
       const pose = m.isTrap ? 'idle' : chasing && poseInfo.anim === 'idle' ? 'run' : poseInfo.anim;
       const poseT = poseInfo.animT ?? 0;
+      const alpha = m.stealth && !m.revealed ? 0.4 : 1;
       const drawn = drawSpriteAt(ctx, spr, m.x, m.y, {
         size,
         facing: m.facing || 1,
@@ -1779,22 +2147,28 @@ export class CombatEngine {
         lungeX: m.lungeX || 0,
         lungeY: m.lungeY || 0,
         tint: m.color,
+        alpha,
       });
       const ax = drawn.x;
       const ay = drawn.y;
-      const ratio = Math.max(0, m.hp / m.maxHp);
-      const barW = Math.min(32, drawn.w * 0.7);
-      const barY = ay - drawn.h / 2 - 7;
-      ctx.fillStyle = '#222';
-      ctx.fillRect(ax - barW / 2, barY, barW, 4);
-      ctx.fillStyle = '#66bb6a';
-      ctx.fillRect(ax - barW / 2, barY, barW * ratio, 4);
-      ctx.fillStyle = 'rgba(255,255,255,0.9)';
-      ctx.font = 'bold 8px "Segoe UI", sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'alphabetic';
-      ctx.fillText(shortLabel(m.name), ax, ay + drawn.h / 2 + 9);
-      ctx.textAlign = 'left';
+      this._drawStatusAura(ctx, m);
+      if (!(m.stealth && !m.revealed)) {
+        const barW = Math.min(32, drawn.w * 0.7);
+        const barY = ay - drawn.h / 2 - 7;
+        this._drawHpBar(ctx, ax, barY, barW, m, '#66bb6a');
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.font = 'bold 8px "Segoe UI", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillText(shortLabel(m.name), ax, ay + drawn.h / 2 + 9);
+        ctx.textAlign = 'left';
+      } else {
+        ctx.fillStyle = 'rgba(165,214,167,0.7)';
+        ctx.font = 'bold 8px "Segoe UI", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('…', ax, ay + drawn.h / 2 + 9);
+        ctx.textAlign = 'left';
+      }
     }
 
     for (const h of this.heroes) {
@@ -1819,13 +2193,11 @@ export class CombatEngine {
       });
       const ax = drawn.x;
       const ay = drawn.y;
-      const ratio = Math.max(0, h.hp / h.maxHp);
+      this._drawStatusAura(ctx, h);
       const barW = Math.min(34, drawn.w * 0.72);
       const barY = ay - drawn.h / 2 - 9;
-      ctx.fillStyle = '#222';
-      ctx.fillRect(ax - barW / 2, barY, barW, 4);
-      ctx.fillStyle = ratio <= COMBAT.PANIC_HP_RATIO ? '#ffeb3b' : '#ef5350';
-      ctx.fillRect(ax - barW / 2, barY, barW * ratio, 4);
+      const hpColor = h.hp / h.maxHp <= COMBAT.PANIC_HP_RATIO ? '#ffeb3b' : '#ef5350';
+      this._drawHpBar(ctx, ax, barY, barW, h, hpColor);
       const badge = intentLabel(h.intent || 'moving');
       ctx.fillStyle = badge.color;
       ctx.font = 'bold 8px "Segoe UI", sans-serif';

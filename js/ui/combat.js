@@ -64,6 +64,7 @@ export function renderCombat(root, ctx) {
         </div>
         <div class="combat-head-right">
           <div class="speed-row" id="speed-row" role="group" aria-label="Tốc độ">
+            <button type="button" class="speed-btn" data-speed="0.5">×0.5</button>
             <button type="button" class="speed-btn active" data-speed="1">×1</button>
             <button type="button" class="speed-btn" data-speed="2">×2</button>
             <button type="button" class="speed-btn" data-speed="3">×3</button>
@@ -257,7 +258,7 @@ export function renderCombat(root, ctx) {
       else if (snap.monsterRage) status.textContent = 'Trống Chiến!';
       else if (snap.treasureShield > 0) status.textContent = 'Khiên Kho!';
       else if (snap.draining) status.textContent = 'Hero đang rút Kho!';
-      else status.textContent = `×${snap.speedMul || 1}`;
+      else status.textContent = `×${Number(snap.speedMul || 1).toFixed(snap.speedMul < 1 ? 1 : 0)}`;
     },
     onWin() {
       status.textContent = 'Thắng!';

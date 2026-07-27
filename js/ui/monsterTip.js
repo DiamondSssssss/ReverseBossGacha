@@ -1,5 +1,6 @@
 import { RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=68';
 import { MONSTER_BY_ID } from '../data/monsters.js?v=68';
+import { describeMonsterKit } from '../data/skillDesc.js?v=68';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,
@@ -13,43 +14,71 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;');
 }
 
-/** HTML nội dung tip cho 1 quái (đã tính nâng cấp). */
+/** HTML nội dung tip cho 1 quái (đã tính nâng cấp + scale ải). */
 export function monsterTipHtml(monsterOrId, state, extra = {}) {
   const m = typeof monsterOrId === 'string' ? MONSTER_BY_ID[monsterOrId] : monsterOrId;
   if (!m) return '';
 
   const upLv = state ? getMonsterUpgradeLevel(state, m.id) : 0;
-  const st = displayMonsterStats(m, upLv);
+  const stageLv =
+    extra.stageLevel > 0
+      ? extra.stageLevel
+      : state?.dungeonLevel > 0
+        ? state.dungeonLevel
+        : 0;
+  const st = displayMonsterStats(m, upLv, stageLv);
   const tags = (m.tags || []).join(' · ') || '—';
+  const kit = describeMonsterKit(m);
+  const kitHtml = kit
+    .map(
+      (k) =>
+        `<div class="mtip-skill"><b>${escapeHtml(k.name)}</b> — ${escapeHtml(k.desc)}</div>`
+    )
+    .join('');
+  const stageBadge =
+    stageLv > 0
+      ? `<span class="mtip-stage-badge">Ải ${stageLv} · ×${Number(st.stageMul).toFixed(2)}</span>`
+      : '';
+  const stageNote =
+    stageLv > 0
+      ? `<div class="mtip-note">HP/ATK trong trận theo <b>ải ${stageLv}</b> (gốc ${st.baseHp}/${st.baseAtk} → trận ${st.hp}/${st.atk}).</div>`
+      : '';
   const note = extra.note ? `<div class="mtip-note">${escapeHtml(extra.note)}</div>` : '';
 
   return `
-    <div class="mtip-name" style="--r:${RARITY_COLORS[m.rarity]}">${escapeHtml(m.name)}</div>
+    <div class="mtip-name" style="--r:${RARITY_COLORS[m.rarity]}">${escapeHtml(m.name)} ${stageBadge}</div>
     <div class="mtip-rarity" style="color:${RARITY_COLORS[m.rarity]}">
       ${'★'.repeat(m.rarity)} ${RARITY_LABELS[m.rarity] || ''}
       · Cost ${m.cost}${upLv ? ` · Lv↑${upLv}` : ''}
     </div>
     <div class="mtip-stats">
-      <span><b>HP</b> ${st.hp}</span>
-      <span><b>ATK</b> ${st.atk}</span>
-      <span><b>SPD</b> ${st.speed}</span>
+      <span><b>HP</b> ${st.hp}${stageLv > 0 ? ` <i class="mtip-scaled">(ải)</i>` : ''}</span>
+      <span><b>ATK</b> ${st.atk}${stageLv > 0 ? ` <i class="mtip-scaled">(ải)</i>` : ''}</span>
+      <span><b>SPD</b> ${Number(st.speed).toFixed(2)}</span>
       <span><b>RNG</b> ${st.range}</span>
       <span><b>AS</b> ${st.atkSpeed}</span>
     </div>
     <div class="mtip-tags">${escapeHtml(tags)}</div>
+    ${kitHtml}
     ${m.drawback ? `<div class="mtip-drawback">⚠ ${escapeHtml(m.drawback)}</div>` : ''}
     <div class="mtip-desc">${escapeHtml(m.description || '')}</div>
+    ${stageNote}
     ${note}
   `;
 }
 
 /** Một dòng gọn cho board-tip / status. */
-export function monsterTipLine(monsterOrId, state) {
+export function monsterTipLine(monsterOrId, state, stageLevel = 0) {
   const m = typeof monsterOrId === 'string' ? MONSTER_BY_ID[monsterOrId] : monsterOrId;
   if (!m) return '';
   const upLv = state ? getMonsterUpgradeLevel(state, m.id) : 0;
-  const st = displayMonsterStats(m, upLv);
-  return `${m.name} · C${m.cost}${upLv ? ` · Lv↑${upLv}` : ''} · HP ${st.hp} · ATK ${st.atk} · SPD ${st.speed} · RNG ${st.range}`;
+  const stageLv =
+    stageLevel > 0 ? stageLevel : state?.dungeonLevel > 0 ? state.dungeonLevel : 0;
+  const st = displayMonsterStats(m, upLv, stageLv);
+  const kit = describeMonsterKit(m);
+  const skillShort = kit.length ? ` · ${kit.map((k) => k.name).join(', ')}` : '';
+  const stageTag = stageLv > 0 ? ` · Ải ${stageLv}` : '';
+  return `${m.name} · C${m.cost}${upLv ? ` · Lv↑${upLv}` : ''}${stageTag} · HP ${st.hp} · ATK ${st.atk}${skillShort}`;
 }
 
 let tipEl = null;
@@ -83,7 +112,6 @@ function positionTip(anchor) {
   let left = rect.left + rect.width / 2 - tw / 2;
   let top = rect.bottom + pad;
 
-  // Ưu tiên dưới con trỏ; nếu tràn đáy thì đưa lên trên
   if (top + th > vh - pad) {
     top = rect.top - th - pad;
   }
@@ -103,7 +131,6 @@ export function showMonsterTip(anchor, monsterOrId, state, extra) {
   const el = ensureTipEl();
   el.innerHTML = html;
   positionTip(anchor);
-  // force reflow rồi mới bật class để transition chạy
   void el.offsetWidth;
   el.classList.add('show');
 }
@@ -133,7 +160,6 @@ export function bindMonsterTips(root, selector, getId, state, getExtra) {
   if (!root) return;
   root.querySelectorAll(selector).forEach((el) => {
     const show = (e) => {
-      // Tránh mouse synthetic sau touch
       if (e.pointerType === 'touch') return;
       const id = getId(el);
       if (!id) return;

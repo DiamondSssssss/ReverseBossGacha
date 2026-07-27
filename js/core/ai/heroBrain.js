@@ -76,6 +76,12 @@ export function tickHeroBrain(hero, ctx) {
     }
   }
 
+  // Forced taunt from monster TAUNT_SELF
+  if (hero.forcedTargetId && time < (hero.forcedTargetUntil || 0)) {
+    const forced = monsters.find((x) => x.id === hero.forcedTargetId && x.alive && !x.isTrap);
+    if (forced) best = forced;
+  }
+
   // Reveal check
   for (const m of monsters) {
     if (!m.alive) continue;
@@ -137,8 +143,7 @@ export function heroSpeedMultiplier(hero, ctx) {
   }
   for (const m of monsters) {
     if (!m.alive || m.passive !== 'SLOW_AURA') continue;
-    const r = (m.auraRadius || 2.2) * cellSize;
-    if (dist(hero, m) < r) speedMul *= 0.65;
+    // Slow đã tick qua applySlow trong combatEngine — không nhân thêm lần 2
   }
   if (hero.tileSpeedMul) speedMul *= hero.tileSpeedMul;
   if (hero.slowUntil && time < hero.slowUntil) {

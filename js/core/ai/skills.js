@@ -8,14 +8,44 @@ export function ensureHeroSkillState(hero, time) {
   if (hero.lastCombatTime == null) hero.lastCombatTime = time;
 }
 
-export function applyIncomingDamage(hero, dmg, time) {
-  ensureHeroSkillState(hero, time);
-  if (hero.shieldHp > 0 && time < hero.shieldUntil) {
-    const absorbed = Math.min(hero.shieldHp, dmg);
-    hero.shieldHp -= absorbed;
+export function applyIncomingDamage(unit, dmg, time) {
+  ensureHeroSkillState(unit, time);
+  if (unit.shieldHp > 0 && time < unit.shieldUntil) {
+    const absorbed = Math.min(unit.shieldHp, dmg);
+    unit.shieldHp -= absorbed;
     dmg -= absorbed;
+    if (unit.shieldHp <= 0) {
+      unit.shieldHp = 0;
+      unit.shieldUntil = 0;
+    }
   }
   return Math.max(0, dmg);
+}
+
+/** Phá khiên — xóa sạch lớp khiên đang có */
+export function applyShieldBreak(attacker, target, time, floatFn) {
+  const skills = attacker.skills || [];
+  const passive = attacker.passive || '';
+  if (
+    !skills.includes('SHIELD_BREAK') &&
+    passive !== 'SHIELD_BREAK' &&
+    !attacker.tags?.includes('shield_break')
+  ) {
+    return false;
+  }
+  ensureHeroSkillState(target, time);
+  if (!(target.shieldHp > 0 && time < target.shieldUntil)) return false;
+  target.shieldHp = 0;
+  target.shieldUntil = 0;
+  floatFn?.(target.x, target.y - 12, 'Phá khiên!', '#81d4fa');
+  return true;
+}
+
+/** Có khiên đang hoạt động không */
+export function activeShieldHp(unit, time) {
+  if (!unit) return 0;
+  if (unit.shieldHp > 0 && time < (unit.shieldUntil || 0)) return unit.shieldHp;
+  return 0;
 }
 
 export function tryActivateShield(hero, profile, time) {
@@ -27,6 +57,18 @@ export function tryActivateShield(hero, profile, time) {
   hero.shieldHp = Math.round(hero.maxHp * 0.28);
   hero.shieldUntil = time + 3.2;
   hero.shieldCdUntil = time + 10;
+  return true;
+}
+
+/** Monster SHIELD — cùng cơ chế absorb HP khi máu thấp. */
+export function tryActivateMonsterShield(m, time) {
+  ensureHeroSkillState(m, time);
+  if (!m.skills?.includes('SHIELD')) return false;
+  if (m.shieldCdUntil && time < m.shieldCdUntil) return false;
+  if (m.hp / m.maxHp > 0.45) return false;
+  m.shieldHp = Math.round(m.maxHp * 0.26);
+  m.shieldUntil = time + 3.0;
+  m.shieldCdUntil = time + 11;
   return true;
 }
 
@@ -46,6 +88,26 @@ export function tryTauntSelf(hero, profile, time, monsters, cellSize, floatFn) {
     }
   }
   floatFn?.(hero.x, hero.y, 'Khiêu khích!', '#ffcc80');
+  return true;
+}
+
+/** Monster TAUNT_SELF — ép hero gần phải đánh mình. */
+export function tryMonsterTauntSelf(m, time, heroes, cellSize, floatFn) {
+  if (!m.skills?.includes('TAUNT_SELF')) return false;
+  if (m.tauntCdUntil && time < m.tauntCdUntil) return false;
+  let hit = false;
+  for (const h of heroes) {
+    if (!h.alive) continue;
+    const d = Math.hypot(h.x - m.x, h.y - m.y);
+    if (d < cellSize * 3.2) {
+      h.forcedTargetId = m.id;
+      h.forcedTargetUntil = time + 2.4;
+      hit = true;
+    }
+  }
+  if (!hit) return false;
+  m.tauntCdUntil = time + 12;
+  floatFn?.(m.x, m.y, 'Khiêu khích!', '#ffcc80');
   return true;
 }
 
@@ -255,11 +317,13 @@ export function tryHealAlly(hero, allies, time, floatFn, particles) {
   const eliteHeal = ['hero_healer_04', 'hero_healer_05', 'hero_healer_06'].includes(
     hero.templateId || hero.id
   );
-  const ratio = hero.class === 'HEALER' ? (eliteHeal ? 0.28 : 0.18) : 0.12;
-  const raw = Math.round(best.maxHp * ratio);
+  // Soft-cap: heal không ăn full stage-scaled maxHp (tránh double-dip ải 31+)
+  const healBase = Math.min(best.maxHp, 900 + best.maxHp * 0.35);
+  const ratio = hero.class === 'HEALER' ? (eliteHeal ? 0.2 : 0.14) : 0.1;
+  const raw = Math.round(healBase * ratio);
   const mul = Math.max(0, Number(best.healRecvMul) ?? 1);
   const amount = Math.max(0, Math.round(raw * mul));
-  hero.healCdUntil = time + (eliteHeal ? 2.6 : 3.2);
+  hero.healCdUntil = time + (eliteHeal ? 3.0 : 3.4);
   if (amount <= 0) {
     floatFn?.(best.x, best.y - 10, 'Giảm hồi!', '#a1887f');
     return true;
@@ -281,7 +345,13 @@ export function tryHealAlly(hero, allies, time, floatFn, particles) {
 
 export function applyHealCutOnHit(attacker, target, time) {
   const skills = attacker.skills || [];
-  if (!skills.includes('HEAL_CUT_HIT') && attacker.passive !== 'HEAL_CUT_ON_HIT') return;
+  if (
+    !skills.includes('HEAL_CUT_HIT') &&
+    attacker.passive !== 'HEAL_CUT_ON_HIT' &&
+    attacker.passive !== 'HEAL_CUT_BOLT'
+  ) {
+    return;
+  }
   const dur = attacker.rarity >= 5 || attacker.class === 'HEXER' ? 5.5 : 4;
   const factor =
     attacker.rarity >= 5 ||

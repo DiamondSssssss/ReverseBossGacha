@@ -144,11 +144,20 @@ export const ACHIEVEMENTS = [
   {
     id: 'clear_game',
     title: 'Phá Đảo Hầm Ngục',
-    desc: 'Thắng ải 50 — phá đảo chế độ chính.',
+    desc: 'Thắng ải 60 — phá đảo chế độ chính.',
     icon: '👑',
     category: 'story',
     reward: { souls: 1000, gold: 500, gems: 50 },
-    check: (s) => (s.dungeonLevel || 1) > 50,
+    check: (s) => (s.dungeonLevel || 1) > 60,
+  },
+  {
+    id: 'reach_level_55',
+    title: 'Ải Số 55',
+    desc: 'Vượt ải 55 — sát núi tận thế.',
+    icon: '💀',
+    category: 'combat',
+    reward: { souls: 1200, gold: 600, gems: 40 },
+    check: (s) => (s.dungeonLevel || 1) > 55,
   },
 
   // —— Collection ——
@@ -266,7 +275,7 @@ export const ACHIEVEMENTS = [
   {
     id: 'master_collector',
     title: 'Sếp Tổng Hoàn Mỹ',
-    desc: 'Phá đảo (ải 50) + sưu tầm đủ catalog.',
+    desc: 'Phá đảo (ải 60) + sưu tầm đủ catalog.',
     icon: '💎',
     category: 'story',
     reward: { souls: 2000, gold: 1000, gems: 25 },
@@ -276,7 +285,7 @@ export const ACHIEVEMENTS = [
         ...Object.keys(s.inventory || {}).filter((id) => (s.inventory[id] || 0) > 0),
         ...(s.ownedEver || []),
       ]);
-      return (s.dungeonLevel || 1) > 50 && owned.size >= total;
+      return (s.dungeonLevel || 1) > 60 && owned.size >= total;
     },
   },
 ];

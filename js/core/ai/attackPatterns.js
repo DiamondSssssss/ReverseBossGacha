@@ -161,6 +161,7 @@ export function patternForMonster(m) {
     p === 'RANGED_FROST' ||
     p === 'RANGED_POISON' ||
     p === 'FROST_BOLT' ||
+    p === 'HEAL_CUT_BOLT' ||
     p === 'MYTHIC_INFERNO' ||
     p === 'MYTHIC_TOXIN' ||
     p === 'MYTHIC_STASIS'

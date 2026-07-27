@@ -130,8 +130,8 @@ export const DUPLICATE_SOUL_REFUND = {
 /** Nâng cấp quái bằng Vàng */
 export const MONSTER_UPGRADE = {
   MAX_LEVEL: 5,
-  /** +12% HP/ATK mỗi cấp */
-  STAT_PER_LEVEL: 0.12,
+  /** +14% HP/ATK mỗi cấp — bám hero scale muộn game */
+  STAT_PER_LEVEL: 0.14,
   COST_BASE: 40,
   COST_GROWTH: 1.45,
   RARITY_MULT: { 1: 1, 2: 1.25, 3: 1.6, 4: 2.2, 5: 3.2, 6: 4.5 },
@@ -203,7 +203,7 @@ export const TERRAIN_HINTS = {
 };
 
 /** Ải cuối chế độ chính (thắng → dungeonLevel = MAX_STAGE + 1). */
-export const MAX_STAGE = 50;
+export const MAX_STAGE = 60;
 
 export const HERO_CLASS_LABELS = {
   MAGE: 'Pháp sư',

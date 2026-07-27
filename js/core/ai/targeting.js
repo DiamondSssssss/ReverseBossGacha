@@ -9,6 +9,11 @@ function dist(a, b) {
  */
 export function scoreMonsterForHero(hero, monster, profile, cellSize) {
   if (!monster.alive || monster.isTrap) return Infinity;
+  // Quái tàng hình: hero không lock được trừ khi sát gần / đã lộ / taunt
+  if (monster.stealth && !monster.revealed) {
+    const d = dist(hero, monster);
+    if (monster.passive !== 'TAUNT' && d > cellSize * 0.9) return Infinity;
+  }
   let score = dist(hero, monster);
 
   if (monster.passive === 'TAUNT') score -= cellSize * 4.5;

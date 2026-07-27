@@ -1366,10 +1366,26 @@ body.play-fit .screen.active > .combat-wrap {
   margin-bottom: 6px;
 }
 
+.mtip-skill {
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: #3d3830;
+  margin-bottom: 4px;
+  padding: 4px 6px;
+  background: rgba(26, 22, 18, 0.06);
+  border-radius: 4px;
+}
+
+.mtip-skill b {
+  color: #1a5f4a;
+  font-weight: 800;
+}
+
 .mtip-desc {
   font-size: 0.75rem;
   line-height: 1.35;
   color: #3d3830;
+  margin-top: 6px;
 }
 
 .mtip-drawback {
@@ -1394,6 +1410,56 @@ body.play-fit .screen.active > .combat-wrap {
   font-size: 0.68rem;
   color: #7a7164;
   font-weight: 600;
+}
+
+.mtip-stage-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+  color: #0d3d32;
+  background: #b2dfdb;
+  border: 1px solid #00695c;
+}
+
+.mtip-scaled {
+  font-style: normal;
+  font-size: 0.65em;
+  font-weight: 700;
+  color: #00695c;
+  opacity: 0.9;
+}
+
+.stat-stage {
+  font-style: normal;
+  font-size: 0.68em;
+  font-weight: 800;
+  color: #00695c;
+  background: rgba(178, 223, 219, 0.7);
+  padding: 1px 5px;
+  border-radius: 4px;
+  margin-left: 2px;
+}
+
+.stat-stage-banner {
+  margin: 8px 0 0;
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: 1px solid #00897b;
+  background: rgba(178, 223, 219, 0.45);
+  font-size: 0.74rem;
+  font-weight: 650;
+  color: #1a3d36;
+  line-height: 1.35;
+}
+
+.stat-stage-banner strong {
+  font-weight: 850;
+  color: #004d40;
 }
 
 .unit-stat-panel {
