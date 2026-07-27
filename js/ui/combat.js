@@ -1,16 +1,16 @@
-import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=88';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=88';
-import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=88';
-import { CombatEngine } from '../core/combatEngine.js?v=88';
-import { saveState } from '../core/storage.js?v=88';
-import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=88';
+import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=89';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=89';
+import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=89';
+import { CombatEngine } from '../core/combatEngine.js?v=89';
+import { saveState } from '../core/storage.js?v=89';
+import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=89';
 import {
   evaluateChallengeResult,
   grantChallengeReward,
   titleName,
-} from '../core/challenge.js?v=88';
-import { monsterSpriteUrl } from '../render/sprites.js?v=88';
-import { bindMonsterTips, hideMonsterTip } from './monsterTip.js?v=88';
+} from '../core/challenge.js?v=89';
+import { monsterSpriteUrl } from '../render/sprites.js?v=89';
+import { bindMonsterTips, hideMonsterTip } from './monsterTip.js?v=89';
 
 let engine = null;
 
@@ -512,7 +512,7 @@ export function renderReward(root, ctx) {
   const stageClass = r.clearedJustNow ? 'clear' : win ? '' : 'lose';
   const mark = r.clearedJustNow ? String(MAX_STAGE) : win ? 'OK' : '…';
   const isCh = !!r.challenge;
-  const replayLabel = isCh ? 'Về Thách thức' : win ? 'Vào ải tiếp' : 'Chơi lại';
+  const replayLabel = isCh ? 'Về Thử Thách' : win ? 'Vào ải tiếp' : 'Chơi lại';
 
   root.innerHTML = `
     <div class="reward-stage ${stageClass}">
@@ -522,8 +522,8 @@ export function renderReward(root, ctx) {
           ? 'Phá đảo'
           : isCh
             ? win
-              ? `Thách thức ${r.challengeId} — Xong`
-              : `Thách thức ${r.challengeId} — Trượt`
+              ? `Thử Thách ${r.challengeId} — Xong`
+              : `Thử Thách ${r.challengeId} — Trượt`
             : win
               ? 'Chiến thắng'
               : 'Thất thủ'

@@ -1,8 +1,9 @@
-import { MONSTERS } from '../data/monsters.js?v=88';
-import { RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=88';
-import { monsterDisplayUrl } from '../render/sprites.js?v=88';
-import { fetchLeaderboard, fetchPlayerProfile } from '../core/leaderboard.js?v=88';
-import { getUser } from '../core/auth.js?v=88';
+import { MONSTERS } from '../data/monsters.js?v=89';
+import { RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=89';
+import { monsterDisplayUrl } from '../render/sprites.js?v=89';
+import { fetchLeaderboard, fetchPlayerProfile } from '../core/leaderboard.js?v=89';
+import { getUser } from '../core/auth.js?v=89';
+import { titleName } from '../core/challenge.js?v=89';
 
 function escapeHtml(str) {
   return String(str ?? '')
@@ -36,6 +37,12 @@ function ownedIds(profile) {
     if ((Number(count) || 0) > 0) set.add(id);
   }
   return set;
+}
+
+function titleBadge(titleId) {
+  const name = titleName(titleId);
+  if (!name) return '';
+  return `<span class="lb-title">${escapeHtml(name)}</span>`;
 }
 
 function renderMonsterGrid(profile) {
@@ -84,6 +91,7 @@ export async function openPlayerProfile(modalEl, username, { toast } = {}) {
     const me = getUser();
     const isMe = me && me.username?.toLowerCase() === profile.username.toLowerCase();
     const owned = ownedIds(profile).size;
+    const eqTitle = titleName(profile.equippedTitle);
 
     modalEl.innerHTML = `
       <div class="modal profile-modal" role="dialog" aria-modal="true">
@@ -92,6 +100,7 @@ export async function openPlayerProfile(modalEl, username, { toast } = {}) {
             <p class="section-label" style="margin:0">${isMe ? 'Hồ sơ của bạn' : 'Hồ sơ'}</p>
             <h2>${escapeHtml(profile.displayName || profile.username)}</h2>
             <p class="muted">@${escapeHtml(profile.username)}</p>
+            ${eqTitle ? `<p class="lb-title profile-title">${escapeHtml(eqTitle)}</p>` : ''}
           </div>
           <button type="button" class="ghost" data-close>Đóng</button>
         </div>
@@ -119,11 +128,13 @@ function rowHtml(entry, meUsername) {
     meUsername && entry.username?.toLowerCase() === meUsername.toLowerCase();
   const rankClass =
     entry.rank === 1 ? 'gold' : entry.rank === 2 ? 'silver' : entry.rank === 3 ? 'bronze' : '';
+  const titleHtml = titleBadge(entry.equippedTitle);
   return `
     <button type="button" class="lb-row ${isMe ? 'me' : ''} ${rankClass}" data-user="${escapeHtml(entry.username)}">
       <span class="lb-rank">${medal(entry.rank)}</span>
       <span class="lb-who">
         <strong>${escapeHtml(entry.displayName || entry.username)}</strong>
+        ${titleHtml}
         <span class="muted">@${escapeHtml(entry.username)}</span>
       </span>
       <span class="lb-stat">

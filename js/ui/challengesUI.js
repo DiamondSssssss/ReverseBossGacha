@@ -5,9 +5,9 @@ import {
   unlockHintChallenge,
   titleName,
   syncChallengeUnlocks,
-} from '../core/challenge.js?v=88';
-import { saveState } from '../core/storage.js?v=88';
-import { CHALLENGE_TITLES } from '../data/challenges.js?v=88';
+} from '../core/challenge.js?v=89';
+import { saveState } from '../core/storage.js?v=89';
+import { CHALLENGE_TITLES } from '../data/challenges.js?v=89';
 
 export function renderChallenges(root, ctx) {
   const { state, go, toast, startChallenge } = ctx;
@@ -24,7 +24,7 @@ export function renderChallenges(root, ctx) {
   root.innerHTML = `
     <div class="hub-layout" style="padding:12px">
       <div>
-        <p class="section-label">Chế độ Thách thức</p>
+        <p class="section-label">Chế độ Thử Thách</p>
         <h2 style="margin:0 0 8px;font-family:Fraunces,serif">10 ải puzzle</h2>
         <p class="muted" style="margin:0 0 16px">Mở theo tiến độ. Thưởng Title độc bản.</p>
         <div class="boss-picker" id="ch-list">
@@ -59,7 +59,7 @@ export function renderChallenges(root, ctx) {
     btn.onclick = () => {
       const id = Number(btn.getAttribute('data-ch'));
       if (!isChallengeUnlocked(state, id)) {
-        toast?.('Chưa mở thách thức này');
+        toast?.('Chưa mở thử thách này');
         return;
       }
       startChallenge?.(id);

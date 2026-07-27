@@ -1,9 +1,9 @@
-import { CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_TITLES, getChallenge } from '../data/challenges.js?v=88';
-import { getChallengeMap } from '../data/mapsChallenge.js?v=88';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=88';
-import { MAP_UPGRADE } from '../data/constants.js?v=88';
-import { HERO_BY_ID, assignHeroFormation } from '../data/heroes.js?v=88';
-import { placeMaxCost, sanitizeLoadout, suggestLoadout } from './loadout.js?v=88';
+import { CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_TITLES, getChallenge } from '../data/challenges.js?v=89';
+import { getChallengeMap } from '../data/mapsChallenge.js?v=89';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=89';
+import { MAP_UPGRADE } from '../data/constants.js?v=89';
+import { HERO_BY_ID, assignHeroFormation } from '../data/heroes.js?v=89';
+import { placeMaxCost, sanitizeLoadout, suggestLoadout } from './loadout.js?v=89';
 
 export { getChallenge, CHALLENGES, CHALLENGE_TITLES };
 

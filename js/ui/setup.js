@@ -3,17 +3,17 @@ import {
   TERRAIN_LABELS,
   RARITY_COLORS,
   HERO_CLASS_LABELS,
-} from '../data/constants.js?v=88';
-import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=88';
-import { monsterScaleForLevel } from '../data/heroes.js?v=88';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=88';
-import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=88';
+} from '../data/constants.js?v=89';
+import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=89';
+import { monsterScaleForLevel } from '../data/heroes.js?v=89';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=89';
+import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=89';
 import {
   mapUsedCost,
   placeMonster,
   removePlacement,
   totalPlacements,
-} from '../core/dungeon.js?v=88';
+} from '../core/dungeon.js?v=89';
 import {
   loadoutMaxPoolCost,
   loadoutPoolCost,
@@ -24,20 +24,20 @@ import {
   suggestLoadout,
   tryAddToLoadout,
   tryRemoveFromLoadout,
-} from '../core/loadout.js?v=88';
-import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=88';
-import { attachSetupBoardFx } from './setupBoardFx.js?v=88';
-import { playGhostWalk } from './setupPreview.js?v=88';
-import { saveState } from '../core/storage.js?v=88';
+} from '../core/loadout.js?v=89';
+import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=89';
+import { attachSetupBoardFx } from './setupBoardFx.js?v=89';
+import { playGhostWalk } from './setupPreview.js?v=89';
+import { saveState } from '../core/storage.js?v=89';
 import {
   hideMonsterTip,
   monsterTipHtml,
-} from './monsterTip.js?v=88';
+} from './monsterTip.js?v=89';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,
-} from '../core/monsterUpgrade.js?v=88';
-import { validateChallengeLoadout } from '../core/challenge.js?v=88';
+} from '../core/monsterUpgrade.js?v=89';
+import { validateChallengeLoadout } from '../core/challenge.js?v=89';
 
 function shortName(name) {
   if (!name) return '?';
@@ -259,7 +259,7 @@ export function renderScout(root, ctx) {
   if (run.waveTip) tips.push(run.waveTip);
   if (map.tip) tips.push(map.tip);
   if (run.mode === 'challenge' && run.challenge) {
-    tips.unshift(`Thách thức CH${run.challengeId}: ${run.challenge.blurb}`);
+    tips.unshift(`Thử Thách CH${run.challengeId}: ${run.challenge.blurb}`);
     for (const o of run.challenge.objectives || []) {
       if (o.label) tips.push(`Điều kiện: ${o.label}`);
     }

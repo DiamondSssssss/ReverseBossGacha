@@ -1,18 +1,18 @@
-import { MAP_UPGRADE, SPELLS, MAX_STAGE } from '../data/constants.js?v=88';
-import { MONSTERS } from '../data/monsters.js?v=88';
+import { MAP_UPGRADE, SPELLS, MAX_STAGE } from '../data/constants.js?v=89';
+import { MONSTERS } from '../data/monsters.js?v=89';
 import {
   DUNGEON_BOSSES,
   getBoss,
   isBossUnlocked,
   unlockHint,
   syncUnlockedBosses,
-} from '../data/dungeonBosses.js?v=88';
-import { tryUpgradeMap, upgradeMapCost } from '../core/dungeon.js?v=88';
-import { saveState } from '../core/storage.js?v=88';
-import { achievementProgress, isGameCleared, evaluateAchievements } from '../core/achievements.js?v=88';
-import { titleName, ensureChallengeProgress } from '../core/challenge.js?v=88';
-import { showTutorial } from './tutorial.js?v=88';
-import { showRedeemModal } from './redeemUI.js?v=88';
+} from '../data/dungeonBosses.js?v=89';
+import { tryUpgradeMap, upgradeMapCost } from '../core/dungeon.js?v=89';
+import { saveState } from '../core/storage.js?v=89';
+import { achievementProgress, isGameCleared, evaluateAchievements } from '../core/achievements.js?v=89';
+import { titleName, ensureChallengeProgress } from '../core/challenge.js?v=89';
+import { showTutorial } from './tutorial.js?v=89';
+import { showRedeemModal } from './redeemUI.js?v=89';
 
 const GATE_SVG = `
 <svg viewBox="0 0 200 250" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -76,8 +76,8 @@ export function renderHub(root, ctx) {
         </div>
         <div class="hub-cta">
           <button type="button" class="primary big" id="btn-play">Mở cổng ải</button>
+          <button type="button" class="cta-alt big" id="btn-challenge">Thử Thách</button>
           <div class="hub-secondary">
-            <button type="button" id="btn-challenge">Thách thức</button>
             <button type="button" id="btn-gacha">Quay Gacha</button>
             <button type="button" id="btn-redeem">Nhập mã</button>
             <button type="button" id="btn-ach">Ấn chương</button>

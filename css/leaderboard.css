@@ -89,6 +89,25 @@
   text-overflow: ellipsis;
 }
 
+.lb-title {
+  display: inline-block;
+  margin-top: 2px;
+  padding: 1px 7px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--seal-deep);
+  background: rgba(196, 60, 40, 0.1);
+  border: 1px solid rgba(196, 60, 40, 0.35);
+  border-radius: 999px;
+  width: fit-content;
+  white-space: nowrap;
+}
+
+.profile-title {
+  margin: 6px 0 0;
+}
+
 .lb-who .muted {
   font-size: 0.72rem;
 }

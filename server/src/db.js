@@ -253,6 +253,7 @@ export function listLeaderboard(limit = 50) {
          COALESCE(s.stages_cleared, 0) AS stagesCleared,
          COALESCE(s.unique_monsters, 0) AS uniqueMonsters,
          COALESCE(s.wins, 0) AS wins,
+         s.save_data AS saveData,
          s.updated_at AS updatedAt
        FROM users u
        INNER JOIN player_saves s ON s.user_id = u.id
@@ -264,16 +265,26 @@ export function listLeaderboard(limit = 50) {
        LIMIT ?`
     )
     .all(lim)
-    .map((row, i) => ({
-      rank: i + 1,
-      id: row.id,
-      username: row.username,
-      displayName: row.displayName,
-      stagesCleared: row.stagesCleared,
-      uniqueMonsters: row.uniqueMonsters,
-      wins: row.wins,
-      updatedAt: row.updatedAt,
-    }));
+    .map((row, i) => {
+      let equippedTitle = null;
+      try {
+        const data = JSON.parse(row.saveData || '{}');
+        equippedTitle = data.equippedTitle || null;
+      } catch {
+        equippedTitle = null;
+      }
+      return {
+        rank: i + 1,
+        id: row.id,
+        username: row.username,
+        displayName: row.displayName,
+        stagesCleared: row.stagesCleared,
+        uniqueMonsters: row.uniqueMonsters,
+        wins: row.wins,
+        equippedTitle,
+        updatedAt: row.updatedAt,
+      };
+    });
 }
 
 export function getPublicProfile(username) {
@@ -304,6 +315,8 @@ export function getPublicProfile(username) {
     wins: stats.wins,
     dungeonLevel: Number(data.dungeonLevel) || 1,
     selectedBossId: data.selectedBossId || null,
+    equippedTitle: data.equippedTitle || null,
+    titles: Array.isArray(data.titles) ? data.titles.filter(Boolean) : [],
     ownedEver,
     inventory,
     monsterUpgrades: data.monsterUpgrades || {},

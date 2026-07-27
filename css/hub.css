@@ -81,10 +81,19 @@
   z-index: 1;
 }
 
-.hub-cta .primary.big {
+.hub-cta .primary.big,
+.hub-cta .cta-alt.big {
   min-height: 56px;
   font-size: 1.05rem;
   width: 100%;
+}
+
+.hub-cta .cta-alt.big {
+  background: var(--bone);
+  color: var(--ink);
+  border-color: var(--ink);
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .hub-meta {

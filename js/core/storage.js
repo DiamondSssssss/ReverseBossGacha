@@ -4,11 +4,11 @@ import {
   SPELLS,
   INVENTORY_CAP,
   DUPLICATE_SOUL_REFUND,
-} from '../data/constants.js?v=88';
-import { DEFAULT_BOSS_ID, syncUnlockedBosses } from '../data/dungeonBosses.js?v=88';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=88';
-import { isLoggedIn } from './auth.js?v=88';
-import { pushCloudSave } from './cloudSave.js?v=88';
+} from '../data/constants.js?v=89';
+import { DEFAULT_BOSS_ID, syncUnlockedBosses } from '../data/dungeonBosses.js?v=89';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=89';
+import { isLoggedIn } from './auth.js?v=89';
+import { pushCloudSave } from './cloudSave.js?v=89';
 
 const LEGACY_KEYS = ['rbg_save_v1'];
 
