@@ -1,6 +1,6 @@
 /** Hero AI catalog — mỗi ải 1–40 có tổ hợp hero riêng */
 
-import { COMBAT } from './constants.js?v=80';
+import { COMBAT } from './constants.js?v=82';
 
 export const HEROES = [
   // ——— MAGE ———
@@ -547,7 +547,7 @@ export const HEROES = [
     name: 'Vệ Vương Thép',
     class: 'BOSS',
     isBoss: true,
-    hp: 2200, atk: 95, speed: 0.7, range: 1.6, atkSpeed: 0.75, aoeRadius: 1.4,
+    hp: 7200, atk: 95, speed: 0.7, range: 1.6, atkSpeed: 0.75, aoeRadius: 1.4,
     target: 'MONSTER', color: '#c9a227',
     skills: ['SHIELD', 'TAUNT_SELF', 'STUN_ON_HIT', 'AOE_FIRE'],
     description: 'Hero Boss — đi chậm, khiên + khiêu khích + choáng + hỏa vực.',
@@ -557,7 +557,7 @@ export const HEROES = [
     name: 'Chúa Bóng Đêm',
     class: 'BOSS',
     isBoss: true,
-    hp: 1600, atk: 140, speed: 0.85, range: 1.5, atkSpeed: 1.05, aoeRadius: 0,
+    hp: 5600, atk: 140, speed: 0.85, range: 1.5, atkSpeed: 1.05, aoeRadius: 0,
     target: 'TREASURE', color: '#6a1b9a',
     stealth: true,
     skills: ['STEALTH', 'REVEAL', 'BACKSTAB', 'HEAL_CUT'],
@@ -568,7 +568,7 @@ export const HEROES = [
     name: 'Pháp Vương Hỗn Nguyên',
     class: 'BOSS',
     isBoss: true,
-    hp: 1800, atk: 155, speed: 0.65, range: 4.2, atkSpeed: 0.85, aoeRadius: 2.2,
+    hp: 6400, atk: 155, speed: 0.65, range: 4.2, atkSpeed: 0.85, aoeRadius: 2.2,
     target: 'MONSTER', color: '#5c6bc0',
     skills: ['AOE_FROST', 'FREEZE', 'AOE_FIRE', 'PIERCE'],
     description: 'Hero Boss — băng/hỏa vực + đóng băng + xuyên giáp, đi rất chậm.',
@@ -578,7 +578,7 @@ export const HEROES = [
     name: 'Thiên Tiễn Hoàng',
     class: 'BOSS',
     isBoss: true,
-    hp: 1500, atk: 175, speed: 0.75, range: 5.5, atkSpeed: 1.15, aoeRadius: 0,
+    hp: 5200, atk: 175, speed: 0.75, range: 5.5, atkSpeed: 1.15, aoeRadius: 0,
     target: 'MONSTER', color: '#43a047',
     skills: ['PIERCE', 'POISON_ON_HIT', 'DEF_SHRED'],
     description: 'Hero Boss — tầm cực xa, xuyên giáp + độc + phá giáp.',
@@ -588,7 +588,7 @@ export const HEROES = [
     name: 'Hoàng Đế Tàn Lửa',
     class: 'BOSS',
     isBoss: true,
-    hp: 2800, atk: 165, speed: 0.55, range: 2.0, atkSpeed: 0.9, aoeRadius: 1.8,
+    hp: 9600, atk: 165, speed: 0.55, range: 2.0, atkSpeed: 0.9, aoeRadius: 1.8,
     target: 'MONSTER', color: '#d84315',
     skills: ['SHIELD', 'AOE_FIRE', 'LIFESTEAL', 'BERSERK'],
     description: 'Hero Boss cuối — khiên + hỏa vực + hút máu + berserk, siêu chậm.',

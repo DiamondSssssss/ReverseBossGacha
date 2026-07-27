@@ -1,7 +1,7 @@
-import { TERRAIN } from '../../data/rooms.js?v=80';
-import { COMBAT, MONSTER_UPGRADE } from '../../data/constants.js?v=80';
-import { monsterStatMul } from '../monsterUpgrade.js?v=80';
-import { monsterScaleForLevel } from '../../data/heroes.js?v=80';
+import { TERRAIN } from '../../data/rooms.js?v=82';
+import { COMBAT, MONSTER_UPGRADE } from '../../data/constants.js?v=82';
+import { monsterStatMul } from '../monsterUpgrade.js?v=82';
+import { monsterScaleForLevel } from '../../data/heroes.js?v=82';
 
 /**
  * Buff / debuff địa hình theo passive element.

@@ -1221,6 +1221,11 @@ const HERO_KIND = {
   hero_hex_03: 'heroMage',
   hero_hex_04: 'heroMage',
   hero_hex_05: 'heroMage',
+  hero_boss_40: 'heroTank',
+  hero_boss_45: 'heroRogue',
+  hero_boss_50: 'heroMage',
+  hero_boss_55: 'heroArcher',
+  hero_boss_60: 'heroBerserker',
 };
 
 function paintBackground(ctx, rarity) {

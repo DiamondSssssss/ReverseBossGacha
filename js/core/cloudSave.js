@@ -1,4 +1,4 @@
-import { api, isLoggedIn } from './auth.js?v=80';
+import { api, isLoggedIn } from './auth.js?v=82';
 
 function sanitize(state) {
   const {

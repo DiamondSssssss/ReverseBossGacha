@@ -1,5 +1,5 @@
-import { scoreHeroForMonster, dist } from './targeting.js?v=80';
-import { los } from '../pathfinding.js?v=80';
+import { scoreHeroForMonster, dist } from './targeting.js?v=82';
+import { los } from '../pathfinding.js?v=82';
 
 /**
  * Monster AI tick — returns { action, target }
