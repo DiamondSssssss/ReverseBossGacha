@@ -1,17 +1,17 @@
-import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=76';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=76';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=76';
-import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=76';
-import { mapUsedCost } from './dungeon.js?v=76';
-import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=76';
-import { ParticleSystem } from '../render/particles.js?v=76';
+import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=77';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=77';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=77';
+import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=77';
+import { mapUsedCost } from './dungeon.js?v=77';
+import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=77';
+import { ParticleSystem } from '../render/particles.js?v=77';
 import {
   getMonsterSprite,
   getHeroSprite,
   drawSpriteAt,
-} from '../render/sprites.js?v=76';
-import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=76';
-import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=76';
+} from '../render/sprites.js?v=77';
+import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=77';
+import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=77';
 import {
   computeHeroAttackDamage,
   applyIncomingDamage,
@@ -33,10 +33,10 @@ import {
   tryActivateMonsterShield,
   tryMonsterTauntSelf,
   ensureHeroSkillState,
-} from './ai/skills.js?v=76';
-import { getTileModifiers, spawnMonsterStats } from './ai/tileModifiers.js?v=76';
-import { dist } from './ai/targeting.js?v=76';
-import { getHeroProfile } from './ai/profiles.js?v=76';
+} from './ai/skills.js?v=77';
+import { getTileModifiers, spawnMonsterStats } from './ai/tileModifiers.js?v=77';
+import { dist } from './ai/targeting.js?v=77';
+import { getHeroProfile } from './ai/profiles.js?v=77';
 import {
   patternForHero,
   patternForMonster,
@@ -44,7 +44,7 @@ import {
   tickAttack,
   ensureAttackState,
   resolveDisplayAnim,
-} from './ai/attackPatterns.js?v=76';
+} from './ai/attackPatterns.js?v=77';
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
@@ -921,6 +921,46 @@ export class CombatEngine {
     }
   }
 
+  _processHeroDeath(hero) {
+    if (!hero.alive || hero.hp > 0) return;
+    const canRevive =
+      !hero.hasRevived &&
+      (hero.skills?.includes('REVIVE') || hero.tags?.includes('revive'));
+    if (canRevive) {
+      hero.hasRevived = true;
+      hero.alive = true;
+      hero.hp = Math.max(1, Math.round(hero.maxHp * 0.4));
+      hero.shieldHp = Math.round(hero.maxHp * 0.2);
+      hero.shieldUntil = this.time + 2.8;
+      hero.panicking = false;
+      hero.flash = 0.45;
+      this.particles.magic(hero.x, hero.y - 8, '#fff59d');
+      this._float(hero.x, hero.y - 14, 'Sống lại!', '#fff59d');
+    } else if (hero.skills?.includes('SELF_DESTRUCT') && !hero._exploded) {
+      hero._exploded = true;
+      hero.alive = false;
+      const r = this.CELL * 2.2;
+      for (const m of this.monsters) {
+        if (!m.alive || m.isTrap) continue;
+        if (dist(hero, m) > r) continue;
+        let dmg = Math.max(10, Math.round(m.maxHp * 0.22 + hero.atk * 0.9));
+        dmg = applyIncomingDamage(m, dmg, this.time);
+        m.hp -= dmg;
+        this._float(m.x, m.y - 8, `-${dmg}`, '#ff7043');
+        if (m.hp <= 0) {
+          m.alive = false;
+          this._onMonsterDeath(m, hero);
+        }
+      }
+      this.particles.burst(hero.x, hero.y, '#ff7043');
+      this._float(hero.x, hero.y, 'NỔ!', '#ff7043');
+    } else {
+      hero.alive = false;
+      this.particles.death(hero.x, hero.y, hero.color);
+      this._float(hero.x, hero.y, 'Hạ!', '#fff');
+    }
+  }
+
   _updateHeroes(dt) {
     const ctx = this._brainCtx();
     ctx.dt = dt;
@@ -931,6 +971,10 @@ export class CombatEngine {
       hero._time = this.time;
       if (hero.atkCd > 0) hero.atkCd -= dt;
       hero.animT = (hero.animT || 0) + dt * (hero.panicking ? 4 : 2.5);
+
+      // Lethal từ frame trước (vd. Báo Bóng đánh khi hero đang choáng)
+      this._processHeroDeath(hero);
+      if (!hero.alive) continue;
 
       if (!hero.panicking && hero.hp / hero.maxHp <= COMBAT.PANIC_HP_RATIO) {
         hero.panicking = true;
@@ -943,6 +987,42 @@ export class CombatEngine {
       if (hero.panicking) hero.facing = -1;
       hero.fightTarget = null;
       hero.telegraph = null;
+
+      // DoT / bẫy vẫn tick khi bị CC — tránh “bất tử” khi bị perma-stun
+      for (const m of this.monsters) {
+        if (!m.alive || !m.isTrap) continue;
+        if (dist(hero, m) < this.CELL * 0.55) {
+          this._triggerTrap(m, hero);
+        }
+      }
+
+      let heroDot = tickStatusDots(hero, this.time, dt);
+      if (heroDot > 0) {
+        heroDot = applyIncomingDamage(
+          hero,
+          Math.round(heroDot / (hero.tileDefMul || 1)),
+          this.time
+        );
+        hero.hp -= heroDot;
+        this._applyDotVfx(hero, dt, heroDot);
+      }
+
+      const hz = this._unitCell(hero);
+      if (this.map.hazard?.has(`${hz.col},${hz.row}`)) {
+        const hzDmg = 6 * dt;
+        hero.hp -= hzDmg;
+        applyBurn(hero, this.time, { dps: 8, duration: 1.8 });
+        hero._hazardVfxCd = (hero._hazardVfxCd || 0) - dt;
+        if (hero._hazardVfxCd <= 0) {
+          hero._hazardVfxCd = 0.4;
+          this.particles.burn?.(hero.x, hero.y - 6);
+          this._floatStatusOnce(hero, 'hazard', 'GAI!', '#ff7043');
+        }
+        this._applyDotVfx(hero, dt, hzDmg);
+      }
+
+      this._processHeroDeath(hero);
+      if (!hero.alive) continue;
 
       if (stunned) {
         hero.intent = 'stunned';
@@ -964,48 +1044,15 @@ export class CombatEngine {
           hero.spawnProtect = 0;
           hero.path = null;
         }
+        this._processHeroDeath(hero);
         continue;
-      }
-
-      // traps
-      for (const m of this.monsters) {
-        if (!m.alive || !m.isTrap) continue;
-        if (dist(hero, m) < this.CELL * 0.55) {
-          this._triggerTrap(m, hero);
-        }
-      }
-
-      // status DoTs
-      let heroDot = tickStatusDots(hero, this.time, dt);
-      if (heroDot > 0) {
-        heroDot = applyIncomingDamage(
-          hero,
-          Math.round(heroDot / (hero.tileDefMul || 1)),
-          this.time
-        );
-        hero.hp -= heroDot;
-        this._applyDotVfx(hero, dt, heroDot);
-      }
-
-      // hazard tiles
-      const hz = this._unitCell(hero);
-      if (this.map.hazard?.has(`${hz.col},${hz.row}`)) {
-        const hzDmg = 6 * dt;
-        hero.hp -= hzDmg;
-        applyBurn(hero, this.time, { dps: 8, duration: 1.8 });
-        hero._hazardVfxCd = (hero._hazardVfxCd || 0) - dt;
-        if (hero._hazardVfxCd <= 0) {
-          hero._hazardVfxCd = 0.4;
-          this.particles.burn?.(hero.x, hero.y - 6);
-          this._floatStatusOnce(hero, 'hazard', 'GAI!', '#ff7043');
-        }
-        this._applyDotVfx(hero, dt, hzDmg);
       }
 
       if (atkBusy) {
         hero.intent = 'fighting';
         const t = this.monsters.find((x) => x.id === hero.atkTargetId);
         if (t) hero.fightTarget = t;
+        this._processHeroDeath(hero);
         continue;
       }
 
@@ -1035,6 +1082,7 @@ export class CombatEngine {
             hero.y += (dy / len) * spd * dt;
             hero.path = null;
           }
+          this._processHeroDeath(hero);
           continue;
         }
       }
@@ -1095,47 +1143,7 @@ export class CombatEngine {
         if (Math.random() < dt * 10) this.particles.gold(hero.x, hero.y - 6);
       }
 
-      if (hero.hp <= 0) {
-        const canRevive =
-          !hero.hasRevived &&
-          (hero.skills?.includes('REVIVE') || hero.tags?.includes('revive'));
-        if (canRevive) {
-          hero.hasRevived = true;
-          hero.alive = true;
-          hero.hp = Math.max(1, Math.round(hero.maxHp * 0.4));
-          hero.shieldHp = Math.round(hero.maxHp * 0.2);
-          hero.shieldUntil = this.time + 2.8;
-          hero.panicking = false;
-          hero.flash = 0.45;
-          this.particles.magic(hero.x, hero.y - 8, '#fff59d');
-          this._float(hero.x, hero.y - 14, 'Sống lại!', '#fff59d');
-        } else if (
-          hero.skills?.includes('SELF_DESTRUCT') &&
-          !hero._exploded
-        ) {
-          hero._exploded = true;
-          hero.alive = false;
-          const r = this.CELL * 2.2;
-          for (const m of this.monsters) {
-            if (!m.alive || m.isTrap) continue;
-            if (dist(hero, m) > r) continue;
-            let dmg = Math.max(10, Math.round(m.maxHp * 0.22 + hero.atk * 0.9));
-            dmg = applyIncomingDamage(m, dmg, this.time);
-            m.hp -= dmg;
-            this._float(m.x, m.y - 8, `-${dmg}`, '#ff7043');
-            if (m.hp <= 0) {
-              m.alive = false;
-              this._onMonsterDeath(m, hero);
-            }
-          }
-          this.particles.burst(hero.x, hero.y, '#ff7043');
-          this._float(hero.x, hero.y, 'NỔ!', '#ff7043');
-        } else {
-          hero.alive = false;
-          this.particles.death(hero.x, hero.y, hero.color);
-          this._float(hero.x, hero.y, 'Hạ!', '#fff');
-        }
-      }
+      this._processHeroDeath(hero);
     }
 
     // Camera is player-controlled (pan / focus buttons). Keep clamped only.
@@ -1884,6 +1892,7 @@ export class CombatEngine {
       this.particles.magic(hero.x, hero.y - 6, '#8d6e63');
     }
     applyShieldBreak(m, hero, this.time, this._float?.bind(this));
+    this._processHeroDeath(hero);
   }
 
   _checkEnd() {

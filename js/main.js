@@ -3,22 +3,22 @@ import {
   saveState,
   resetState,
   inventoryCopy,
-} from './core/storage.js?v=76';
-import { createRunState } from './core/dungeon.js?v=76';
-import { loadoutFingerprint } from './core/loadout.js?v=76';
-import { evaluateAchievements } from './core/achievements.js?v=76';
-import { initAuth, onAuthChange } from './core/auth.js?v=76';
-import { renderHub } from './ui/hub.js?v=76';
-import { renderGacha } from './ui/gachaUI.js?v=76';
-import { renderCollection } from './ui/collection.js?v=76';
-import { renderHeroes } from './ui/heroesUI.js?v=76';
-import { renderScout, renderSetup } from './ui/setup.js?v=76';
-import { renderCombat, renderReward, stopCombatIfAny, getCombatEngine } from './ui/combat.js?v=76';
-import { renderAchievements, announceUnlocks } from './ui/achievementsUI.js?v=76';
-import { renderLeaderboard } from './ui/leaderboardUI.js?v=76';
-import { startGuidedTour, showTipBanner } from './ui/tutorial.js?v=76';
-import { renderAccountBar } from './ui/authUI.js?v=76';
-import { hideMonsterTip } from './ui/monsterTip.js?v=76';
+} from './core/storage.js?v=77';
+import { createRunState } from './core/dungeon.js?v=77';
+import { loadoutFingerprint } from './core/loadout.js?v=77';
+import { evaluateAchievements } from './core/achievements.js?v=77';
+import { initAuth, onAuthChange } from './core/auth.js?v=77';
+import { renderHub } from './ui/hub.js?v=77';
+import { renderGacha } from './ui/gachaUI.js?v=77';
+import { renderCollection } from './ui/collection.js?v=77';
+import { renderHeroes } from './ui/heroesUI.js?v=77';
+import { renderScout, renderSetup } from './ui/setup.js?v=77';
+import { renderCombat, renderReward, stopCombatIfAny, getCombatEngine } from './ui/combat.js?v=77';
+import { renderAchievements, announceUnlocks } from './ui/achievementsUI.js?v=77';
+import { renderLeaderboard } from './ui/leaderboardUI.js?v=77';
+import { startGuidedTour, showTipBanner } from './ui/tutorial.js?v=77';
+import { renderAccountBar } from './ui/authUI.js?v=77';
+import { hideMonsterTip } from './ui/monsterTip.js?v=77';
 
 const state = loadState();
 // Mở ấn đủ điều kiện + backfill Gem cho ấn đã mở (bảng thưởng mới)
