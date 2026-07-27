@@ -1,11 +1,11 @@
-import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=84';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=84';
-import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=84';
-import { CombatEngine } from '../core/combatEngine.js?v=84';
-import { saveState } from '../core/storage.js?v=84';
-import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=84';
-import { monsterSpriteUrl } from '../render/sprites.js?v=84';
-import { bindMonsterTips, hideMonsterTip } from './monsterTip.js?v=84';
+import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=85';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=85';
+import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=85';
+import { CombatEngine } from '../core/combatEngine.js?v=85';
+import { saveState } from '../core/storage.js?v=85';
+import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=85';
+import { monsterSpriteUrl } from '../render/sprites.js?v=85';
+import { bindMonsterTips, hideMonsterTip } from './monsterTip.js?v=85';
 
 let engine = null;
 
@@ -284,9 +284,9 @@ export function renderCombat(root, ctx) {
       if (snap.result) {
         /* keep end status */
       } else if (snap.selectedDeployId) status.textContent = 'Chạm map thả quái';
-      else if (snap.globalSlow) status.textContent = 'Sương Chậm!';
-      else if (snap.monsterRage) status.textContent = 'Trống Chiến!';
-      else if (snap.treasureShield > 0) status.textContent = 'Khiên Kho!';
+      else if (snap.globalSlow) status.textContent = 'Boss làm chậm đội Hero!';
+      else if (snap.monsterRage) status.textContent = 'Boss đang cường hóa quái!';
+      else if (snap.treasureShield > 0) status.textContent = 'Kho báu đang có khiên!';
       else if (snap.draining) status.textContent = 'Hero đang rút Kho!';
       else status.textContent = `×${Number(snap.speedMul || 1).toFixed(snap.speedMul < 1 ? 1 : 0)}`;
     },

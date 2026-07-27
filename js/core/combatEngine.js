@@ -1,17 +1,17 @@
-import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=84';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=84';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=84';
-import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=84';
-import { mapUsedCost } from './dungeon.js?v=84';
-import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=84';
-import { ParticleSystem } from '../render/particles.js?v=84';
+import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=85';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=85';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=85';
+import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=85';
+import { mapUsedCost } from './dungeon.js?v=85';
+import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=85';
+import { ParticleSystem } from '../render/particles.js?v=85';
 import {
   getMonsterSprite,
   getHeroSprite,
   drawSpriteAt,
-} from '../render/sprites.js?v=84';
-import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=84';
-import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=84';
+} from '../render/sprites.js?v=85';
+import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=85';
+import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=85';
 import {
   computeHeroAttackDamage,
   applyIncomingDamage,
@@ -33,10 +33,10 @@ import {
   tryActivateMonsterShield,
   tryMonsterTauntSelf,
   ensureHeroSkillState,
-} from './ai/skills.js?v=84';
-import { getTileModifiers, spawnMonsterStats, elementAuraActive, elementAuraTag } from './ai/tileModifiers.js?v=84';
-import { dist } from './ai/targeting.js?v=84';
-import { getHeroProfile } from './ai/profiles.js?v=84';
+} from './ai/skills.js?v=85';
+import { getTileModifiers, spawnMonsterStats, elementAuraActive, elementAuraTag } from './ai/tileModifiers.js?v=85';
+import { dist } from './ai/targeting.js?v=85';
+import { getHeroProfile } from './ai/profiles.js?v=85';
 import {
   patternForHero,
   patternForMonster,
@@ -44,7 +44,7 @@ import {
   tickAttack,
   ensureAttackState,
   resolveDisplayAnim,
-} from './ai/attackPatterns.js?v=84';
+} from './ai/attackPatterns.js?v=85';
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
@@ -116,6 +116,7 @@ export class CombatEngine {
     this.particles = new ParticleSystem();
     this.zones = [];
     this.globalSlowUntil = 0;
+    this.globalSlowFactor = 0.55;
     this.treasureShield = 0;
     this.treasureShieldUntil = 0;
     this.monsterRageUntil = 0;
@@ -156,6 +157,52 @@ export class CombatEngine {
     };
   }
 
+  _damageHero(hero, raw, color = '#ff7043', text = null) {
+    if (!hero?.alive) return 0;
+    let dmg = Math.max(0, Math.round(raw));
+    dmg = applyIncomingDamage(hero, Math.round(dmg / (hero.tileDefMul || 1)), this.time);
+    if (dmg <= 0) return 0;
+    hero.hp -= dmg;
+    this._float(hero.x, hero.y - 8, text || `-${dmg}`, color);
+    this.particles.burst(hero.x, hero.y, color);
+    if (hero.hp <= 0) {
+      hero.alive = false;
+      this._float(hero.x, hero.y, 'Hạ!', color);
+    }
+    return dmg;
+  }
+
+  _frontHeroes(count = 2) {
+    return this.heroes
+      .filter((h) => h.alive)
+      .sort((a, b) => b.x - a.x)
+      .slice(0, count);
+  }
+
+  _backlineHeroes(count = 2) {
+    return this.heroes
+      .filter((h) => h.alive)
+      .sort((a, b) => a.x - b.x)
+      .slice(0, count);
+  }
+
+  _heroClusterAnchor(radiusCells = 2.2) {
+    const seed = this._frontHeroes(1)[0];
+    if (!seed) return null;
+    const radius = this.CELL * radiusCells;
+    const group = this.heroes.filter((h) => h.alive && dist(h, seed) <= radius);
+    if (!group.length) return seed;
+    const sum = group.reduce((acc, h) => ({ x: acc.x + h.x, y: acc.y + h.y }), { x: 0, y: 0 });
+    return { x: sum.x / group.length, y: sum.y / group.length, group };
+  }
+
+  _grantMonsterShield(monster, ratio, duration) {
+    if (!monster?.alive) return;
+    const amount = Math.max(1, Math.round(monster.maxHp * ratio));
+    monster.shieldHp = Math.max(monster.shieldHp || 0, amount);
+    monster.shieldUntil = Math.max(monster.shieldUntil || 0, this.time + duration);
+  }
+
   _dynamicBlocked() {
     const extra = [];
     for (const m of this.monsters) {
@@ -176,6 +223,7 @@ export class CombatEngine {
       blockedExtra: [],
       dynamicBlocked: this._dynamicBlocked(),
       globalSlowUntil: this.globalSlowUntil,
+      globalSlowFactor: this.globalSlowFactor,
       zones: this.zones,
       originY: this.originY,
       blocked: buildBlockedFromMap(this.map, this._dynamicBlocked()),
@@ -465,25 +513,41 @@ export class CombatEngine {
     const bannerX = this.viewW / 2 + this.cameraX;
     const kind = spell.kind || spellId;
 
-    if (kind === 'slow') {
+    if (kind === 'slow_chip') {
       this.globalSlowUntil = this.time + spell.duration;
+      this.globalSlowFactor = spell.slowFactor || 0.55;
       this._float(bannerX, 30, `${spell.name}!`, '#81d4fa');
       for (const h of this.heroes) {
-        if (h.alive) this.particles.frost(h.x, h.y);
+        if (!h.alive) continue;
+        this.particles.frost(h.x, h.y);
+        this._damageHero(h, h.maxHp * (spell.damageRatio || 0), '#81d4fa');
       }
-    } else if (kind === 'heal') {
+    } else if (kind === 'cleanse_heal') {
       this.monsters.forEach((m) => {
         if (!m.alive) return;
         this._applyHealTo(m, m.maxHp * spell.healRatio, { quiet: true });
+        m.burnUntil = 0;
+        m.poisonUntil = 0;
+        m.slowUntil = 0;
+        m.slowFactor = 1;
+        m.defShredUntil = 0;
         this.particles.heal(m.x, m.y - 8);
       });
       this._float(bannerX, 30, `${spell.name}!`, '#ef9a9a');
-    } else if (kind === 'treasure_shield') {
+    } else if (kind === 'treasure_barrier') {
       this.treasureShield = spell.shieldHp;
       this.treasureShieldUntil = this.time + spell.duration;
       this._float(bannerX, 30, `${spell.name}!`, '#ffd54f');
       this.particles.burst(this.mapWidth * 0.85, this.originY + this.mapHeight * 0.5, '#ffd54f');
-    } else if (kind === 'knock') {
+      const nearTreasure = [...this.monsters]
+        .filter((m) => m.alive && !m.isTrap)
+        .sort((a, b) => b.x - a.x)
+        .slice(0, spell.allyCount || 3);
+      for (const m of nearTreasure) {
+        this._grantMonsterShield(m, spell.allyShieldRatio || 0.16, spell.duration || 5);
+        this.particles.magic(m.x, m.y - 8, '#ffd54f');
+      }
+    } else if (kind === 'knock_strike') {
       const cells = spell.cells || 2;
       for (const h of this.heroes) {
         if (!h.alive) continue;
@@ -496,36 +560,162 @@ export class CombatEngine {
           h.draining = false;
           this.particles.burst(h.x, h.y, '#8d6e63');
         }
+        this._damageHero(h, spell.damage || 0, '#8d6e63');
       }
       this._float(bannerX, 30, `${spell.name}!`, '#8d6e63');
-    } else if (kind === 'poison') {
+    } else if (kind === 'poison_healcut') {
       for (const h of this.heroes) {
         if (!h.alive) continue;
         h.poisonUntil = this.time + spell.duration;
         h.poisonDps = spell.dps;
+        h.healCutUntil = this.time + spell.duration;
+        h.healCutFactor = spell.healCutFactor || 0.55;
         this.particles.burst(h.x, h.y, '#66bb6a');
       }
       this._float(bannerX, 30, `${spell.name}!`, '#66bb6a');
-    } else if (kind === 'rage') {
-      this.monsterRageUntil = this.time + spell.duration;
-      this.monsterRageMul = spell.atkMul || 1.4;
+    } else if (kind === 'rage_haste') {
       for (const m of this.monsters) {
-        if (m.alive) this.particles.burst(m.x, m.y, '#ef5350');
+        if (!m.alive || m.isTrap) continue;
+        m.rageUntil = this.time + spell.duration;
+        m.rageMul = spell.atkMul || 1.3;
+        m.hasteUntil = this.time + spell.duration;
+        m.hasteMul = spell.atkSpeedMul || 1.15;
+        this.particles.burst(m.x, m.y, '#ef5350');
       }
       this._float(bannerX, 30, `${spell.name}!`, '#ef5350');
-    } else if (kind === 'reveal_silence') {
+    } else if (kind === 'reveal_mark') {
       for (const h of this.heroes) {
         if (!h.alive) continue;
         h.revealed = true;
         h.silenced = true;
         h.tempSilenceUntil = this.time + spell.duration;
+        applyDefShred(h, this.time, { factor: spell.defShredFactor || 0.82, duration: spell.duration });
         this.particles.magic(h.x, h.y - 8, '#ce93d8');
       }
       this._float(bannerX, 30, `${spell.name}!`, '#ce93d8');
-    } else if (kind === 'stun') {
+    } else if (kind === 'cluster_blast') {
+      const anchor = this._heroClusterAnchor(spell.radius || 2.2);
+      if (!anchor) return false;
+      const radius = this.CELL * (spell.radius || 2.2);
+      this.particles.burst(anchor.x, anchor.y, '#90a4ae');
+      for (const h of this.heroes) {
+        if (!h.alive || Math.hypot(h.x - anchor.x, h.y - anchor.y) > radius) continue;
+        this._damageHero(h, h.maxHp * (spell.damageRatio || 0) + (spell.damageFlat || 0), '#90a4ae');
+        if (spell.stunDuration) applyStun(h, this.time, spell.stunDuration);
+      }
+      this._float(anchor.x, anchor.y - 20, spell.name, '#90a4ae');
+      this._float(bannerX, 30, `${spell.name}!`, '#90a4ae');
+    } else if (kind === 'ember_field') {
+      const anchor = this._heroClusterAnchor(spell.radius || 2.1);
+      if (!anchor) return false;
+      this.zones.push({
+        x: anchor.x,
+        y: anchor.y,
+        r: this.CELL * (spell.radius || 2.1),
+        factor: 0.9,
+        ttl: spell.duration || 4,
+        burnDps: spell.dps || 12,
+        color: '#ff7043',
+      });
+      this.particles.burst(anchor.x, anchor.y, '#ff7043');
+      this._float(bannerX, 30, `${spell.name}!`, '#ff7043');
+    } else if (kind === 'knock_burn') {
+      const cells = spell.cells || 2;
+      for (const h of this.heroes) {
+        if (!h.alive) continue;
+        const cell = this._unitCell(h);
+        const newCol = Math.max(0, cell.col - cells);
+        const dest = this._cellCenter(newCol, cell.row);
+        if (!this.map.blocked.has(`${newCol},${cell.row}`)) {
+          h.x = dest.x;
+          h.path = null;
+          h.draining = false;
+        }
+        applyBurn(h, this.time, { dps: spell.dps || 12, duration: spell.duration || 3.5 });
+        this.particles.burst(h.x, h.y, '#ff7043');
+      }
+      this._float(bannerX, 30, `${spell.name}!`, '#ff7043');
+    } else if (kind === 'front_freeze') {
+      for (const h of this._frontHeroes(spell.count || 2)) {
+        applyFreeze(h, this.time, spell.freezeDuration || 1.4);
+        applySlow(h, this.time, { factor: spell.slowFactor || 0.7, duration: spell.slowDuration || 3 });
+        this.particles.frost(h.x, h.y);
+      }
+      this._float(bannerX, 30, `${spell.name}!`, '#81d4fa');
+    } else if (kind === 'drain_pulse') {
+      for (const h of this._backlineHeroes(spell.heroCount || 3)) {
+        this._damageHero(h, h.maxHp * (spell.damageRatio || 0.16), '#ab47bc');
+      }
+      for (const m of this.monsters) {
+        if (!m.alive || m.isTrap) continue;
+        this._applyHealTo(m, m.maxHp * (spell.healRatio || 0.1), { quiet: true });
+        this.particles.heal(m.x, m.y - 6);
+      }
+      this._float(bannerX, 30, `${spell.name}!`, '#ab47bc');
+    } else if (kind === 'acid_rain') {
+      const anchor = this._heroClusterAnchor(spell.radius || 2);
+      if (!anchor) return false;
+      const radius = this.CELL * (spell.radius || 2);
+      for (const h of this.heroes) {
+        if (!h.alive || Math.hypot(h.x - anchor.x, h.y - anchor.y) > radius) continue;
+        this._damageHero(h, h.maxHp * (spell.damageRatio || 0.12), '#7cb342');
+        applyPoison(h, this.time, { dps: spell.dps || 14, duration: spell.duration || 4 });
+      }
+      this.particles.burst(anchor.x, anchor.y, '#7cb342');
+      this._float(bannerX, 30, `${spell.name}!`, '#7cb342');
+    } else if (kind === 'backline_silence') {
+      for (const h of this._backlineHeroes(spell.count || 2)) {
+        h.silenced = true;
+        h.tempSilenceUntil = this.time + (spell.duration || 3);
+        applySlow(h, this.time, { factor: spell.slowFactor || 0.6, duration: spell.slowDuration || 3 });
+        this.particles.magic(h.x, h.y - 8, '#ba68c8');
+      }
+      this._float(bannerX, 30, `${spell.name}!`, '#ba68c8');
+    } else if (kind === 'monster_barrier') {
+      for (const m of this.monsters) {
+        if (!m.alive || m.isTrap) continue;
+        this._grantMonsterShield(m, spell.shieldRatio || 0.18, spell.duration || 5.5);
+        this.particles.magic(m.x, m.y - 8, '#ffd54f');
+      }
+      this._float(bannerX, 30, `${spell.name}!`, '#ffd54f');
+    } else if (kind === 'treasure_bombard') {
+      const treasure = this.map.treasure?.[0];
+      if (!treasure) return false;
+      const center = this._cellCenter(treasure.col, treasure.row);
+      const radius = this.CELL * (spell.radius || 2.8);
+      for (const h of this.heroes) {
+        if (!h.alive || Math.hypot(h.x - center.x, h.y - center.y) > radius) continue;
+        this._damageHero(
+          h,
+          h.maxHp * (spell.damageRatio || 0.16) + (spell.damageFlat || 20),
+          '#8d6e63'
+        );
+      }
+      for (const m of this.monsters) {
+        if (!m.alive || m.isTrap) continue;
+        this._applyHealTo(m, m.maxHp * (spell.healRatio || 0.08), { quiet: true });
+      }
+      this.particles.burst(center.x, center.y, '#8d6e63');
+      this._float(bannerX, 30, `${spell.name}!`, '#8d6e63');
+    } else if (kind === 'doom_march') {
+      for (const m of this.monsters) {
+        if (!m.alive || m.isTrap) continue;
+        m.rageUntil = this.time + spell.duration;
+        m.rageMul = spell.atkMul || 1.22;
+        m.hasteUntil = this.time + spell.duration;
+        m.hasteMul = spell.atkSpeedMul || 1.18;
+        m.moveBuffUntil = this.time + spell.duration;
+        m.moveBuffMul = spell.speedMul || 1.12;
+        this.particles.burst(m.x, m.y, '#ef5350');
+      }
+      this._float(bannerX, 30, `${spell.name}!`, '#ef5350');
+    } else if (kind === 'panic_bell') {
       for (const h of this.heroes) {
         if (!h.alive) continue;
         h.stunnedUntil = Math.max(h.stunnedUntil || 0, this.time + spell.duration);
+        if (h.hp / Math.max(1, h.maxHp) <= (spell.executeThreshold || 0.55)) {
+          this._damageHero(h, h.maxHp * (spell.damageRatio || 0.1), '#90a4ae');
+        }
         this.particles.burst(h.x, h.y, '#90a4ae');
       }
       this._float(bannerX, 30, `${spell.name}!`, '#90a4ae');
@@ -601,6 +791,13 @@ export class CombatEngine {
       z.ttl -= dt;
       return z.ttl > 0;
     });
+    for (const z of this.zones) {
+      if (!z.burnDps) continue;
+      for (const h of this.heroes) {
+        if (!h.alive || dist(h, z) > z.r) continue;
+        applyBurn(h, this.time, { dps: z.burnDps, duration: Math.min(1.2, z.ttl + 0.2) });
+      }
+    }
     this.floatTexts = this.floatTexts.filter((f) => {
       f.ttl -= dt;
       f.y -= 20 * dt;
@@ -776,6 +973,9 @@ export class CombatEngine {
       m.atk = Math.round((m.baseAtk || m.atk) * atkMul);
       if (m._baseAtkSpeed) m.atkSpeed = m._baseAtkSpeed;
       if (m._rainbowAsMul) m.atkSpeed = (m._baseAtkSpeed || m.atkSpeed) * m._rainbowAsMul;
+      if (m.hasteUntil && this.time < m.hasteUntil) {
+        m.atkSpeed *= m.hasteMul || 1.15;
+      }
       if (m._elemAuraDef && m._elemAuraDef !== 1) m.tileDefMul *= m._elemAuraDef;
       if (m._rainbowFragile && m._rainbowFragile !== 1) m.tileDefMul *= m._rainbowFragile;
       if (mod.healPerSec > 0) {
@@ -1947,6 +2147,7 @@ export class CombatEngine {
         }
       } else if (decision.action === 'chase' && decision.target) {
         let spd = m.speed * this.CELL * 0.4 * (m.tileSpeedMul || 1);
+        if (m.moveBuffUntil && this.time < m.moveBuffUntil) spd *= m.moveBuffMul || 1.1;
         if (m.stealth && !m.revealed) spd *= 1.4;
         if (m.slowUntil && this.time < m.slowUntil) spd *= m.slowFactor ?? 0.55;
         const dx = decision.target.x - m.x;
@@ -1959,6 +2160,7 @@ export class CombatEngine {
         const dy = m.homeY - m.y;
         const d = Math.hypot(dx, dy) || 1;
         let spd = m.speed * this.CELL * 0.35 * (m.tileSpeedMul || 1);
+        if (m.moveBuffUntil && this.time < m.moveBuffUntil) spd *= m.moveBuffMul || 1.1;
         if (m.slowUntil && this.time < m.slowUntil) spd *= m.slowFactor ?? 0.55;
         this._moveMonster(m, (dx / d) * spd * dt, (dy / d) * spd * dt);
       }
@@ -2288,7 +2490,8 @@ export class CombatEngine {
     }
 
     for (const z of this.zones) {
-      ctx.fillStyle = 'rgba(200,184,154,0.28)';
+      const fill = z.color || 'rgba(200,184,154,0.28)';
+      ctx.fillStyle = fill.startsWith('rgba') ? fill : `${fill}44`;
       ctx.beginPath();
       ctx.arc(z.x, z.y, z.r, 0, Math.PI * 2);
       ctx.fill();

@@ -1,5 +1,5 @@
-import { getHeroProfile } from './profiles.js?v=84';
-import { scoreMonsterForHero, dist } from './targeting.js?v=84';
+import { getHeroProfile } from './profiles.js?v=85';
+import { scoreMonsterForHero, dist } from './targeting.js?v=85';
 import {
   ensureHeroSkillState,
   tryActivateShield,
@@ -7,9 +7,8 @@ import {
   tickStealthRegen,
   tryHealAlly,
   applySlow,
-} from './skills.js?v=84';
-import { findPath, findPathAway, buildBlockedFromMap } from '../pathfinding.js?v=84';
-import { SPELLS } from '../../data/constants.js?v=84';
+} from './skills.js?v=85';
+import { findPath, findPathAway, buildBlockedFromMap } from '../pathfinding.js?v=85';
 
 /**
  * Decide hero combat intent for this frame.
@@ -149,9 +148,9 @@ export function tickHeroBrain(hero, ctx) {
 }
 
 export function heroSpeedMultiplier(hero, ctx) {
-  const { time, globalSlowUntil, zones, monsters, cellSize } = ctx;
+  const { time, globalSlowUntil, globalSlowFactor, zones, monsters, cellSize } = ctx;
   let speedMul = 1;
-  if (time < globalSlowUntil) speedMul *= SPELLS.slow_wave.slowFactor;
+  if (time < globalSlowUntil) speedMul *= globalSlowFactor ?? 0.55;
   for (const z of zones) {
     if (dist(hero, z) < z.r) speedMul *= z.factor;
   }
