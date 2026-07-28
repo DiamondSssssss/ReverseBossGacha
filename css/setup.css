@@ -1520,6 +1520,56 @@ body.play-fit .screen.active > .combat-wrap {
   box-shadow: 0 -6px 16px rgba(26, 22, 18, 0.08);
 }
 
+@media (min-width: 900px) {
+  .loadout-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+    grid-template-areas:
+      "head stat"
+      "selected stat"
+      "filters stat"
+      "pool stat";
+    gap: 10px 14px;
+    align-items: start;
+  }
+
+  .loadout-head {
+    grid-area: head;
+    margin-bottom: 0;
+  }
+
+  .loadout-selected {
+    grid-area: selected;
+    margin-bottom: 0;
+  }
+
+  .loadout-filters {
+    grid-area: filters;
+    margin-bottom: 0;
+  }
+
+  .loadout-pool {
+    grid-area: pool;
+    max-height: min(62vh, 560px);
+  }
+
+  .loadout-stat-panel {
+    grid-area: stat;
+    margin: 0;
+    min-height: min(44vh, 420px);
+    max-height: min(78vh, 720px);
+    overflow: auto;
+  }
+
+  .loadout-stat-panel.sticky-stat {
+    position: sticky;
+    top: 12px;
+    bottom: auto;
+    margin-top: 0;
+    box-shadow: 0 6px 16px rgba(26, 22, 18, 0.08);
+  }
+}
+
 .pick-stats {
   display: block;
   font-size: 0.62rem;

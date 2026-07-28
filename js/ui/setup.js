@@ -3,17 +3,17 @@ import {
   TERRAIN_LABELS,
   RARITY_COLORS,
   HERO_CLASS_LABELS,
-} from '../data/constants.js?v=113';
-import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=113';
-import { monsterScaleForLevel } from '../data/heroes.js?v=113';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=113';
-import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=113';
+} from '../data/constants.js?v=114';
+import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=114';
+import { monsterScaleForLevel } from '../data/heroes.js?v=114';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=114';
+import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=114';
 import {
   mapUsedCost,
   placeMonster,
   removePlacement,
   totalPlacements,
-} from '../core/dungeon.js?v=113';
+} from '../core/dungeon.js?v=114';
 import {
   loadoutMaxPoolCost,
   loadoutPoolCost,
@@ -24,18 +24,18 @@ import {
   suggestLoadout,
   tryAddToLoadout,
   tryRemoveFromLoadout,
-} from '../core/loadout.js?v=113';
-import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=113';
-import { attachSetupBoardFx } from './setupBoardFx.js?v=113';
-import { playGhostWalk } from './setupPreview.js?v=113';
-import { saveState } from '../core/storage.js?v=113';
+} from '../core/loadout.js?v=114';
+import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=114';
+import { attachSetupBoardFx } from './setupBoardFx.js?v=114';
+import { playGhostWalk } from './setupPreview.js?v=114';
+import { saveState } from '../core/storage.js?v=114';
 import {
   hideMonsterTip,
   monsterTipHtml,
-} from './monsterTip.js?v=113';
+} from './monsterTip.js?v=114';
 import {
   displayMonsterStats,
-} from '../core/monsterUpgrade.js?v=113';
+} from '../core/monsterUpgrade.js?v=114';
 import {
   validateChallengeLoadout,
   tryAddChallengeLoadout,
@@ -46,7 +46,7 @@ import {
   monsterStageLevelForRun,
   monsterUpgradeLevelForRun,
   monsterStatMulForRun,
-} from '../core/challenge.js?v=113';
+} from '../core/challenge.js?v=114';
 import {
   hardRarityBlockReason,
   hardRaritySummary,
@@ -54,7 +54,7 @@ import {
   suggestHardLoadout,
   tryAddHardLoadout,
   validateHardLoadout,
-} from '../data/hardMode.js?v=113';
+} from '../data/hardMode.js?v=114';
 
 function shortName(name) {
   if (!name) return '?';
