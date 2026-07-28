@@ -1,12 +1,12 @@
-import { MAX_STAGE } from '../data/constants.js?v=102';
-import { getStageMap } from '../data/maps.js?v=102';
+import { MAX_STAGE } from '../data/constants.js?v=104';
+import { getStageMap } from '../data/maps.js?v=104';
 import {
   frontierForMode,
   hardModifiersForLevel,
   personalBestCost,
   stageAccess,
-} from '../data/hardMode.js?v=102';
-import { fetchStageRecords } from '../core/stageRecords.js?v=102';
+} from '../data/hardMode.js?v=104';
+import { fetchStageRecords } from '../core/stageRecords.js?v=104';
 
 let activeMode = 'normal';
 
@@ -38,7 +38,7 @@ export function renderStages(root, ctx) {
       </div>
       ${
         mode === 'hard'
-          ? `<p class="stages-hard-tip muted">Khó: Hero mạnh hơn, Cap/kho thấp hơn, quái yếu hơn một chút. Kỉ lục = pool cost thấp nhất lúc vào trận.</p>`
+          ? `<p class="stages-hard-tip muted">Khó: Hero mạnh hơn, Cap/kho thấp hơn — mỗi ải giới hạn số Legendary / Mythic / Rainbow mang theo.</p>`
           : `<p class="stages-hard-tip muted">Kỉ lục trên thẻ = người giữ pool mang theo thấp nhất (đăng nhập mới nộp server).</p>`
       }
       <div class="stages-grid" id="stages-grid">

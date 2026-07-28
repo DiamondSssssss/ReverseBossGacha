@@ -1,5 +1,5 @@
-import { apiUrl } from '../config.js?v=102';
-import { api, isLoggedIn } from './auth.js?v=102';
+import { apiUrl } from '../config.js?v=104';
+import { api, isLoggedIn } from './auth.js?v=104';
 
 async function publicApi(path) {
   const res = await fetch(apiUrl(path));

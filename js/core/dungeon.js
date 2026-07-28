@@ -1,17 +1,19 @@
-import { getStageMap, isPlaceable } from '../data/maps.js?v=102';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=102';
-import { MAP_UPGRADE, COMBAT, MAX_STAGE } from '../data/constants.js?v=102';
-import { buildWave, getWavePlan, assignHeroFormation } from '../data/heroes.js?v=102';
+import { getStageMap, isPlaceable, stretchCompiledMap } from '../data/maps.js?v=104';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=104';
+import { MAP_UPGRADE, COMBAT, MAX_STAGE } from '../data/constants.js?v=104';
+import { buildWave, getWavePlan, assignHeroFormation } from '../data/heroes.js?v=104';
 import {
   sanitizeLoadout,
   suggestLoadout,
   placeMaxCost,
   loadoutPoolMultForLevel,
-} from './loadout.js?v=102';
+} from './loadout.js?v=104';
 import {
   frontierForMode,
   hardModifiersForLevel,
-} from '../data/hardMode.js?v=102';
+  sanitizeHardLoadout,
+  suggestHardLoadout,
+} from '../data/hardMode.js?v=104';
 
 function reindexBuffs(map) {
   const buffIndex = {};
@@ -64,7 +66,10 @@ export function createRunState(playerState, opts = {}) {
 
   const isReplay = level < frontier;
   const plan = getWavePlan(level);
-  const map = getStageMap(level);
+  let map = getStageMap(level);
+  if (mode === 'hard' && map.cols < 60) {
+    map = stretchCompiledMap(map, 3);
+  }
   const hardMods = mode === 'hard' ? hardModifiersForLevel(level) : null;
   if (hardMods) applyHardMapMods(map, hardMods);
 
@@ -75,15 +80,22 @@ export function createRunState(playerState, opts = {}) {
   /** Cap sân = Cap gốc (1×); pool mang = 3× hoặc 5× (boss) */
   map.costCap = placeMaxCost(refCap);
   map.upgradeLevel = upgradeLv;
-  map.poolMult = loadoutPoolMultForLevel(level);
+  const basePoolMult = map.poolMultOverride || loadoutPoolMultForLevel(level);
+  map.poolMult = basePoolMult + (hardMods?.poolMultBonus || 0);
 
   let wave = assignHeroFormation(buildWave(level), map);
   if (hardMods) wave = scaleWaveHeroes(wave, hardMods.heroStatMul);
 
   const inv = playerState.inventory || {};
-  let loadout = sanitizeLoadout(playerState.lastLoadout, inv, map.refCostCap, level);
+  let loadout = sanitizeLoadout(playerState.lastLoadout, inv, map.refCostCap, level, map.poolMult);
+  if (mode === 'hard' && hardMods?.rarityLimits) {
+    loadout = sanitizeHardLoadout(hardMods.rarityLimits, loadout);
+  }
   if (loadoutPoolEmpty(loadout)) {
-    loadout = suggestLoadout(inv, map.refCostCap, level);
+    loadout =
+      mode === 'hard' && hardMods?.rarityLimits
+        ? suggestHardLoadout(hardMods.rarityLimits, inv, map.refCostCap, level, map.poolMult)
+        : suggestLoadout(inv, map.refCostCap, level, map.poolMult);
   }
 
   return {
@@ -92,6 +104,7 @@ export function createRunState(playerState, opts = {}) {
     level,
     isReplay,
     hardRules: hardMods?.rules || null,
+    hardRarityLimits: hardMods?.rarityLimits || null,
     monsterStatMul: hardMods?.monsterStatMul || 1,
     treasureHpOverride: map.treasureHp || null,
     map,

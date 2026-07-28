@@ -1,5 +1,6 @@
-/** Wide stage maps (20 cols) — ải 40–60
- * Boss fights 40/45/50/55/60: 60 cols (×3).
+/** Wide stage maps for 40–60.
+ * Non-boss: kéo dài lên 60 cols để trận endgame có chiều sâu hơn.
+ * Boss fights 40/45/50/55/60: 60 cols (×3) với pool lớn hơn.
  * Thiết kế theo element: ép đổi loadout (nước / tối / lửa / băng / độc / trần thấp).
  */
 
@@ -27,6 +28,24 @@ function W(id, name, costCap, rows, extras = {}) {
     }
   }
   return M(id, name, costCap, [WW, ...rows, WW], extras);
+}
+
+function stretchWideRows(rows, factor = 3) {
+  const mul = Math.max(1, Math.floor(Number(factor) || 1));
+  return rows.map((row) =>
+    row
+      .split('')
+      .map((ch) => {
+        if (ch === 'G') return ch + '.'.repeat(Math.max(0, mul - 1));
+        if (ch === 'T') return '.'.repeat(Math.max(0, mul - 1)) + ch;
+        return ch.repeat(mul);
+      })
+      .join('')
+  );
+}
+
+function W3(id, name, costCap, rows, extras = {}) {
+  return WB(id, name, costCap, stretchWideRows(rows, 3), extras);
 }
 
 /** Boss corridor: 60 cols = G/# + xxxx + 54 mid + T/# */
@@ -84,7 +103,8 @@ export const RAW_WIDE_MAPS = {
       bossRow('~~~~ffff....iiii....pppp....dddd....~~~~....ffff..'),
     ],
     {
-      tip: 'Boss fight — map ×3 dài. Segment ~ / f / i / p / d. Pool mang ×5. Focus Hero Boss.',
+      poolMultOverride: 7,
+      tip: 'Boss fight — map ×3 dài. Segment ~ / f / i / p / d. Pool mang lớn. Focus Hero Boss.',
       buffs: [
         ...H_BOSS_NEAR,
         { cells: ['18,3', '19,4'], side: 'hero', kind: 'ATK_UP', value: 1.2 },
@@ -101,10 +121,10 @@ export const RAW_WIDE_MAPS = {
   ),
 
   // Water dominant
-  41: W(
+  41: W3(
     'stage_41',
     'Đầm Lầy Ngập',
-    11,
+    15,
     [
       row('~~~~~~~~~~~~~~'),
       row('~~........~~~~'),
@@ -114,6 +134,7 @@ export const RAW_WIDE_MAPS = {
       row('~~~~~~~~~~~~~~'),
     ],
     {
+      poolMultOverride: 5,
       tip: 'Gần như toàn nước — mang Buff nước. Quái lửa/cạn bị yếu nặng.',
       buffs: [
         ...H_NEAR,
@@ -126,10 +147,10 @@ export const RAW_WIDE_MAPS = {
   ),
 
   // Dark
-  42: W(
+  42: W3(
     'stage_42',
     'Hầm Đèn Tắt',
-    11,
+    15,
     [
       row('dddddddddddddd'),
       row('dd........dddd'),
@@ -139,6 +160,7 @@ export const RAW_WIDE_MAPS = {
       row('dddddddddddddd'),
     ],
     {
+      poolMultOverride: 5,
       tip: 'Toàn bóng tối — Buff tối +100% ATK trên d. Quái không tối bị −35% ATK.',
       buffs: [
         ...H_NEAR,
@@ -151,10 +173,10 @@ export const RAW_WIDE_MAPS = {
   ),
 
   // Fire
-  43: W(
+  43: W3(
     'stage_43',
     'Lò Nung Thép',
-    11,
+    15,
     [
       row('ffffffffffffff'),
       row('ff........ffff'),
@@ -164,6 +186,7 @@ export const RAW_WIDE_MAPS = {
       row('ffffffffffffff'),
     ],
     {
+      poolMultOverride: 5,
       tip: 'Biển lửa — Buff lửa trên f. Đừng đặt quái nước/băng (bị nerf nặng).',
       buffs: [
         ...H_NEAR,
@@ -176,10 +199,10 @@ export const RAW_WIDE_MAPS = {
   ),
 
   // Ice
-  44: W(
+  44: W3(
     'stage_44',
     'Sảnh Băng Giá',
-    11,
+    15,
     [
       row('iiiiiiiiiiiiii'),
       row('ii........iiii'),
@@ -189,6 +212,7 @@ export const RAW_WIDE_MAPS = {
       row('iiiiiiiiiiiiii'),
     ],
     {
+      poolMultOverride: 5,
       tip: 'Toàn băng — Buff băng trên i. Quái lửa đứng đây bị −45% ATK.',
       buffs: [
         ...H_NEAR,
@@ -214,7 +238,8 @@ export const RAW_WIDE_MAPS = {
       bossRow('ppppppdddddddd........ppppppdddddddd........pppppp'),
     ],
     {
-      tip: 'Boss fight — map ×3. Nửa đầu tối/độc, giữa mixed, gần kho ATK quái. Pool ×5. Focus boss ẩn.',
+      poolMultOverride: 7,
+      tip: 'Boss fight — map ×3. Nửa đầu tối/độc, giữa mixed, gần kho ATK quái. Pool lớn. Focus boss ẩn.',
       buffs: [
         ...H_BOSS_NEAR,
         { cells: ['14,3', '15,4'], side: 'hero', kind: 'SPEED_DOWN', value: 0.65 },
@@ -230,10 +255,10 @@ export const RAW_WIDE_MAPS = {
   ),
 
   // Low ceiling caves
-  46: W(
+  46: W3(
     'stage_46',
     'Hang Trần Thấp',
-    12,
+    16,
     [
       row('llllllllllllll'),
       row('ll........llll'),
@@ -243,6 +268,7 @@ export const RAW_WIDE_MAPS = {
       row('llllllllllllll'),
     ],
     {
+      poolMultOverride: 5,
       tip: 'Hang thấp — quái Sợ trần cao trên l: +200% ATK. Tránh ô trần cao (h).',
       buffs: [
         ...H_NEAR,
@@ -255,10 +281,10 @@ export const RAW_WIDE_MAPS = {
   ),
 
   // Water + Dark split lanes
-  47: W(
+  47: W3(
     'stage_47',
     'Sông & Bóng',
-    12,
+    16,
     [
       row('~~~~~~dddddddd'),
       row('~~~~......dddd'),
@@ -268,6 +294,7 @@ export const RAW_WIDE_MAPS = {
       row('~~~~~~dddddddd'),
     ],
     {
+      poolMultOverride: 5,
       tip: 'Làn trên nước + làn dưới tối — đặt Buff nước trên ~, Buff tối trên d.',
       buffs: [
         ...H_NEAR,
@@ -281,10 +308,10 @@ export const RAW_WIDE_MAPS = {
   ),
 
   // Fire + Ice conflict
-  48: W(
+  48: W3(
     'stage_48',
     'Lửa Đối Băng',
-    12,
+    16,
     [
       row('ffffffiiiiiiii'),
       row('ffff......iiii'),
@@ -294,6 +321,7 @@ export const RAW_WIDE_MAPS = {
       row('ffffffiiiiiiii'),
     ],
     {
+      poolMultOverride: 5,
       tip: 'Nửa lửa nửa băng — đặt đúng element. Sai phía = nerf chéo (−45% ATK).',
       buffs: [
         ...H_NEAR,
@@ -306,10 +334,10 @@ export const RAW_WIDE_MAPS = {
   ),
 
   // Poison + low ceiling
-  49: W(
+  49: W3(
     'stage_49',
     'Hang Độc Thấp',
-    12,
+    16,
     [
       row('ppppllllllllll'),
       row('pppp......llll'),
@@ -319,6 +347,7 @@ export const RAW_WIDE_MAPS = {
       row('ppppllllllllll'),
     ],
     {
+      poolMultOverride: 5,
       tip: 'Độc + trần thấp — Buff độc trên p, Sợ trần cao trên l.',
       buffs: [
         ...H_NEAR,
@@ -344,7 +373,8 @@ export const RAW_WIDE_MAPS = {
       bossRow('~~~~ffffiiii~~~~ffffiiii~~~~ffffiiii~~~~ffffiiii~~'),
     ],
     {
-      tip: 'Boss fight — map ×3. Xen i/f/~ + tường choke. Pool ×5. Focus Pháp vương.',
+      poolMultOverride: 7,
+      tip: 'Boss fight — map ×3. Xen i/f/~ + tường choke. Pool lớn. Focus Pháp vương.',
       buffs: [
         ...H_BOSS_NEAR,
         { cells: ['16,3', '16,4'], side: 'hero', kind: 'SILENCE_ZONE', value: 1 },
@@ -360,10 +390,10 @@ export const RAW_WIDE_MAPS = {
     }
   ),
 
-  51: W(
+  51: W3(
     'stage_51',
     'Thác Độc Lửa',
-    12,
+    16,
     [
       row('ffffppppffffpp'),
       row('ff........ppff'),
@@ -373,6 +403,7 @@ export const RAW_WIDE_MAPS = {
       row('ppppffffppppff'),
     ],
     {
+      poolMultOverride: 6,
       tip: 'Lửa ↔ độc xen kẽ + gai giữa — chỉ đặt đúng element; sai ô = yếu.',
       buffs: [
         ...H_NEAR,
@@ -384,10 +415,10 @@ export const RAW_WIDE_MAPS = {
     }
   ),
 
-  52: W(
+  52: W3(
     'stage_52',
     'Hồ Đêm',
-    12,
+    16,
     [
       row('~~~~dddd~~~~dd'),
       row('~~........dd~~'),
@@ -397,6 +428,7 @@ export const RAW_WIDE_MAPS = {
       row('dddd~~~~dddd~~'),
     ],
     {
+      poolMultOverride: 6,
       tip: 'Nước + tối — Buff nước / Buff tối. Hero chậm trên nước, mù trên tối.',
       buffs: [
         ...H_NEAR,
@@ -408,10 +440,10 @@ export const RAW_WIDE_MAPS = {
     }
   ),
 
-  53: W(
+  53: W3(
     'stage_53',
     'Pháo Đài Băng Lửa',
-    13,
+    17,
     [
       row('##ffff##iiii##'),
       row('..ffff..iiii..'),
@@ -421,6 +453,7 @@ export const RAW_WIDE_MAPS = {
       row('##ffff##iiii##'),
     ],
     {
+      poolMultOverride: 6,
       tip: 'Hai pháo đài lửa/băng — chọn 1 phía element hoặc đội hỗn hợp đúng ô.',
       buffs: [
         ...H_NEAR,
@@ -432,10 +465,10 @@ export const RAW_WIDE_MAPS = {
     }
   ),
 
-  54: W(
+  54: W3(
     'stage_54',
     'Mê Cung Tối Thấp',
-    13,
+    17,
     [
       row('ddllddllddlldd'),
       row('dd..ll..dd..ll'),
@@ -445,6 +478,7 @@ export const RAW_WIDE_MAPS = {
       row('llddllddllddll'),
     ],
     {
+      poolMultOverride: 6,
       tip: 'Tối + trần thấp — Buff tối / Sợ trần cao. Sàn thường = −20%~−35% ATK.',
       buffs: [
         ...H_NEAR,
@@ -469,7 +503,8 @@ export const RAW_WIDE_MAPS = {
       bossRow('iiii..........ffff..........iiii..........ffff....'),
     ],
     {
-      tip: 'Boss fight — map ×3. Trần thấp giữa + lửa/băng mép. Pool ×5. Gap-close Thiên tiễn.',
+      poolMultOverride: 7,
+      tip: 'Boss fight — map ×3. Trần thấp giữa + lửa/băng mép. Pool lớn. Gap-close Thiên tiễn.',
       buffs: [
         ...H_BOSS_NEAR,
         { cells: ['14,3', '15,4'], side: 'hero', kind: 'SPEED_UP', value: 1.35 },
@@ -485,10 +520,10 @@ export const RAW_WIDE_MAPS = {
     }
   ),
 
-  56: W(
+  56: W3(
     'stage_56',
     'Bốn Góc Nguyên Tố',
-    13,
+    17,
     [
       row('ffff......iiii'),
       row('ff..........ii'),
@@ -498,6 +533,7 @@ export const RAW_WIDE_MAPS = {
       row('pppp......~~~~'),
     ],
     {
+      poolMultOverride: 6,
       tip: '4 góc: lửa / băng / độc / nước — mỗi góc 1 element. Đặt lệch góc = nerf.',
       buffs: [
         ...H_NEAR,
@@ -509,10 +545,10 @@ export const RAW_WIDE_MAPS = {
     }
   ),
 
-  57: W(
+  57: W3(
     'stage_57',
     'Thành Trì Độc Nước',
-    13,
+    17,
     [
       row('oooooooooooooo'),
       row('~~pp~~pp~~pp~~'),
@@ -522,6 +558,7 @@ export const RAW_WIDE_MAPS = {
       row('oooooooooooooo'),
     ],
     {
+      poolMultOverride: 6,
       tip: 'Hành lang nước+độc giữa tường — Buff nước/độc. Tank cạn đứng đây yếu.',
       buffs: [
         ...H_NEAR,
@@ -532,10 +569,10 @@ export const RAW_WIDE_MAPS = {
     }
   ),
 
-  58: W(
+  58: W3(
     'stage_58',
     'Đấu Trường Lửa',
-    13,
+    17,
     [
       row('..ffffffffff..'),
       row('.ff~~~~~~~~ff.'),
@@ -545,6 +582,7 @@ export const RAW_WIDE_MAPS = {
       row('..ffffffffff..'),
     ],
     {
+      poolMultOverride: 6,
       tip: 'Vành lửa + sông giữa — Buff lửa trên f, Buff nước trên ~. Berserk cạn bị yếu trên cả hai.',
       buffs: [
         ...H_NEAR,
@@ -556,10 +594,10 @@ export const RAW_WIDE_MAPS = {
     }
   ),
 
-  59: W(
+  59: W3(
     'stage_59',
     'Tứ Trụ Element',
-    13,
+    17,
     [
       row('##~~##dd##ff##'),
       row('..~~..dd..ff..'),
@@ -569,6 +607,7 @@ export const RAW_WIDE_MAPS = {
       row('##ii##pp##ll##'),
     ],
     {
+      poolMultOverride: 6,
       tip: '6 trụ element quanh đường giữa — đọc ô trước khi thả. Sai element = −25%~−45% ATK.',
       buffs: [
         ...H_NEAR,
@@ -594,7 +633,8 @@ export const RAW_WIDE_MAPS = {
       bossRow('llllffffiiii~~~~ddddpppp~~~~iiiiffff~~~~ddddpppp~~'),
     ],
     {
-      tip: 'Ải 60 Boss — map ×3 đủ element + gai. Pool ×5. Focus Hoàng đế; đọc từng đoạn trước khi thả.',
+      poolMultOverride: 7,
+      tip: 'Ải 60 Boss — map ×3 đủ element + gai. Pool lớn. Focus Hoàng đế; đọc từng đoạn trước khi thả.',
       buffs: [
         ...H_BOSS_NEAR,
         { cells: ['12,2', '12,5'], side: 'hero', kind: 'DEF_UP', value: 1.2 },

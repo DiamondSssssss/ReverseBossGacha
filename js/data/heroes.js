@@ -1,6 +1,6 @@
 /** Hero AI catalog — mỗi ải 1–40 có tổ hợp hero riêng */
 
-import { COMBAT } from './constants.js?v=102';
+import { COMBAT } from './constants.js?v=104';
 
 export const HEROES = [
   // ——— MAGE ———
@@ -1046,22 +1046,24 @@ export const WAVE_PLANS = {
   },
   40: {
     theme: 'Boss: Vệ Vương Thép',
-    tip: 'Boss fight — map ×3 / pool ×5. Focus Vệ Vương; wave 1 là lính, boss vào đợt 2.',
+    tip: 'Boss fight dài — map ×3 / pool lớn. Focus Vệ Vương; boss ép giao tranh nhiều nhịp.',
     waves: [
       { delay: 0.4, ids: ['hero_support_04', 'hero_warrior_09', 'hero_archer_04', 'hero_mage_06', 'hero_rogue_06'] },
       { delay: 12, ids: ['hero_boss_40', 'hero_stasis_01', 'hero_healer_04', 'hero_tank_04', 'hero_hex_03', 'hero_support_02'] },
       { delay: 26, ids: ['hero_boss_40', 'hero_berserker_04', 'hero_healer_05', 'hero_archer_05', 'hero_mage_07', 'hero_support_01'] },
+      { delay: 42, ids: ['hero_boss_40', 'hero_stasis_02', 'hero_tank_05', 'hero_healer_05', 'hero_shatter_01', 'hero_support_04'] },
     ],
   },
 
   // ——— Ải 41–50: mỗi ải nhấn 1–2 class ———
   41: {
     theme: 'Pháp trận hỗn mang',
-    tip: 'Nhấn Mage + Hexer — Silence / anti-heal / áp sát.',
+    tip: 'Mage + Hexer nhiều đợt trên map dài — Silence / anti-heal / áp sát.',
     waves: [
       { delay: 0.4, ids: ['hero_scout_01', 'hero_support_04', 'hero_mage_06', 'hero_mage_07', 'hero_mage_08', 'hero_hex_03'] },
       { delay: 12, ids: ['hero_hex_04', 'hero_healer_04', 'hero_mage_07', 'hero_archer_04'] },
       { delay: 24, ids: ['hero_mage_07', 'hero_stasis_03', 'hero_hex_05', 'hero_tank_04', 'hero_warrior_10', 'hero_healer_05'] },
+      { delay: 37, ids: ['hero_mage_08', 'hero_hex_07', 'hero_support_01', 'hero_support_04', 'hero_rogue_07'] },
     ],
   },
   42: {
@@ -1071,6 +1073,7 @@ export const WAVE_PLANS = {
       { delay: 0.35, ids: ['hero_scout_01', 'hero_archer_04', 'hero_archer_05', 'hero_rogue_06'] },
       { delay: 11, ids: ['hero_archer_06', 'hero_support_04', 'hero_healer_06', 'hero_hex_06', 'hero_mage_06', 'hero_support_03'] },
       { delay: 22, ids: ['hero_archer_05', 'hero_stasis_02', 'hero_archer_04', 'hero_tank_04', 'hero_berserker_04', 'hero_healer_04'] },
+      { delay: 35, ids: ['hero_archer_06', 'hero_support_03', 'hero_support_04', 'hero_hex_05', 'hero_rogue_09'] },
     ],
   },
   43: {
@@ -1080,6 +1083,7 @@ export const WAVE_PLANS = {
       { delay: 0.5, ids: ['hero_scout_01', 'hero_tank_05', 'hero_tank_04', 'hero_healer_05'] },
       { delay: 13, ids: ['hero_tank_05', 'hero_stasis_01', 'hero_warrior_11', 'hero_healer_04', 'hero_hex_04'] },
       { delay: 26, ids: ['hero_tank_05', 'hero_healer_05', 'hero_mage_07', 'hero_archer_04', 'hero_rogue_07', 'hero_support_04'] },
+      { delay: 40, ids: ['hero_tank_05', 'hero_stasis_01', 'hero_shatter_01', 'hero_healer_05', 'hero_support_02'] },
     ],
   },
   44: {
@@ -1089,15 +1093,17 @@ export const WAVE_PLANS = {
       { delay: 0.35, ids: ['hero_scout_01', 'hero_berserker_04', 'hero_berserker_05', 'hero_rogue_06'] },
       { delay: 10, ids: ['hero_berserker_05', 'hero_stasis_02', 'hero_healer_04', 'hero_hex_04', 'hero_warrior_10', 'hero_support_01'] },
       { delay: 21, ids: ['hero_berserker_05', 'hero_tank_04', 'hero_healer_05', 'hero_archer_05', 'hero_hex_03', 'hero_support_04'] },
+      { delay: 34, ids: ['hero_berserker_05', 'hero_bomber_01', 'hero_support_03', 'hero_hex_07', 'hero_stasis_02'] },
     ],
   },
   45: {
     theme: 'Boss: Chúa Bóng Đêm',
-    tip: 'Boss fight — map ×3 / pool ×5. Focus Chúa Bóng; Mắt thần + anti-heal bắt buộc.',
+    tip: 'Boss fight — map ×3 / pool lớn. Focus Chúa Bóng; Mắt thần + anti-heal bắt buộc.',
     waves: [
       { delay: 0.35, ids: ['hero_rogue_06', 'hero_rogue_07', 'hero_hex_04', 'hero_scout_01', 'hero_support_03'] },
       { delay: 11, ids: ['hero_boss_45', 'hero_healer_05', 'hero_hex_05', 'hero_archer_04', 'hero_support_04'] },
       { delay: 24, ids: ['hero_boss_45', 'hero_stasis_01', 'hero_rogue_09', 'hero_berserker_04', 'hero_tank_04', 'hero_mage_07'] },
+      { delay: 40, ids: ['hero_boss_45', 'hero_rogue_09', 'hero_support_03', 'hero_hex_07', 'hero_healer_05'] },
     ],
   },
   46: {
@@ -1108,6 +1114,7 @@ export const WAVE_PLANS = {
       { delay: 11, ids: ['hero_warrior_11', 'hero_healer_04', 'hero_hex_04', 'hero_tank_04'] },
       { delay: 22, ids: ['hero_warrior_10', 'hero_stasis_02', 'hero_warrior_11', 'hero_healer_05', 'hero_mage_07', 'hero_archer_04', 'hero_support_04'] },
       { delay: 34, ids: ['hero_warrior_11', 'hero_tank_05', 'hero_healer_05', 'hero_berserker_04', 'hero_rogue_07'] },
+      { delay: 48, ids: ['hero_warrior_11', 'hero_support_01', 'hero_support_04', 'hero_shatter_01', 'hero_tank_05'] },
     ],
   },
   47: {
@@ -1118,6 +1125,7 @@ export const WAVE_PLANS = {
       { delay: 10, ids: ['hero_hex_05', 'hero_stasis_03', 'hero_healer_05', 'hero_tank_04', 'hero_archer_05'] },
       { delay: 20, ids: ['hero_hex_04', 'hero_berserker_05', 'hero_warrior_10', 'hero_rogue_07'] },
       { delay: 31, ids: ['hero_hex_05', 'hero_hex_04', 'hero_tank_05', 'hero_healer_05', 'hero_mage_07', 'hero_archer_04', 'hero_support_04'] },
+      { delay: 44, ids: ['hero_hex_07', 'hero_support_01', 'hero_support_04', 'hero_stasis_03', 'hero_archer_06'] },
     ],
   },
   48: {
@@ -1128,6 +1136,7 @@ export const WAVE_PLANS = {
       { delay: 11, ids: ['hero_archer_05', 'hero_hex_04', 'hero_healer_04', 'hero_tank_04'] },
       { delay: 22, ids: ['hero_mage_07', 'hero_stasis_01', 'hero_archer_04', 'hero_healer_05', 'hero_warrior_11', 'hero_rogue_06'] },
       { delay: 34, ids: ['hero_archer_05', 'hero_mage_06', 'hero_healer_05', 'hero_hex_05', 'hero_berserker_04', 'hero_support_04'] },
+      { delay: 47, ids: ['hero_archer_06', 'hero_support_03', 'hero_support_04', 'hero_mage_08', 'hero_stasis_02'] },
     ],
   },
   49: {
@@ -1138,15 +1147,17 @@ export const WAVE_PLANS = {
       { delay: 9, ids: ['hero_tank_05', 'hero_stasis_02', 'hero_healer_05', 'hero_mage_07', 'hero_berserker_04'] },
       { delay: 18, ids: ['hero_warrior_11', 'hero_hex_05', 'hero_archer_05', 'hero_healer_04', 'hero_rogue_06'] },
       { delay: 28, ids: ['hero_berserker_05', 'hero_tank_05', 'hero_mage_07', 'hero_healer_05', 'hero_hex_05', 'hero_stasis_01', 'hero_support_04'] },
+      { delay: 42, ids: ['hero_support_01', 'hero_support_03', 'hero_support_04', 'hero_phoenix_01', 'hero_shatter_01'] },
     ],
   },
   50: {
     theme: 'Boss: Pháp Vương Hỗn Nguyên',
-    tip: 'Boss fight — map ×3 / pool ×5. Focus Pháp Vương; Silence / áp sát mage.',
+    tip: 'Boss fight — map ×3 / pool lớn. Focus Pháp Vương; Silence / áp sát mage.',
     waves: [
       { delay: 0.3, ids: ['hero_support_04', 'hero_mage_06', 'hero_mage_07', 'hero_hex_04', 'hero_archer_04'] },
       { delay: 12, ids: ['hero_boss_50', 'hero_stasis_03', 'hero_healer_05', 'hero_tank_04', 'hero_warrior_10', 'hero_support_02'] },
       { delay: 26, ids: ['hero_boss_50', 'hero_mage_08', 'hero_healer_05', 'hero_hex_05', 'hero_shatter_01', 'hero_support_03'] },
+      { delay: 43, ids: ['hero_boss_50', 'hero_stasis_03', 'hero_support_04', 'hero_healer_05', 'hero_archer_06', 'hero_hex_07'] },
     ],
   },
 
@@ -1158,6 +1169,7 @@ export const WAVE_PLANS = {
       { delay: 0.35, ids: ['hero_scout_02', 'hero_support_04', 'hero_bomber_01', 'hero_berserker_04', 'hero_rogue_06', 'hero_archer_04'] },
       { delay: 11, ids: ['hero_stasis_01', 'hero_tank_04', 'hero_healer_04', 'hero_hex_04', 'hero_warrior_10', 'hero_mage_06'] },
       { delay: 23, ids: ['hero_bomber_01', 'hero_berserker_05', 'hero_shatter_01', 'hero_healer_05', 'hero_rogue_07'] },
+      { delay: 37, ids: ['hero_bomber_01', 'hero_support_03', 'hero_support_04', 'hero_stasis_02', 'hero_hex_07'] },
     ],
   },
   52: {
@@ -1167,6 +1179,7 @@ export const WAVE_PLANS = {
       { delay: 0.4, ids: ['hero_scout_02', 'hero_phoenix_01', 'hero_stasis_02', 'hero_healer_04', 'hero_tank_03', 'hero_mage_06'] },
       { delay: 12, ids: ['hero_phoenix_01', 'hero_stasis_01', 'hero_healer_05', 'hero_warrior_11', 'hero_hex_04', 'hero_archer_04'] },
       { delay: 24, ids: ['hero_healer_05', 'hero_tank_05', 'hero_phoenix_01', 'hero_stasis_03', 'hero_berserker_04', 'hero_mage_07', 'hero_hex_05', 'hero_support_04'] },
+      { delay: 39, ids: ['hero_phoenix_01', 'hero_stasis_01', 'hero_support_02', 'hero_support_04', 'hero_healer_06'] },
     ],
   },
   53: {
@@ -1177,6 +1190,7 @@ export const WAVE_PLANS = {
       { delay: 11, ids: ['hero_tank_05', 'hero_shatter_01', 'hero_warrior_10', 'hero_healer_04', 'hero_hex_03'] },
       { delay: 22, ids: ['hero_shatter_01', 'hero_stasis_01', 'hero_tank_04', 'hero_berserker_05', 'hero_mage_06', 'hero_rogue_09'] },
       { delay: 34, ids: ['hero_tank_05', 'hero_shatter_01', 'hero_hex_07', 'hero_healer_05', 'hero_archer_05', 'hero_mage_07', 'hero_support_04'] },
+      { delay: 49, ids: ['hero_shatter_01', 'hero_stasis_01', 'hero_support_01', 'hero_support_04', 'hero_mage_08'] },
     ],
   },
   54: {
@@ -1187,15 +1201,17 @@ export const WAVE_PLANS = {
       { delay: 10, ids: ['hero_rogue_08', 'hero_stasis_03', 'hero_hex_05', 'hero_healer_05', 'hero_archer_04', 'hero_mage_06', 'hero_support_03'] },
       { delay: 21, ids: ['hero_rogue_09', 'hero_berserker_04', 'hero_hex_07', 'hero_tank_04', 'hero_mage_08'] },
       { delay: 32, ids: ['hero_rogue_07', 'hero_hex_05', 'hero_archer_05', 'hero_healer_05', 'hero_warrior_11', 'hero_rogue_06'] },
+      { delay: 46, ids: ['hero_rogue_09', 'hero_support_03', 'hero_support_04', 'hero_stasis_03', 'hero_hex_charm'] },
     ],
   },
   55: {
     theme: 'Boss: Thiên Tiễn Hoàng',
-    tip: 'Boss fight — map ×3 / pool ×5. Focus Thiên Tiễn; gap-close / silence bắt buộc.',
+    tip: 'Boss fight — map ×3 / pool lớn. Focus Thiên Tiễn; gap-close / silence bắt buộc.',
     waves: [
       { delay: 0.35, ids: ['hero_support_04', 'hero_archer_04', 'hero_archer_05', 'hero_healer_04', 'hero_mage_06'] },
       { delay: 11, ids: ['hero_boss_55', 'hero_stasis_02', 'hero_healer_05', 'hero_hex_06', 'hero_tank_04', 'hero_support_02'] },
       { delay: 24, ids: ['hero_boss_55', 'hero_archer_06', 'hero_healer_05', 'hero_berserker_04', 'hero_mage_08', 'hero_hex_charm', 'hero_support_03'] },
+      { delay: 41, ids: ['hero_boss_55', 'hero_support_04', 'hero_archer_06', 'hero_stasis_02', 'hero_healer_06'] },
     ],
   },
   56: {
@@ -1206,6 +1222,7 @@ export const WAVE_PLANS = {
       { delay: 10, ids: ['hero_mage_07', 'hero_stasis_03', 'hero_healer_04', 'hero_warrior_11', 'hero_hex_04', 'hero_archer_04'] },
       { delay: 20, ids: ['hero_mage_08', 'hero_berserker_05', 'hero_tank_04', 'hero_hex_05', 'hero_healer_05'] },
       { delay: 30, ids: ['hero_mage_07', 'hero_mage_06', 'hero_warrior_11', 'hero_healer_05', 'hero_rogue_07', 'hero_hex_07', 'hero_support_04'] },
+      { delay: 44, ids: ['hero_mage_08', 'hero_support_01', 'hero_support_04', 'hero_stasis_03', 'hero_archer_06'] },
     ],
   },
   57: {
@@ -1216,6 +1233,7 @@ export const WAVE_PLANS = {
       { delay: 12, ids: ['hero_tank_05', 'hero_healer_04', 'hero_warrior_11', 'hero_shatter_01', 'hero_mage_06'] },
       { delay: 24, ids: ['hero_tank_05', 'hero_healer_05', 'hero_phoenix_01', 'hero_stasis_02', 'hero_hex_05', 'hero_archer_05', 'hero_berserker_04'] },
       { delay: 36, ids: ['hero_tank_05', 'hero_tank_04', 'hero_healer_05', 'hero_warrior_10', 'hero_hex_07', 'hero_mage_07', 'hero_support_04'] },
+      { delay: 51, ids: ['hero_tank_05', 'hero_stasis_01', 'hero_support_02', 'hero_support_04', 'hero_phoenix_01'] },
     ],
   },
   58: {
@@ -1226,6 +1244,7 @@ export const WAVE_PLANS = {
       { delay: 9, ids: ['hero_berserker_05', 'hero_stasis_02', 'hero_healer_04', 'hero_hex_04', 'hero_warrior_10', 'hero_archer_04'] },
       { delay: 18, ids: ['hero_berserker_05', 'hero_bomber_01', 'hero_tank_04', 'hero_healer_05', 'hero_mage_07'] },
       { delay: 28, ids: ['hero_berserker_05', 'hero_rogue_09', 'hero_hex_05', 'hero_archer_05', 'hero_stasis_01', 'hero_shatter_01', 'hero_support_04'] },
+      { delay: 42, ids: ['hero_berserker_05', 'hero_bomber_01', 'hero_support_03', 'hero_support_04', 'hero_stasis_02'] },
     ],
   },
   59: {
@@ -1236,16 +1255,18 @@ export const WAVE_PLANS = {
       { delay: 9, ids: ['hero_tank_05', 'hero_healer_05', 'hero_archer_06', 'hero_berserker_05', 'hero_shatter_01'] },
       { delay: 18, ids: ['hero_phoenix_01', 'hero_stasis_01', 'hero_bomber_01', 'hero_hex_07', 'hero_mage_07', 'hero_warrior_10', 'hero_healer_04'] },
       { delay: 28, ids: ['hero_tank_05', 'hero_archer_05', 'hero_berserker_05', 'hero_rogue_07', 'hero_healer_05', 'hero_mage_08', 'hero_hex_05', 'hero_support_04'] },
+      { delay: 43, ids: ['hero_phoenix_01', 'hero_stasis_03', 'hero_support_01', 'hero_support_03', 'hero_support_04', 'hero_shatter_01'] },
     ],
   },
   60: {
     theme: 'Boss: Hoàng Đế Tàn Lửa',
-    tip: 'Ải 60 Boss — map ×3 / pool ×5. Focus Hoàng Đế; mọi utility. Wave sau khi đợt trước hết.',
+    tip: 'Ải 60 Boss cực dài — map ×3 / pool lớn. Focus Hoàng Đế; giữ tài nguyên cho các đợt cuối.',
     waves: [
       { delay: 0.25, ids: ['hero_support_04', 'hero_warrior_11', 'hero_hex_05', 'hero_archer_06', 'hero_healer_05', 'hero_bomber_01'] },
       { delay: 10, ids: ['hero_boss_60', 'hero_stasis_01', 'hero_tank_05', 'hero_mage_08', 'hero_shatter_01', 'hero_phoenix_01', 'hero_support_02'] },
       { delay: 22, ids: ['hero_boss_60', 'hero_stasis_02', 'hero_healer_05', 'hero_berserker_05', 'hero_rogue_07', 'hero_hex_07', 'hero_archer_05', 'hero_support_01'] },
       { delay: 36, ids: ['hero_boss_60', 'hero_stasis_03', 'hero_phoenix_01', 'hero_bomber_01', 'hero_tank_05', 'hero_mage_08', 'hero_healer_05', 'hero_warrior_11', 'hero_support_04'] },
+      { delay: 54, ids: ['hero_boss_60', 'hero_stasis_01', 'hero_stasis_03', 'hero_support_02', 'hero_support_03', 'hero_support_04', 'hero_shatter_01'] },
     ],
   },
 

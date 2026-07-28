@@ -3,17 +3,17 @@ import {
   TERRAIN_LABELS,
   RARITY_COLORS,
   HERO_CLASS_LABELS,
-} from '../data/constants.js?v=102';
-import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=102';
-import { monsterScaleForLevel } from '../data/heroes.js?v=102';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=102';
-import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=102';
+} from '../data/constants.js?v=104';
+import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=104';
+import { monsterScaleForLevel } from '../data/heroes.js?v=104';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=104';
+import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=104';
 import {
   mapUsedCost,
   placeMonster,
   removePlacement,
   totalPlacements,
-} from '../core/dungeon.js?v=102';
+} from '../core/dungeon.js?v=104';
 import {
   loadoutMaxPoolCost,
   loadoutPoolCost,
@@ -24,18 +24,18 @@ import {
   suggestLoadout,
   tryAddToLoadout,
   tryRemoveFromLoadout,
-} from '../core/loadout.js?v=102';
-import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=102';
-import { attachSetupBoardFx } from './setupBoardFx.js?v=102';
-import { playGhostWalk } from './setupPreview.js?v=102';
-import { saveState } from '../core/storage.js?v=102';
+} from '../core/loadout.js?v=104';
+import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=104';
+import { attachSetupBoardFx } from './setupBoardFx.js?v=104';
+import { playGhostWalk } from './setupPreview.js?v=104';
+import { saveState } from '../core/storage.js?v=104';
 import {
   hideMonsterTip,
   monsterTipHtml,
-} from './monsterTip.js?v=102';
+} from './monsterTip.js?v=104';
 import {
   displayMonsterStats,
-} from '../core/monsterUpgrade.js?v=102';
+} from '../core/monsterUpgrade.js?v=104';
 import {
   validateChallengeLoadout,
   tryAddChallengeLoadout,
@@ -46,7 +46,15 @@ import {
   monsterStageLevelForRun,
   monsterUpgradeLevelForRun,
   monsterStatMulForRun,
-} from '../core/challenge.js?v=102';
+} from '../core/challenge.js?v=104';
+import {
+  hardRarityBlockReason,
+  hardRaritySummary,
+  sanitizeHardLoadout,
+  suggestHardLoadout,
+  tryAddHardLoadout,
+  validateHardLoadout,
+} from '../data/hardMode.js?v=104';
 
 function shortName(name) {
   if (!name) return '?';
@@ -267,16 +275,23 @@ export function renderScout(root, ctx) {
       run.level,
       poolMult
     );
+    if (run.mode === 'hard' && run.hardRarityLimits) {
+      run.loadout = sanitizeHardLoadout(run.hardRarityLimits, run.loadout);
+    }
     if (!loadoutUnitCount(run.loadout)) {
       run.loadout =
         run.mode === 'challenge' && run.challenge
           ? suggestChallengeLoadout(run.challenge, vault, loadoutRefCap(map), run.level, poolMult)
-          : suggestLoadout(vault, loadoutRefCap(map), run.level, poolMult);
+          : run.mode === 'hard' && run.hardRarityLimits
+            ? suggestHardLoadout(run.hardRarityLimits, vault, loadoutRefCap(map), run.level, poolMult)
+            : suggestLoadout(vault, loadoutRefCap(map), run.level, poolMult);
     }
   } else if (!lockLoadout) {
     run.loadout = sanitizeLoadout(run.loadout, vault, loadoutRefCap(map), run.level, poolMult);
     if (run.mode === 'challenge' && run.challenge) {
       run.loadout = sanitizeChallengeLoadout(run.challenge, run.loadout);
+    } else if (run.mode === 'hard' && run.hardRarityLimits) {
+      run.loadout = sanitizeHardLoadout(run.hardRarityLimits, run.loadout);
     }
   }
 
@@ -294,6 +309,9 @@ export function renderScout(root, ctx) {
     }
   } else if (run.mode === 'hard' && run.hardRules) {
     tips.unshift(`Khó: ${run.hardRules}`);
+    if (run.hardRarityLimits) {
+      tips.unshift(`Giới hạn mang theo: ${hardRaritySummary(run.hardRarityLimits)}`);
+    }
     if (run.isReplay) tips.unshift('Replay — thắng không tăng tiến độ, thưởng giảm');
   } else if (run.isReplay) {
     tips.unshift('Replay — thắng không tăng tiến độ, thưởng giảm');
@@ -318,6 +336,7 @@ export function renderScout(root, ctx) {
   function loadoutPanelHtml() {
     const loadout = run.loadout || {};
     const isChallenge = run.mode === 'challenge' && run.challenge;
+    const isHard = run.mode === 'hard' && run.hardRarityLimits;
     const stageLv = monsterStageLevelForRun(run);
     const statMul = monsterStatMulForRun(run);
     const stageLabel = isChallenge
@@ -367,10 +386,24 @@ export function renderScout(root, ctx) {
         const have = vault[m.id] || 0;
         const inLoad = loadout[m.id] || 0;
         const left = have - inLoad;
-        const hardBan = isChallenge ? challengeHardBlockReason(run.challenge, m) : null;
+        const hardBan = isChallenge
+          ? challengeHardBlockReason(run.challenge, m)
+          : isHard
+            ? hardRarityBlockReason(run.hardRarityLimits, m)
+            : null;
         const trial = isChallenge
           ? tryAddChallengeLoadout(run.challenge, loadout, vault, m.id, refCap, run.level, poolMult)
-          : tryAddToLoadout(loadout, vault, m.id, refCap, run.level);
+          : isHard
+            ? tryAddHardLoadout(
+                run.hardRarityLimits,
+                loadout,
+                vault,
+                m.id,
+                refCap,
+                run.level,
+                poolMult
+              )
+            : tryAddToLoadout(loadout, vault, m.id, refCap, run.level);
         const blocked = !!hardBan || (left > 0 && !trial.ok && trial.reason !== 'Hết số lượng trong kho');
         const full = left <= 0 || !!hardBan;
         const upLv = monsterUpgradeLevelForRun(run, state, m.id);
@@ -421,7 +454,9 @@ export function renderScout(root, ctx) {
             ${
               isChallenge
                 ? `<p class="muted" style="margin:4px 0 0;font-size:0.72rem;color:var(--seal-deep)">Giới hạn: ${challengeConstraintSummary(run.challenge)}</p>`
-                : ''
+                : isHard
+                  ? `<p class="muted" style="margin:4px 0 0;font-size:0.72rem;color:var(--seal-deep)">Giới hạn Khó: ${hardRaritySummary(run.hardRarityLimits)}</p>`
+                  : ''
             }
             <p class="stat-stage-banner">${stageBanner}</p>
           </div>
@@ -523,7 +558,17 @@ export function renderScout(root, ctx) {
                 run.level,
                 poolMult
               )
-            : tryAddToLoadout(run.loadout, vault, id, refCap, run.level, poolMult);
+            : run.mode === 'hard' && run.hardRarityLimits
+              ? tryAddHardLoadout(
+                  run.hardRarityLimits,
+                  run.loadout,
+                  vault,
+                  id,
+                  refCap,
+                  run.level,
+                  poolMult
+                )
+              : tryAddToLoadout(run.loadout, vault, id, refCap, run.level, poolMult);
         if (!res.ok) {
           toast(res.reason);
           return;
@@ -573,7 +618,9 @@ export function renderScout(root, ctx) {
         run.loadout =
           run.mode === 'challenge' && run.challenge
             ? suggestChallengeLoadout(run.challenge, vault, refCap, run.level, poolMult)
-            : suggestLoadout(vault, refCap, run.level, poolMult);
+            : run.mode === 'hard' && run.hardRarityLimits
+              ? suggestHardLoadout(run.hardRarityLimits, vault, refCap, run.level, poolMult)
+              : suggestLoadout(vault, refCap, run.level, poolMult);
         refreshLoadout();
         toast('Đã gợi ý loadout');
       };
@@ -685,6 +732,13 @@ export function renderScout(root, ctx) {
       );
       if (blocking.length) {
         toast(blocking[0]);
+        return;
+      }
+    } else if (run.mode === 'hard' && run.hardRarityLimits) {
+      clean = sanitizeHardLoadout(run.hardRarityLimits, clean);
+      const check = validateHardLoadout(run.hardRarityLimits, clean);
+      if (!check.ok && check.errors.length) {
+        toast(check.errors[0]);
         return;
       }
     }

@@ -1,7 +1,7 @@
 /** Per-stage continuous battle maps — 1 ải = 1 map */
 
-import { TERRAIN } from './rooms.js?v=102';
-import { RAW_WIDE_MAPS } from './mapsWide.js?v=102';
+import { TERRAIN } from './rooms.js?v=104';
+import { RAW_WIDE_MAPS } from './mapsWide.js?v=104';
 
 export const TILE = {
   WALL: '#',
@@ -94,6 +94,7 @@ export function compileMap(def) {
     id: def.id,
     name: def.name,
     tip: def.tip || '',
+    poolMultOverride: Number(def.poolMultOverride) || null,
     cols,
     rows,
     cellSize: def.cellSize || 44,
@@ -113,6 +114,46 @@ export function compileMap(def) {
     walkable,
     placements: [],
   };
+}
+
+function stretchTileChar(ch, factor) {
+  if (ch === TILE.GATE) return ch + '.'.repeat(Math.max(0, factor - 1));
+  if (ch === TILE.TREASURE) return '.'.repeat(Math.max(0, factor - 1)) + ch;
+  return ch.repeat(factor);
+}
+
+function stretchCells(cells, factor) {
+  const out = [];
+  for (const cell of cells || []) {
+    const [colRaw, rowRaw] = String(cell).split(',');
+    const col = Number(colRaw);
+    const row = Number(rowRaw);
+    if (!Number.isFinite(col) || !Number.isFinite(row)) continue;
+    for (let i = 0; i < factor; i++) out.push(`${col * factor + i},${row}`);
+  }
+  return out;
+}
+
+/** Kéo dài map theo trục ngang để trận kéo dài hơn mà vẫn giữ layout gốc. */
+export function stretchCompiledMap(map, factor = 3) {
+  const mul = Math.max(1, Math.floor(Number(factor) || 1));
+  if (mul <= 1) return map;
+  const tiles = map.tiles.map((row) =>
+    row.map((ch) => stretchTileChar(ch, mul)).join('')
+  );
+  const buffs = (map.buffs || []).map((b) => ({
+    ...b,
+    cells: stretchCells(b.cells, mul),
+  }));
+  return compileMap({
+    id: map.id,
+    name: map.name,
+    costCap: map.baseCostCap || map.costCap,
+    tiles,
+    tip: map.tip,
+    buffs,
+    poolMultOverride: map.poolMultOverride || null,
+  });
 }
 
 export function terrainAt(map, col, row) {

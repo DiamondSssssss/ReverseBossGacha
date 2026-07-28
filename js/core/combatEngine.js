@@ -1,17 +1,17 @@
-import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=102';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=102';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=102';
-import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=102';
-import { mapUsedCost } from './dungeon.js?v=102';
-import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=102';
-import { ParticleSystem } from '../render/particles.js?v=102';
+import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=104';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=104';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=104';
+import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=104';
+import { mapUsedCost } from './dungeon.js?v=104';
+import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=104';
+import { ParticleSystem } from '../render/particles.js?v=104';
 import {
   getMonsterSprite,
   getHeroSprite,
   drawSpriteAt,
-} from '../render/sprites.js?v=102';
-import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=102';
-import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=102';
+} from '../render/sprites.js?v=104';
+import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=104';
+import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=104';
 import {
   computeHeroAttackDamage,
   applyIncomingDamage,
@@ -47,10 +47,10 @@ import {
   ensureHeroSkillState,
   tryEnterStasisRevive,
   tickStasisRevive,
-} from './ai/skills.js?v=102';
-import { getTileModifiers, spawnMonsterStats, elementAuraActive, elementAuraTag } from './ai/tileModifiers.js?v=102';
-import { dist } from './ai/targeting.js?v=102';
-import { getHeroProfile } from './ai/profiles.js?v=102';
+} from './ai/skills.js?v=104';
+import { getTileModifiers, spawnMonsterStats, elementAuraActive, elementAuraTag } from './ai/tileModifiers.js?v=104';
+import { dist } from './ai/targeting.js?v=104';
+import { getHeroProfile } from './ai/profiles.js?v=104';
 import {
   patternForHero,
   patternForMonster,
@@ -58,7 +58,7 @@ import {
   tickAttack,
   ensureAttackState,
   resolveDisplayAnim,
-} from './ai/attackPatterns.js?v=102';
+} from './ai/attackPatterns.js?v=104';
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
