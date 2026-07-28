@@ -1,5 +1,5 @@
-import { getHeroProfile } from './profiles.js?v=100';
-import { scoreMonsterForHero, dist } from './targeting.js?v=100';
+import { getHeroProfile } from './profiles.js?v=101';
+import { scoreMonsterForHero, dist } from './targeting.js?v=101';
 import {
   ensureHeroSkillState,
   tryActivateShield,
@@ -7,8 +7,8 @@ import {
   tickStealthRegen,
   tryHealAlly,
   applySlow,
-} from './skills.js?v=100';
-import { findPath, findPathAway, buildBlockedFromMap } from '../pathfinding.js?v=100';
+} from './skills.js?v=101';
+import { findPath, findPathAway, buildBlockedFromMap } from '../pathfinding.js?v=101';
 
 /**
  * Decide hero combat intent for this frame.
@@ -238,3 +238,4 @@ export function rebuildKitePath(hero, threat, ctx) {
     hero.pathIdx = 0;
   }
 }
+

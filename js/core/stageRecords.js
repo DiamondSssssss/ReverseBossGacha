@@ -1,5 +1,5 @@
-import { apiUrl } from '../config.js?v=100';
-import { api, isLoggedIn } from './auth.js?v=100';
+import { apiUrl } from '../config.js?v=101';
+import { api, isLoggedIn } from './auth.js?v=101';
 
 async function publicApi(path) {
   const res = await fetch(apiUrl(path));
@@ -41,3 +41,4 @@ export async function submitStageBestCost(mode, stage, cost) {
     }),
   });
 }
+

@@ -1,4 +1,4 @@
-import { api, isLoggedIn } from './auth.js?v=100';
+import { api, isLoggedIn } from './auth.js?v=101';
 
 function sanitize(state) {
   const {
@@ -113,3 +113,4 @@ export function pickBetterSave(local, cloud) {
     (Number(s.souls) || 0) * 0.01;
   return score(cloud) > score(local) ? cloud : local;
 }
+

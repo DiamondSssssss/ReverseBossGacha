@@ -1,10 +1,10 @@
-import { MONSTERS } from '../data/monsters.js?v=100';
-import { RARITY_COLORS, RARITY_LABELS, MAX_STAGE } from '../data/constants.js?v=100';
-import { monsterDisplayUrl } from '../render/sprites.js?v=100';
-import { fetchLeaderboard, fetchPlayerProfile } from '../core/leaderboard.js?v=100';
-import { getUser } from '../core/auth.js?v=100';
-import { titleName } from '../core/challenge.js?v=100';
-import { CHALLENGES } from '../data/challenges.js?v=100';
+import { MONSTERS } from '../data/monsters.js?v=101';
+import { RARITY_COLORS, RARITY_LABELS, MAX_STAGE } from '../data/constants.js?v=101';
+import { monsterDisplayUrl } from '../render/sprites.js?v=101';
+import { fetchLeaderboard, fetchPlayerProfile } from '../core/leaderboard.js?v=101';
+import { getUser } from '../core/auth.js?v=101';
+import { titleName } from '../core/challenge.js?v=101';
+import { CHALLENGES } from '../data/challenges.js?v=101';
 
 const CHALLENGE_TOTAL = CHALLENGES.length || 10;
 
@@ -218,3 +218,4 @@ export async function renderLeaderboard(root, ctx) {
   root.querySelector('#lb-refresh').onclick = () => load();
   await load();
 }
+

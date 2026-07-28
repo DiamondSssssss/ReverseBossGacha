@@ -1,20 +1,20 @@
-import { MONSTERS } from '../data/monsters.js?v=100';
+import { MONSTERS } from '../data/monsters.js?v=101';
 import {
   RARITY_COLORS,
   RARITY_LABELS,
   INVENTORY_CAP,
   MONSTER_UPGRADE,
-} from '../data/constants.js?v=100';
-import { monsterDisplayUrl } from '../render/sprites.js?v=100';
+} from '../data/constants.js?v=101';
+import { monsterDisplayUrl } from '../render/sprites.js?v=101';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,
   tryUpgradeMonster,
   upgradeMonsterCost,
-} from '../core/monsterUpgrade.js?v=100';
-import { evaluateAchievements } from '../core/achievements.js?v=100';
-import { describeMonsterKit } from '../data/skillDesc.js?v=100';
-import { inventoryOwnCap } from '../core/storage.js?v=100';
+} from '../core/monsterUpgrade.js?v=101';
+import { evaluateAchievements } from '../core/achievements.js?v=101';
+import { describeMonsterKit, describeMonsterSummary } from '../data/skillDesc.js?v=101';
+import { inventoryOwnCap } from '../core/storage.js?v=101';
 
 const filters = {
   q: '',
@@ -83,9 +83,10 @@ function filterList(state) {
       const kitText = describeMonsterKit(m)
         .map((k) => `${k.name} ${k.desc}`)
         .join(' ');
+      const summary = describeMonsterSummary(m);
       const hay =
         count > 0
-          ? `${m.name} ${m.description} ${m.id} ${kitText}`.toLowerCase()
+          ? `${m.name} ${summary} ${m.id} ${kitText}`.toLowerCase()
           : `${RARITY_LABELS[m.rarity]} ★${m.rarity}`.toLowerCase();
       if (!hay.includes(q) && !(count <= 0 && q.includes('?'))) return false;
     }
@@ -144,7 +145,7 @@ function renderCards(state) {
           <div class="muted" style="font-size:0.75rem;margin-top:2px">Cost ${m.cost} · HP ${st.hp} · ATK ${st.atk}${upLv ? ` · Lv↑${upLv}` : ''}</div>
           ${m.drawback ? `<div class="desc drawback-line">⚠ ${escapeHtml(m.drawback)}</div>` : ''}
           ${kitHtml(m)}
-          <div class="desc">${escapeHtml(m.description || '')}</div>
+          <div class="desc">${escapeHtml(describeMonsterSummary(m))}</div>
           <div class="count">Sở hữu ×${count}/${inventoryOwnCap(m.id)}</div>
           <div class="upgrade-row">
             <button type="button" class="btn-upgrade-mon" data-upgrade="${m.id}" ${maxed || !canAfford ? 'disabled' : ''}>
@@ -282,3 +283,4 @@ export function renderCollection(root, ctx) {
 
   bindUpgradeButtons(root, ctx);
 }
+

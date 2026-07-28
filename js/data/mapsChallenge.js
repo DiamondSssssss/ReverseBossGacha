@@ -1,4 +1,4 @@
-import { compileMap } from './maps.js?v=100';
+import { compileMap } from './maps.js?v=101';
 
 function M(id, name, costCap, tiles, extras = {}) {
   return { id, name, costCap, tiles, ...extras };
@@ -245,3 +245,4 @@ export function getChallengeMap(mapId) {
     treasureHp: raw?.treasureHp,
   };
 }
+

@@ -1,10 +1,10 @@
-import { RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=100';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=100';
-import { describeMonsterKit } from '../data/skillDesc.js?v=100';
+import { RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=101';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=101';
+import { describeMonsterKit, describeMonsterSummary } from '../data/skillDesc.js?v=101';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,
-} from '../core/monsterUpgrade.js?v=100';
+} from '../core/monsterUpgrade.js?v=101';
 
 function escapeHtml(str) {
   return String(str ?? '')
@@ -87,7 +87,7 @@ export function monsterTipHtml(monsterOrId, state, extra = {}) {
     <div class="mtip-tags">${escapeHtml(tags)}</div>
     ${kitHtml}
     ${m.drawback ? `<div class="mtip-drawback">⚠ ${escapeHtml(m.drawback)}</div>` : ''}
-    <div class="mtip-desc">${escapeHtml(m.description || '')}</div>
+    <div class="mtip-desc">${escapeHtml(describeMonsterSummary(m))}</div>
     ${stageNote}
     ${note}
   `;
@@ -215,3 +215,4 @@ export function hideMonsterTipOnScroll(root) {
   const hide = () => hideMonsterTip(true);
   root.addEventListener('scroll', hide, { passive: true, capture: true });
 }
+

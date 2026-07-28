@@ -1,6 +1,6 @@
 /** Achievement definitions — clear goals toward "clearing" the game */
 
-import { MAP_UPGRADE } from './constants.js?v=100';
+import { MAP_UPGRADE } from './constants.js?v=101';
 
 /**
  * Tăng khi đổi bảng Gem ấn — load save sẽ cộng phần chênh cho ấn đã mở.
@@ -322,3 +322,4 @@ export function backfillAchievementGems(state) {
   state.achievementGemRev = ACHIEVEMENT_GEM_REVISION;
   return grant;
 }
+

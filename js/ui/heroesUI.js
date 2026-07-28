@@ -1,6 +1,6 @@
-import { HEROES } from '../data/heroes.js?v=100';
-import { HERO_CLASS_LABELS } from '../data/constants.js?v=100';
-import { heroSpriteUrl } from '../render/sprites.js?v=100';
+import { HEROES } from '../data/heroes.js?v=101';
+import { HERO_CLASS_LABELS } from '../data/constants.js?v=101';
+import { heroSpriteUrl } from '../render/sprites.js?v=101';
 
 const filters = {
   q: '',
@@ -184,3 +184,4 @@ export function renderHeroes(root, ctx) {
   bindFilters(root, ctx);
   root.querySelector('#btn-heroes-to-col').onclick = () => ctx.go('collection');
 }
+

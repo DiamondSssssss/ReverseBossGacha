@@ -1,4 +1,4 @@
-import { apiUrl } from '../config.js?v=100';
+import { apiUrl } from '../config.js?v=101';
 
 async function publicApi(path) {
   const res = await fetch(apiUrl(path));
@@ -23,3 +23,4 @@ export async function fetchPlayerProfile(username) {
   const data = await publicApi(`/api/players/${encodeURIComponent(username)}`);
   return data.profile;
 }
+

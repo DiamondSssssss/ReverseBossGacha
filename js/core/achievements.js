@@ -1,10 +1,10 @@
 import {
   ACHIEVEMENTS,
   backfillAchievementGems,
-} from '../data/achievements.js?v=100';
-import { MONSTERS } from '../data/monsters.js?v=100';
-import { MAX_STAGE } from '../data/constants.js?v=100';
-import { saveState } from './storage.js?v=100';
+} from '../data/achievements.js?v=101';
+import { MONSTERS } from '../data/monsters.js?v=101';
+import { MAX_STAGE } from '../data/constants.js?v=101';
+import { saveState } from './storage.js?v=101';
 
 function checkCtx() {
   return {
@@ -71,3 +71,4 @@ export function isGameCleared(state) {
   // Beat final stage → dungeonLevel becomes MAX_STAGE + 1
   return (state.dungeonLevel || 1) > MAX_STAGE;
 }
+

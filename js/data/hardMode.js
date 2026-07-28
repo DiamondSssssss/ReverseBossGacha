@@ -1,4 +1,4 @@
-import { MAX_STAGE } from './constants.js?v=100';
+import { MAX_STAGE } from './constants.js?v=101';
 
 /** @typedef {'normal' | 'hard'} StageMode */
 
@@ -189,3 +189,4 @@ export function personalBestCost(state, mode, stage) {
   const v = state?.stageBestCost?.[m]?.[s];
   return Number.isFinite(Number(v)) ? Number(v) : null;
 }
+

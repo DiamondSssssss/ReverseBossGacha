@@ -1,5 +1,5 @@
-import { scoreHeroForMonster, dist } from './targeting.js?v=100';
-import { los } from '../pathfinding.js?v=100';
+import { scoreHeroForMonster, dist } from './targeting.js?v=101';
+import { los } from '../pathfinding.js?v=101';
 
 /**
  * Monster AI tick — returns { action, target }
@@ -142,3 +142,4 @@ export function inferMonsterAi(tpl) {
   }
   return { role: 'chaser', leash: 4 };
 }
+

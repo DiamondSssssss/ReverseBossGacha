@@ -1,6 +1,6 @@
-import { ACHIEVEMENTS, CATEGORY_LABELS } from '../data/achievements.js?v=100';
-import { achievementProgress, isGameCleared } from '../core/achievements.js?v=100';
-import { showTutorial } from './tutorial.js?v=100';
+import { ACHIEVEMENTS, CATEGORY_LABELS } from '../data/achievements.js?v=101';
+import { achievementProgress, isGameCleared } from '../core/achievements.js?v=101';
+import { showTutorial } from './tutorial.js?v=101';
 
 function rewardText(r = {}) {
   const parts = [];
@@ -116,3 +116,4 @@ export function announceUnlocks(unlocks, { toast, modalEl } = {}) {
     modalEl.innerHTML = '';
   };
 }
+

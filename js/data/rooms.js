@@ -1,4 +1,4 @@
-import { COMBAT } from './constants.js?v=100';
+import { COMBAT } from './constants.js?v=101';
 
 /** @deprecated Multi-room strip removed — see maps.js STAGE_MAPS */
 
@@ -38,3 +38,4 @@ export function cloneDungeonRooms() {
     placements: [],
   }));
 }
+

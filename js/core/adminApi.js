@@ -1,4 +1,4 @@
-import { api } from './auth.js?v=100';
+import { api } from './auth.js?v=101';
 
 export async function fetchAdminStats() {
   const data = await api('/api/admin/stats');
@@ -57,3 +57,4 @@ export async function redeemCodeServer(code) {
     body: JSON.stringify({ code }),
   });
 }
+

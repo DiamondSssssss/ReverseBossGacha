@@ -1,7 +1,7 @@
-import { REDEEM_CODES, normalizeRedeemCode } from '../data/redeemCodes.js?v=100';
-import { saveState, applySaveData } from './storage.js?v=100';
-import { isLoggedIn } from './auth.js?v=100';
-import { redeemCodeServer } from './adminApi.js?v=100';
+import { REDEEM_CODES, normalizeRedeemCode } from '../data/redeemCodes.js?v=101';
+import { saveState, applySaveData } from './storage.js?v=101';
+import { isLoggedIn } from './auth.js?v=101';
+import { redeemCodeServer } from './adminApi.js?v=101';
 
 /**
  * @returns {Promise<{ ok: boolean, reason?: string, reward?: object, label?: string }>}
@@ -51,3 +51,4 @@ export function formatRedeemReward(reward = {}) {
   if (reward.gems) parts.push(`+${reward.gems} Gem`);
   return parts.join(' · ') || '—';
 }
+

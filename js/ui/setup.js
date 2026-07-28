@@ -3,17 +3,17 @@ import {
   TERRAIN_LABELS,
   RARITY_COLORS,
   HERO_CLASS_LABELS,
-} from '../data/constants.js?v=100';
-import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=100';
-import { monsterScaleForLevel } from '../data/heroes.js?v=100';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=100';
-import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=100';
+} from '../data/constants.js?v=101';
+import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=101';
+import { monsterScaleForLevel } from '../data/heroes.js?v=101';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=101';
+import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=101';
 import {
   mapUsedCost,
   placeMonster,
   removePlacement,
   totalPlacements,
-} from '../core/dungeon.js?v=100';
+} from '../core/dungeon.js?v=101';
 import {
   loadoutMaxPoolCost,
   loadoutPoolCost,
@@ -24,18 +24,18 @@ import {
   suggestLoadout,
   tryAddToLoadout,
   tryRemoveFromLoadout,
-} from '../core/loadout.js?v=100';
-import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=100';
-import { attachSetupBoardFx } from './setupBoardFx.js?v=100';
-import { playGhostWalk } from './setupPreview.js?v=100';
-import { saveState } from '../core/storage.js?v=100';
+} from '../core/loadout.js?v=101';
+import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=101';
+import { attachSetupBoardFx } from './setupBoardFx.js?v=101';
+import { playGhostWalk } from './setupPreview.js?v=101';
+import { saveState } from '../core/storage.js?v=101';
 import {
   hideMonsterTip,
   monsterTipHtml,
-} from './monsterTip.js?v=100';
+} from './monsterTip.js?v=101';
 import {
   displayMonsterStats,
-} from '../core/monsterUpgrade.js?v=100';
+} from '../core/monsterUpgrade.js?v=101';
 import {
   validateChallengeLoadout,
   tryAddChallengeLoadout,
@@ -46,7 +46,7 @@ import {
   monsterStageLevelForRun,
   monsterUpgradeLevelForRun,
   monsterStatMulForRun,
-} from '../core/challenge.js?v=100';
+} from '../core/challenge.js?v=101';
 
 function shortName(name) {
   if (!name) return '?';
@@ -1168,3 +1168,4 @@ export function renderSetup(root, ctx) {
     stopFx();
   };
 }
+

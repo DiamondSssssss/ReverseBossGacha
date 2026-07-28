@@ -3,8 +3,8 @@
  * Người chơi bấm / thả / chọn đúng chỗ mới sang bước tiếp.
  */
 
-import { totalPlacements } from '../core/dungeon.js?v=100';
-import { loadoutUnitCount } from '../core/loadout.js?v=100';
+import { totalPlacements } from '../core/dungeon.js?v=101';
+import { loadoutUnitCount } from '../core/loadout.js?v=101';
 
 /** @typedef {'click' | 'condition' | 'next' | 'either'} AdvanceMode */
 
@@ -479,3 +479,4 @@ export function showTipBanner(container, screen, state, { onDismiss } = {}) {
     container.innerHTML = '';
   };
 }
+

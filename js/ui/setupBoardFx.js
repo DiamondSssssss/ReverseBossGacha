@@ -2,7 +2,7 @@
  * Setup board FX — ít particle, đúng chỗ: place/remove + path pulse theo ô.
  */
 
-import { ParticleSystem } from '../render/particles.js?v=100';
+import { ParticleSystem } from '../render/particles.js?v=101';
 
 /**
  * @param {HTMLElement} boardEl
@@ -171,3 +171,4 @@ export function attachSetupBoardFx(boardEl, opts = {}) {
     if (canvas.parentNode) canvas.remove();
   };
 }
+

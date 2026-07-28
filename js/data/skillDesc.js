@@ -372,12 +372,46 @@ export const SKILL_INFO = {
   },
 };
 
+function healBaseRatioForRarity(rarity) {
+  return rarity >= 5 ? 0.09 : rarity >= 4 ? 0.07 : rarity >= 3 ? 0.055 : rarity >= 2 ? 0.04 : 0.028;
+}
+
+function formatPct(ratio) {
+  const pct = ratio * 100;
+  const rounded1 = Math.round(pct * 10) / 10;
+  return Number.isInteger(rounded1) ? String(rounded1) : rounded1.toFixed(1);
+}
+
+function dynamicPassiveDesc(m) {
+  const rarity = Number(m?.rarity) || 1;
+  const radius = Number(m?.auraRadius);
+  const radiusText = Number.isFinite(radius) ? ` Bán kính unit: ${radius} ô.` : '';
+  if (m?.passive === 'HEAL_AURA') {
+    const pctPerSecond = formatPct(healBaseRatioForRarity(rarity) * 1.15);
+    return `Mỗi giây hồi khoảng ${pctPerSecond}% maxHp cho từng đồng minh gần.${radiusText}`;
+  }
+  if (m?.passive === 'HEAL_PULSE') {
+    const pctPerPulse = formatPct(healBaseRatioForRarity(rarity) * 2.2);
+    const pulseRadiusText = Number.isFinite(radius)
+      ? ` Bán kính unit: ${radius} ô (xung thực tế khoảng ${(Math.round(radius * 1.15 * 100) / 100).toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1')} ô).`
+      : '';
+    return `Mỗi 2.4 giây hồi một đợt khoảng ${pctPerPulse}% maxHp cho từng đồng minh gần.${pulseRadiusText}`;
+  }
+  return null;
+}
+
+export function describeMonsterSummary(m) {
+  const dynamicDesc = dynamicPassiveDesc(m);
+  if (dynamicDesc) return dynamicDesc;
+  return m?.description || '';
+}
+
 /** Ghép mô tả bị động + kỹ năng phụ cho tip */
 export function describeMonsterKit(m) {
   const bits = [];
   const p = PASSIVE_INFO[m.passive];
   if (p && m.passive !== 'NONE') {
-    bits.push({ name: p.name, desc: p.desc });
+    bits.push({ name: p.name, desc: dynamicPassiveDesc(m) || p.desc });
   }
   const skills = m.skills || [];
   for (const s of skills) {
@@ -413,7 +447,7 @@ export function describeMonsterKit(m) {
     ]);
     if (auraPassives.has(m.passive)) {
       const bit = bits.find((b) => b.name === (PASSIVE_INFO[m.passive] || {}).name);
-      if (bit && !bit.desc.includes(`bán kính ${m.auraRadius}`)) {
+      if (bit && !bit.desc.includes('Bán kính unit:')) {
         bit.desc += ` Bán kính unit: ${m.auraRadius} ô.`;
       }
     }

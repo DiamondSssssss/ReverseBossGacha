@@ -1,6 +1,6 @@
 /** Hero AI catalog — mỗi ải 1–40 có tổ hợp hero riêng */
 
-import { COMBAT } from './constants.js?v=100';
+import { COMBAT } from './constants.js?v=101';
 
 export const HEROES = [
   // ——— MAGE ———
@@ -1388,3 +1388,4 @@ export function assignHeroFormation(wave, map) {
 
   return wave;
 }
+

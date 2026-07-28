@@ -2,7 +2,7 @@
  * Ghost Hero walks path on setup board (preview).
  */
 
-import { heroSpriteUrl } from '../render/sprites.js?v=100';
+import { heroSpriteUrl } from '../render/sprites.js?v=101';
 
 /**
  * @param {HTMLElement} boardEl
@@ -85,3 +85,4 @@ export function playGhostWalk(boardEl, path, hero) {
     ghost.remove();
   };
 }
+
