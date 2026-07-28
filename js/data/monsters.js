@@ -1474,8 +1474,147 @@ const AI_OVERRIDES = {
   blood_tithe_wraith: { role: 'chaser', leash: 5.5 },
 };
 
+function MB(targetPriority, movementStyle, skillTrigger, environmentalReaction, brainLogic, extra = {}) {
+  return {
+    targetPriority,
+    movementStyle,
+    skillTrigger: Array.isArray(skillTrigger) ? skillTrigger : [skillTrigger],
+    environmentalReaction: Array.isArray(environmentalReaction)
+      ? environmentalReaction
+      : [environmentalReaction],
+    brain_logic: brainLogic,
+    ...extra,
+  };
+}
+
+function terrainAnchorForPassive(passive) {
+  switch (passive) {
+    case 'WATER_BUFF':
+      return 'WATER_ANCHOR';
+    case 'DARK_BUFF':
+      return 'DARK_ANCHOR';
+    case 'BUFF_IN_LOW_CEILING_ROOM':
+      return 'LOW_CEILING_ANCHOR';
+    default:
+      return 'NONE';
+  }
+}
+
+function buildMonsterBehavior(m) {
+  const ai = AI_OVERRIDES[m.id] || m.ai || {};
+  const tags = m.tags || [];
+  const terrainAnchor = terrainAnchorForPassive(m.passive);
+  const env = [];
+  const triggers = [];
+  let targetPriority = 'NEAREST_INTRUDER';
+  let movementStyle = 'PRESSURE_CHASE';
+
+  if (terrainAnchor !== 'NONE') env.push(terrainAnchor);
+  if (tags.includes('ranged') || ai.role === 'ranged_guard') env.push('BUFF_PERCH');
+  if (tags.includes('detect') || m.passive === 'REVEAL') env.push('VISION_HOLD');
+  if (tags.includes('heal') || ai.role === 'aura_support') env.push('ALLY_CLUSTER_HOLD');
+  if (tags.includes('trap')) env.push('STATIC_ZONE');
+  if (tags.includes('poison')) env.push('POISON_TILE_LOVER');
+  if (tags.includes('fire')) env.push('FIRE_TILE_LOVER');
+
+  if (m.passive === 'STUN_ON_HIT' || m.passive === 'KNOCK_BACK_ROOM' || m.passive === 'ROOT_ON_HIT') {
+    triggers.push('ON_DIVER_ENTER');
+  }
+  if (m.passive === 'SILENCE_ON_HIT' || m.passive === 'SLIME_EXPLODE_SILENCE') {
+    triggers.push('ON_CASTER_TOUCH');
+  }
+  if (m.passive === 'HEAL_AURA' || m.passive === 'HEAL_PULSE') {
+    triggers.push('ON_ALLY_CLUSTER');
+  }
+  if (m.passive === 'BURST_FIRST_HIT' || tags.includes('assassin')) {
+    triggers.push('ON_BACKLINE_OPEN');
+  }
+  if (m.passive === 'REVEAL') {
+    triggers.push('ON_STEALTH_SIGHT');
+  }
+  if (!triggers.length) triggers.push('ON_CONTACT');
+
+  switch (ai.role) {
+    case 'trap':
+      targetPriority = 'ZONE_DENIAL';
+      movementStyle = 'STATIC_TRAP';
+      break;
+    case 'bait_taunt':
+      targetPriority = 'FRONTLINE_LOCK';
+      movementStyle = 'ANCHOR_BLOCK';
+      break;
+    case 'aura_support':
+      if (tags.includes('heal') || tags.includes('support')) {
+        targetPriority = 'ALLY_BODYGUARD';
+        movementStyle = 'BUFF_ANCHOR';
+      } else {
+        targetPriority = 'FRONTLINE_LOCK';
+        movementStyle = 'ANCHOR_BLOCK';
+      }
+      break;
+    case 'ranged_guard':
+      targetPriority = tags.includes('anti_rogue') ? 'STEALTH_PUNISH' : 'HIGH_VALUE_POKE';
+      movementStyle = 'SENTRY_HOLD';
+      break;
+    case 'anti_mage':
+      targetPriority = 'CASTER_HUNTER';
+      movementStyle = 'DISRUPT_CHASE';
+      break;
+    case 'anti_rogue':
+      targetPriority = 'STEALTH_PUNISH';
+      movementStyle = 'VISION_SENTINEL';
+      break;
+    case 'knockbacker':
+      targetPriority = 'TREASURE_GUARD';
+      movementStyle = 'INTERCEPT_BUMP';
+      break;
+    case 'boss_elite':
+      targetPriority = tags.includes('ranged') ? 'BOSS_SNIPER' : 'EXECUTE_DRAINER';
+      movementStyle = tags.includes('ranged') ? 'BOSS_SENTRY' : 'BOSS_PRESSURE';
+      break;
+    default:
+      if (tags.includes('assassin')) {
+        targetPriority = 'BACKLINE_DIVE';
+        movementStyle = 'FLANK_DIVE';
+      } else if (tags.includes('tank') || tags.includes('tankette')) {
+        targetPriority = 'FRONTLINE_LOCK';
+        movementStyle = 'ANCHOR_BLOCK';
+      } else if (tags.includes('support') || tags.includes('heal')) {
+        targetPriority = 'ALLY_BODYGUARD';
+        movementStyle = 'BUFF_ANCHOR';
+      } else if (tags.includes('speed')) {
+        targetPriority = 'EXECUTE_DRAINER';
+        movementStyle = 'RAPID_INTERCEPT';
+      } else {
+        targetPriority = 'PRESSURE_CLOSEST';
+        movementStyle = 'PRESSURE_CHASE';
+      }
+      break;
+  }
+
+  if (tags.includes('anti_mage')) targetPriority = 'CASTER_HUNTER';
+  if (tags.includes('anti_rogue')) targetPriority = 'STEALTH_PUNISH';
+  if (m.passive === 'ANTI_WARRIOR_BURST') targetPriority = 'SHIELD_BREAK';
+  if (m.passive === 'REVEAL' && ai.role !== 'ranged_guard') movementStyle = 'VISION_SENTINEL';
+
+  return MB(
+    targetPriority,
+    movementStyle,
+    triggers,
+    env.length ? env : ['NONE'],
+    `${m.name} đọc vai trò ${ai.role || 'chaser'} từ passive ${m.passive} và tags ${tags.join('/') || 'none'} để chọn nhịp ép lane riêng.`,
+    {
+      tacticalTags: tags,
+      aiRole: ai.role || 'chaser',
+      passiveHook: m.passive,
+    }
+  );
+}
+
 for (const m of MONSTERS) {
   if (AI_OVERRIDES[m.id]) m.ai = AI_OVERRIDES[m.id];
+  m.monster_behavior = buildMonsterBehavior(m);
+  m.brain_logic = m.monster_behavior.brain_logic;
 }
 
 export const MONSTER_BY_ID = Object.fromEntries(MONSTERS.map((m) => [m.id, m]));

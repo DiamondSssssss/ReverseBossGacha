@@ -1,6 +1,6 @@
 /** Hero AI catalog — mỗi ải 1–40 có tổ hợp hero riêng */
 
-import { COMBAT } from './constants.js?v=104';
+import { COMBAT } from './constants.js?v=112';
 
 export const HEROES = [
   // ——— MAGE ———
@@ -685,6 +685,110 @@ export const HEROES = [
     description: 'Support — trao khiên chủ động cho đồng minh thiếu máu trong tầm.',
   },
 ];
+
+function AB(targetPriority, movementStyle, skillTrigger, environmentalReaction, brainLogic, extra = {}) {
+  return {
+    targetPriority,
+    movementStyle,
+    skillTrigger: Array.isArray(skillTrigger) ? skillTrigger : [skillTrigger],
+    environmentalReaction: Array.isArray(environmentalReaction)
+      ? environmentalReaction
+      : [environmentalReaction],
+    brain_logic: brainLogic,
+    ...extra,
+  };
+}
+
+const HERO_AI_BEHAVIORS = {
+  hero_mage_01: AB('CROWD_DENSEST', 'KEEP_DISTANCE', ['ON_CROWD_ENTER', 'ON_TRAP_TRIGGER'], ['HERO_BUFF_SEEKER', 'HAZARD_EXPLOITER'], 'Canh choke có dầu/lửa rồi dồn cầu lửa vào cụm quái đông nhất; ưu tiên đốt lane đang giữ buff Hero.', { preferredTiles: ['FIRE', 'OIL'], secondaryTarget: 'BUFF_GUARD' }),
+  hero_mage_02: AB('HIGH_THREAT', 'KITING', ['INTERRUPT_CHANNEL', 'ON_CROWD_ENTER'], ['HAZARD_AVOIDER', 'HERO_BUFF_SEEKER'], 'Giữ tầm bắn tối đa, ưu tiên đóng băng quái lao vào tuyến sau hoặc quái chuẩn bị dẫm ô buff.', { preferredTiles: ['ICE'], secondaryTarget: 'DIVER_STOP' }),
+  hero_mage_03: AB('CROWD_DENSEST', 'ZONING_ORBIT', ['ON_TRAP_TRIGGER', 'ON_CROWD_ENTER'], ['HAZARD_EXPLOITER', 'HERO_BUFF_SEEKER'], 'Lượn quanh các ô nước/buff để tạo tia lan, nã vào nơi quái đứng dày nhất thay vì bắn mục tiêu đơn.', { preferredTiles: ['WATER', 'HERO_BUFF_ZONE'], secondaryTarget: 'CHAIN_CLUSTER' }),
+  hero_mage_04: AB('LOWEST_HP_ALLOY', 'KEEP_DISTANCE', ['ON_CROWD_ENTER'], ['HAZARD_EXPLOITER', 'HAZARD_AVOIDER'], 'Rải độc vào tuyến quái đã trầy máu, thích quét lại lane có bẫy độc để kết liễu hàng loạt.', { preferredTiles: ['POISON'], secondaryTarget: 'WOUNDED_CLUSTER' }),
+  hero_mage_05: AB('HIGH_THREAT', 'KITING', ['INTERRUPT_CHANNEL', 'ON_CROWD_ENTER'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Săn boss/support tuyến sau bằng burst phép, sẽ bẻ hướng để chiếm ô buff tăng tầm trước khi xả chiêu.', { preferredTiles: ['HERO_BUFF_ZONE'], secondaryTarget: 'BACKLINE_SUPPORT' }),
+  hero_mage_06: AB('HIGH_THREAT', 'KEEP_DISTANCE', ['ON_CROWD_ENTER', 'INTERRUPT_CHANNEL'], ['HAZARD_AVOIDER', 'HERO_BUFF_SEEKER'], 'Nhìn thấy quái trâu hoặc boss là giữ khoảng cách rồi nuke trước, bỏ qua quái mồi nhỏ ở mép.', { preferredTiles: ['HIGH', 'HERO_BUFF_ZONE'], secondaryTarget: 'BOSS_BREAK' }),
+  hero_mage_07: AB('CROWD_DENSEST', 'ZONING_ORBIT', ['ON_CROWD_ENTER', 'INTERRUPT_CHANNEL'], ['HERO_BUFF_SEEKER', 'HAZARD_EXPLOITER'], 'Di chuyển như chỉ huy pháo đài, xoay quanh ô buff lớn và quét AoE vào điểm giao tranh đông nhất.', { preferredTiles: ['HERO_BUFF_ZONE', 'FIRE', 'ICE'], secondaryTarget: 'SIEGE_CENTER' }),
+  hero_warrior_01: AB('NEAREST', 'TANK_WALL', ['ON_LOW_HP'], ['HAZARD_AVOIDER'], 'Đè tuyến trước, nhận đòn cho tuyến sau rồi mới bật khiên khi máu xuống thấp.', { guardRole: 'FRONT_HOLD', secondaryTarget: 'LANE_BLOCKER' }),
+  hero_warrior_02: AB('NEAREST', 'TANK_WALL', ['ON_CROWD_ENTER'], ['HAZARD_AVOIDER', 'HERO_BUFF_SEEKER'], 'Luôn chen vào giữa đội hình quái và pháp sư đồng minh để khiêu khích cụm quái đang tràn qua choke.', { guardRole: 'BODYGUARD', secondaryTarget: 'TAUNT_CLUSTER' }),
+  hero_warrior_03: AB('HIGH_THREAT', 'CHARGER', ['ON_LOW_HP'], ['HAZARD_AVOIDER'], 'Là đấu sĩ chủ động lao vào DPS hoặc quái gây hiệu ứng mạnh, càng thấp máu càng đẩy nhịp tấn công.', { finisherBias: 'BACKLINE_DPS', secondaryTarget: 'LOW_ARMOR_DPS' }),
+  hero_warrior_04: AB('AOE_BUFF_CARRIER', 'TANK_WALL', ['ON_CROWD_ENTER', 'ON_LOW_HP'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Bám theo healer/support quan trọng, chặn ngay trước người đang mang aura hoặc cờ buff.', { guardRole: 'AURA_ESCORT', secondaryTarget: 'ALLY_PROTECT' }),
+  hero_warrior_05: AB('TREASURE_RUSH', 'BULL_RUSH', ['ON_LOW_HP'], ['HAZARD_AVOIDER'], 'Chậm nhưng lì, nếu tuyến quái hở là bỏ giao tranh nhỏ để bò thẳng vào Kho.', { guardRole: 'SIEGE_RAM', secondaryTarget: 'TREASURE_PATH' }),
+  hero_warrior_06: AB('HIGH_THREAT', 'CHARGER', ['ON_CROWD_ENTER'], ['HAZARD_AVOIDER', 'HERO_BUFF_SEEKER'], 'Phá thành thương luôn chọn lane có nhiều quái cản đường buff Hero rồi xuyên thẳng vào đó.', { finisherBias: 'CHOKE_BREAK', secondaryTarget: 'BUFF_BLOCKER' }),
+  hero_warrior_07: AB('AOE_BUFF_CARRIER', 'TANK_WALL', ['ON_LOW_HP', 'ON_ALLY_DEATH'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Giữ vị trí trước đồng minh quý giá; nếu đồng minh chết gần đó sẽ ép mình lên cao hơn để vá lỗ hổng.', { guardRole: 'ROYAL_GUARD', secondaryTarget: 'ALLY_REVENGE' }),
+  hero_warrior_08: AB('HIGH_THREAT', 'BULL_RUSH', ['ON_CROWD_ENTER', 'ON_LOW_HP'], ['HAZARD_AVOIDER'], 'Tìm mục tiêu xứng đáng nhất ở tuyến giữa rồi ép giao tranh liên tục, không thích bị câu kéo ở mép map.', { finisherBias: 'MIDLINE_BREAK', secondaryTarget: 'HEAVY_BRUISER' }),
+  hero_warrior_09: AB('TREASURE_RUSH', 'TANK_WALL', ['ON_LOW_HP'], ['HAZARD_AVOIDER'], 'Titan giáp nặng ưu tiên giữ trục giữa và nghiền những gì đứng giữa hắn với Kho.', { guardRole: 'SLOW_SIEGE', secondaryTarget: 'TREASURE_GATE' }),
+  hero_warrior_10: AB('HIGH_THREAT', 'CHARGER', ['ON_ALLY_DEATH', 'ON_LOW_HP'], ['HAZARD_AVOIDER', 'HAZARD_EXPLOITER'], 'Khi tuyến trước ngã xuống, hắn chuyển ngay sang săn DPS/boss để trả đũa và phá nhịp quái.', { finisherBias: 'REVENGE_DIVE', secondaryTarget: 'BOSS_OR_CARRY' }),
+  hero_warrior_11: AB('TREASURE_RUSH', 'TANK_WALL', ['ON_CROWD_ENTER', 'ON_LOW_HP'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Hoàng đế phá thành giữ lộ trình ngắn nhất vào Kho, nhưng nếu có buff quan trọng gần đó sẽ chiếm rồi trụ luôn.', { guardRole: 'IMPERIAL_PUSH', secondaryTarget: 'TREASURE_CORE' }),
+  hero_healer_01: AB('LOWEST_HP_ALLOY', 'KEEP_DISTANCE', ['ON_LOW_HP'], ['HAZARD_AVOIDER', 'HERO_BUFF_SEEKER'], 'Đi sau đội hình, tìm đồng minh tụt máu đầu tiên rồi trôi nhẹ sang ô hồi/ô buff để duy trì tuyến.', { supportFocus: 'EMERGENCY_HEAL', secondaryTarget: 'ALLY_CRITICAL' }),
+  hero_healer_02: AB('AOE_BUFF_CARRIER', 'KEEP_DISTANCE', ['ON_CROWD_ENTER', 'ON_LOW_HP'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Ưu tiên bọc cho tank đang đứng giữ choke hoặc đồng minh cầm buff quan trọng.', { supportFocus: 'SHIELD_HEAL_PAIR', secondaryTarget: 'TANK_ANCHOR' }),
+  hero_healer_03: AB('LOWEST_HP_ALLOY', 'ZONING_ORBIT', ['ON_ALLY_DEATH', 'ON_LOW_HP'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Đi vòng quanh vùng an toàn gần buff để cứu lane vừa sập, hồi mục tiêu đang hấp hối trước.', { supportFocus: 'LATE_SAVE', secondaryTarget: 'BROKEN_LANE' }),
+  hero_healer_04: AB('AOE_BUFF_CARRIER', 'KEEP_DISTANCE', ['ON_CROWD_ENTER', 'ON_LOW_HP'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Bám sát mũi tấn công mạnh nhất và dồn hồi/giáp cho người đang mở đường ăn buff.', { supportFocus: 'PUSH_SUPPORT', secondaryTarget: 'LEAD_DIVER' }),
+  hero_healer_05: AB('AOE_BUFF_CARRIER', 'ZONING_ORBIT', ['ON_LOW_HP', 'ON_ALLY_DEATH'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Thiên sứ chủ động giữ đội hình sống đủ lâu để lật giao tranh kéo dài, nhất là quanh ô buff trung tâm.', { supportFocus: 'ENDGAME_SUSTAIN', secondaryTarget: 'ALLY_WITH_AURA' }),
+  hero_rogue_01: AB('TREASURE_RUSH', 'STEALTH_AMBUSH', ['ON_TRAP_TRIGGER'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Men theo rìa map, chỉ dừng đánh nếu quái cản ngay trước mặt hoặc có buff Hero lộ ra bên sườn.', { flankLane: 'EDGE', secondaryTarget: 'OPEN_TREASURE_PATH' }),
+  hero_rogue_02: AB('BACKLINE_DIVE', 'STEALTH_AMBUSH', ['ON_LOW_HP'], ['HAZARD_AVOIDER'], 'Tàng hình sâu rồi nhảy vào mục tiêu máu giấy ở tuyến sau; nếu bị lộ sẽ cố kết liễu thật nhanh.', { flankLane: 'BACK_DOOR', secondaryTarget: 'RANGED_SUPPORT' }),
+  hero_rogue_03: AB('LOWEST_HP_ALLOY', 'FLANKING', ['ON_CROWD_ENTER'], ['HAZARD_AVOIDER', 'HAZARD_EXPLOITER'], 'Đánh vòng để ăn những quái đã mất máu, tận dụng bẫy hoặc lane hẹp để chém dứt điểm liên tục.', { flankLane: 'MID_FLANK', secondaryTarget: 'EXECUTE_CHAIN' }),
+  hero_rogue_04: AB('BACKLINE_DIVE', 'STEALTH_AMBUSH', ['ON_TRAP_TRIGGER', 'ON_LOW_HP'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Ảo ảnh tặc thích lao qua lane ít quân, móc vào pháp sư/healer đang đứng canh ô buff.', { flankLane: 'SOFT_SIDE', secondaryTarget: 'BUFFED_BACKLINE' }),
+  hero_rogue_05: AB('HIGH_THREAT', 'KITING', ['ON_TRAP_TRIGGER'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Vừa là rogue vừa là cung thủ: tìm góc bắn an toàn, tự soi đường và quấy rối mục tiêu quan trọng từ mép map.', { flankLane: 'WIDE_ANGLE', secondaryTarget: 'STEALTH_SAFE_POKE' }),
+  hero_rogue_06: AB('BACKLINE_DIVE', 'STEALTH_AMBUSH', ['ON_LOW_HP', 'ON_CROWD_ENTER'], ['HAZARD_AVOIDER'], 'Huyết Ảnh đợi mở giao tranh rồi xộc vào giết carry trước khi quái kịp xoay đầu.', { flankLane: 'DEEP_DIVE', secondaryTarget: 'CARRY_EXECUTE' }),
+  hero_rogue_07: AB('HIGH_THREAT', 'STEALTH_AMBUSH', ['ON_TRAP_TRIGGER', 'ON_CROWD_ENTER'], ['HAZARD_EXPLOITER', 'HERO_BUFF_SEEKER'], 'Độc vương sẽ chọn lane có ô độc/hazard để vừa bắn vừa lùa quái đứng sai vị trí.', { flankLane: 'POISON_EDGE', secondaryTarget: 'HAZARD_FINISH' }),
+  hero_archer_01: AB('NEAREST', 'KEEP_DISTANCE', ['ON_CROWD_ENTER'], ['HAZARD_AVOIDER', 'HERO_BUFF_SEEKER'], 'Giữ góc bắn cơ bản, ưu tiên quái gần nhất để giữ nhịp phòng thủ cho bản thân và tuyến sau.', { firingDiscipline: 'SAFE_LANE', secondaryTarget: 'LANE_STABILIZE' }),
+  hero_archer_02: AB('HIGH_THREAT', 'KITING', ['ON_CROWD_ENTER'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Rừng thủ bẻ góc lấy tầm bắn đẹp rồi rút lại mỗi khi quái áp sát, chuyên rỉa support/ranged quái.', { firingDiscipline: 'KITE_SNIPER', secondaryTarget: 'RANGED_MONSTER' }),
+  hero_archer_03: AB('LOWEST_HP_ALLOY', 'KEEP_DISTANCE', ['ON_CROWD_ENTER'], ['HAZARD_AVOIDER'], 'Bắn dọn quái đã bị thương để mở đường cho tuyến trước thay vì phí tên vào mục tiêu đầy máu.', { firingDiscipline: 'EXECUTE_ARCHER', secondaryTarget: 'WOUNDED_FRONT' }),
+  hero_archer_04: AB('HIGH_THREAT', 'KITING', ['INTERRUPT_CHANNEL'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Long tiễn tìm line-of-fire dài nhất để bắn vào pháp sư/boss; nếu bị ép thì lùi ngay qua lane trống.', { firingDiscipline: 'BOSS_SNIPER', secondaryTarget: 'CHANNEL_BREAK' }),
+  hero_archer_05: AB('HIGH_THREAT', 'KEEP_DISTANCE', ['INTERRUPT_CHANNEL', 'ON_CROWD_ENTER'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Thiên tiễn vương đứng ở ô nhìn rộng rồi tập trung bắn carry nguy hiểm nhất trên bàn.', { firingDiscipline: 'ROYAL_SNIPER', secondaryTarget: 'TOP_THREAT' }),
+  hero_tank_01: AB('NEAREST', 'TANK_WALL', ['ON_LOW_HP'], ['HAZARD_AVOIDER'], 'Khiên gỗ che thân cho đồng đội yếu máu ở gần nhất, không tự ý rời tuyến.', { guardRole: 'BASIC_BODYBLOCK', secondaryTarget: 'ALLY_SCREEN' }),
+  hero_tank_02: AB('AOE_BUFF_CARRIER', 'TANK_WALL', ['ON_CROWD_ENTER'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Thành đồng chỉ thích đứng lên đúng ô chặn giữa choke và buộc quái dồn vào mình.', { guardRole: 'CHOKE_ANCHOR', secondaryTarget: 'BUFF_HOLDER_GUARD' }),
+  hero_tank_03: AB('NEAREST', 'TANK_WALL', ['ON_CROWD_ENTER', 'ON_LOW_HP'], ['HAZARD_AVOIDER'], 'Tháp sắt là cọc tiêu di động: tìm giao điểm nhiều quái rồi cắm trụ ở đó càng lâu càng tốt.', { guardRole: 'STATIC_ANCHOR', secondaryTarget: 'DENSE_FRONT' }),
+  hero_tank_04: AB('AOE_BUFF_CARRIER', 'TANK_WALL', ['ON_ALLY_DEATH', 'ON_CROWD_ENTER'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Thành Bastion sẽ nhích lên bọc các pháp sư/healer vừa bị hở góc sau khi đồng minh ngã xuống.', { guardRole: 'BASTION_REFORM', secondaryTarget: 'BACKLINE_SHIELD' }),
+  hero_tank_05: AB('TREASURE_RUSH', 'TANK_WALL', ['ON_LOW_HP', 'ON_CROWD_ENTER'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Pháo đài bất diệt không chase lẻ, chỉ tiến từng nhịp vào lõi Kho và buộc quái phải dồn tài nguyên vào mình.', { guardRole: 'SIEGE_ANCHOR', secondaryTarget: 'TREASURE_ZONE' }),
+  hero_berserker_01: AB('NEAREST', 'CHARGER', ['ON_LOW_HP'], ['HAZARD_AVOIDER'], 'Cuồng binh chỉ cần thấy quái là lao vào, càng xuống máu càng bỏ qua phòng thủ để ép trao đổi.', { rageStyle: 'EARLY_ALL_IN', secondaryTarget: 'OPEN_DUEL' }),
+  hero_berserker_02: AB('HIGH_THREAT', 'BULL_RUSH', ['ON_LOW_HP', 'ON_CROWD_ENTER'], ['HAZARD_AVOIDER', 'HAZARD_EXPLOITER'], 'Rìu máu chọn lane đông hoặc quái mạnh rồi đập thẳng, chấp nhận lướt qua bẫy nhẹ để chạm mục tiêu.', { rageStyle: 'THREAT_CHASE', secondaryTarget: 'HEAVY_TARGET' }),
+  hero_berserker_03: AB('LOWEST_HP_ALLOY', 'CHARGER', ['ON_LOW_HP'], ['HAZARD_AVOIDER'], 'Berserker trung cấp thích săn những quái đã mẻ máu để lấy đà cuồng hóa nhanh hơn.', { rageStyle: 'EXECUTE_RAGE', secondaryTarget: 'BLOOD_SCENT' }),
+  hero_berserker_04: AB('HIGH_THREAT', 'BULL_RUSH', ['ON_LOW_HP', 'ON_ALLY_DEATH'], ['HAZARD_AVOIDER'], 'Huyết cuồng xem cái chết đồng đội như cò súng để lập tức nhảy vào mục tiêu giá trị nhất.', { rageStyle: 'REVENGE_RAGE', secondaryTarget: 'ALLY_KILLER' }),
+  hero_berserker_05: AB('TREASURE_RUSH', 'BULL_RUSH', ['ON_LOW_HP', 'ON_CROWD_ENTER'], ['HAZARD_AVOIDER', 'HAZARD_EXPLOITER'], 'Thần cuồng hủy chỉ hạ quái khi bắt buộc; còn lại ưu tiên đạp xuyên bãi mìn để áp Kho thật nhanh.', { rageStyle: 'APOCALYPSE_PUSH', secondaryTarget: 'TREASURE_SHRED' }),
+  hero_hex_01: AB('HIGH_THREAT', 'KEEP_DISTANCE', ['ON_CROWD_ENTER'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Lang y ô uế chuyên tìm cụm quái đang được hồi máu hoặc đứng trong ô hồi để đặt lời nguyền.', { curseFocus: 'ANTI_HEAL_OPEN', secondaryTarget: 'HEALING_CLUSTER' }),
+  hero_hex_02: AB('AOE_BUFF_CARRIER', 'KITING', ['ON_CROWD_ENTER', 'INTERRUPT_CHANNEL'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Phù thủy vết bám theo mũi tấn công và dằn lời nguyền lên quái chặn đầu choke.', { curseFocus: 'FRONTLINE_ROT', secondaryTarget: 'TANKED_CLUSTER' }),
+  hero_hex_03: AB('HIGH_THREAT', 'KEEP_DISTANCE', ['INTERRUPT_CHANNEL', 'ON_CROWD_ENTER'], ['HAZARD_AVOIDER'], 'Sứ giả chí mạng ưu tiên mục tiêu đang hồi máu hoặc có khiên để biến nó thành điểm vỡ của đội quái.', { curseFocus: 'FOCUS_CONDEMN', secondaryTarget: 'SHIELDED_HEALER' }),
+  hero_hex_04: AB('CROWD_DENSEST', 'ZONING_ORBIT', ['ON_CROWD_ENTER', 'ON_ALLY_DEATH'], ['HAZARD_EXPLOITER', 'HERO_BUFF_SEEKER'], 'Đại dịch sứ xoay quanh vùng giao tranh lớn nhất, rải debuff cho cả cụm để quái không gượng dậy nổi.', { curseFocus: 'PLAGUE_FIELD', secondaryTarget: 'DENSE_HEAL_STACK' }),
+  hero_hex_05: AB('HIGH_THREAT', 'KEEP_DISTANCE', ['INTERRUPT_CHANNEL', 'ON_CROWD_ENTER'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Chúa tể hư hồi bỏ qua mồi nhử, chỉ nhằm vào boss/tank đang được bảo kê nặng nhất.', { curseFocus: 'BOSS_DENIAL', secondaryTarget: 'MAX_SUSTAIN_TARGET' }),
+  hero_archer_06: AB('HIGH_THREAT', 'KITING', ['INTERRUPT_CHANNEL', 'ON_CROWD_ENTER'], ['HAZARD_AVOIDER', 'HERO_BUFF_SEEKER'], 'Băng cung ưu tiên mục tiêu lao nhanh vào tuyến sau để ghim chậm và mở khoảng thở.', { firingDiscipline: 'FREEZE_PICK', secondaryTarget: 'FAST_DIVER' }),
+  hero_mage_08: AB('CROWD_DENSEST', 'KEEP_DISTANCE', ['ON_TRAP_TRIGGER', 'ON_CROWD_ENTER'], ['HAZARD_EXPLOITER', 'HERO_BUFF_SEEKER'], 'Hỏa ấn sư thích nổ combo quanh oil/fire rồi lùi đúng tầm trước khi quái phản công.', { preferredTiles: ['FIRE', 'OIL'], secondaryTarget: 'BURN_COMBO' }),
+  hero_rogue_08: AB('LOWEST_HP_ALLOY', 'STEALTH_AMBUSH', ['ON_TRAP_TRIGGER'], ['HAZARD_EXPLOITER', 'HAZARD_AVOIDER'], 'Độc ảnh tìm đường qua các ô độc để gặm dần quái máu mỏng rồi rút trước khi bị giữ chân.', { flankLane: 'POISON_STITCH', secondaryTarget: 'POISON_EXECUTE' }),
+  hero_tank_06: AB('HIGH_THREAT', 'TANK_WALL', ['INTERRUPT_CHANNEL', 'ON_CROWD_ENTER'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Lôi khiên chủ động kẹp boss/bruiser nguy hiểm để stun ngắt nhịp đúng lúc.', { guardRole: 'STUN_ANCHOR', secondaryTarget: 'BOSS_PIN' }),
+  hero_healer_06: AB('AOE_BUFF_CARRIER', 'ZONING_ORBIT', ['ON_CROWD_ENTER', 'ON_LOW_HP'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Sương y thích đứng lệch ở mép choke để hồi đồng đội và rải làm chậm lên quái tiếp cận.', { supportFocus: 'SLOW_HEAL_AURA', secondaryTarget: 'CHOKE_SUPPORT' }),
+  hero_hex_06: AB('HIGH_THREAT', 'KEEP_DISTANCE', ['INTERRUPT_CHANNEL', 'ON_CROWD_ENTER'], ['HAZARD_AVOIDER'], 'Phá giáp hex truy đúng mục tiêu giáp cao hoặc đang có shield rồi đục thủng nó cho đồng đội dồn sát thương.', { curseFocus: 'DEF_BREAK', secondaryTarget: 'MAX_DEF_TARGET' }),
+  hero_archer_07: AB('HIGH_THREAT', 'KEEP_DISTANCE', ['ON_CROWD_ENTER'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Cung xuyên tìm góc bắn xuyên qua nhiều quái và ưu tiên lane có tank đứng chắn phía trước.', { firingDiscipline: 'PIERCE_LINE', secondaryTarget: 'DEF_STACK_LINE' }),
+  hero_berserker_06: AB('LOWEST_HP_ALLOY', 'CHARGER', ['ON_LOW_HP', 'ON_ALLY_DEATH'], ['HAZARD_AVOIDER', 'HAZARD_EXPLOITER'], 'Cuồng huyết chọn con đang chảy máu để hút máu hồi đà, thích lao vào lane đang hỗn loạn.', { rageStyle: 'LIFESTEAL_CHAIN', secondaryTarget: 'WOUNDED_FEED' }),
+  hero_bomber_01: AB('CROWD_DENSEST', 'SUICIDE_CHARGE', ['ON_LOW_HP', 'ON_CROWD_ENTER'], ['HAZARD_EXPLOITER'], 'Cảm tử lao thẳng vào cụm quái dày nhất hoặc điểm có bẫy để nổ trúng tối đa mục tiêu.', { detonationBias: 'MAX_CLUSTER', secondaryTarget: 'HAZARD_BOMB' }),
+  hero_phoenix_01: AB('AOE_BUFF_CARRIER', 'ZONING_ORBIT', ['ON_LOW_HP', 'ON_ALLY_DEATH'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Phượng y giữ mình ở lane còn đồng minh sống đông nhất để tận dụng hồi sinh và hồi máu dây chuyền.', { supportFocus: 'REVIVE_PIVOT', secondaryTarget: 'ALLY_CLUSTER_CORE' }),
+  hero_shatter_01: AB('HIGH_THREAT', 'CHARGER', ['ON_CROWD_ENTER'], ['HAZARD_AVOIDER'], 'Phá khiên sĩ khóa đúng quái đang có khiên hoặc đứng trong ô tăng giáp rồi lao vào phá lớp bảo kê.', { finisherBias: 'SHIELD_BREAK', secondaryTarget: 'MAX_SHIELD_TARGET' }),
+  hero_hex_07: AB('HIGH_THREAT', 'KEEP_DISTANCE', ['INTERRUPT_CHANNEL', 'ON_CROWD_ENTER'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Phá khiên hex vừa cắt hồi vừa bóc khiên, thích quét support-tank đứng cùng nhau.', { curseFocus: 'SHIELD_HEAL_BREAK', secondaryTarget: 'PROTECTED_HEALER' }),
+  hero_rogue_09: AB('CROWD_DENSEST', 'SUICIDE_CHARGE', ['ON_LOW_HP', 'ON_TRAP_TRIGGER'], ['HAZARD_EXPLOITER'], 'Bóng nổ luồn vào cụm quái tuyến sau rồi chấp nhận chết để nổ mở khoảng trống.', { detonationBias: 'BACKLINE_BOMB', secondaryTarget: 'CARRY_CLUSTER' }),
+  hero_scout_01: AB('HIGH_THREAT', 'KEEP_DISTANCE', ['INTERRUPT_CHANNEL'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Mắt thần tìm ô nhìn rộng nhất rồi khóa mọi mục tiêu tàng hình hoặc sát thủ đang chuẩn bị lao ra.', { visionRole: 'WIDE_REVEAL', secondaryTarget: 'STEALTH_REVEAL' }),
+  hero_scout_02: AB('HIGH_THREAT', 'ZONING_ORBIT', ['INTERRUPT_CHANNEL', 'ON_CROWD_ENTER'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Nhãn quang thay đổi vị trí ít hơn, ưu tiên chiếm ô cao/tầm rộng và chỉ thị focus liên tục vào carry ẩn.', { visionRole: 'SNIPER_REVEAL', secondaryTarget: 'HIDDEN_CARRY' }),
+  hero_boss_40: AB('AOE_BUFF_CARRIER', 'TANK_WALL', ['ON_CROWD_ENTER', 'INTERRUPT_CHANNEL'], ['HERO_BUFF_SEEKER', 'HAZARD_EXPLOITER'], 'Vệ vương đi chậm nhưng luôn kéo giao tranh vào giữa map, bật khống chế khi quái tụ quá đông trước mặt.', { bossPattern: 'MID_SIEGE', secondaryTarget: 'CENTER_BREAK' }),
+  hero_boss_45: AB('BACKLINE_DIVE', 'STEALTH_AMBUSH', ['INTERRUPT_CHANNEL', 'ON_LOW_HP'], ['HAZARD_AVOIDER', 'HERO_BUFF_SEEKER'], 'Chúa bóng đêm lẩn ở mép tối rồi đánh thẳng vào support/ranged yếu máu nhất.', { bossPattern: 'SHADOW_ASSASSIN', secondaryTarget: 'SOFT_BACKLINE' }),
+  hero_boss_50: AB('CROWD_DENSEST', 'KEEP_DISTANCE', ['ON_CROWD_ENTER', 'INTERRUPT_CHANNEL'], ['HERO_BUFF_SEEKER', 'HAZARD_EXPLOITER'], 'Pháp vương giữ khoảng cách kiểu pháo đài, chờ quái gom cụm mới tung combo băng-hỏa diện rộng.', { bossPattern: 'ARTILLERY_MAGE', secondaryTarget: 'CHANNEL_CLUSTER' }),
+  hero_boss_55: AB('HIGH_THREAT', 'KITING', ['INTERRUPT_CHANNEL'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Thiên tiễn hoàng luôn giữ tầm xa nhất có thể và chỉ bắn vào mục tiêu đáng giá nhất đang lộ góc.', { bossPattern: 'IMPERIAL_SNIPER', secondaryTarget: 'TOP_CARRY_LINE' }),
+  hero_boss_60: AB('TREASURE_RUSH', 'BULL_RUSH', ['ON_CROWD_ENTER', 'ON_ALLY_DEATH'], ['HAZARD_EXPLOITER', 'HERO_BUFF_SEEKER'], 'Hoàng đế tàn lửa vừa đốt đường vừa tiến vào Kho; nếu thuộc hạ chết sẽ đổi sang trạng thái nghiền nát tuyến giữa.', { bossPattern: 'FINAL_SIEGE', secondaryTarget: 'CORE_COLLAPSE' }),
+  hero_support_01: AB('AOE_BUFF_CARRIER', 'ZONING_ORBIT', ['ON_CROWD_ENTER', 'ON_ALLY_DEATH'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Chiến kỳ sư chủ động đứng sát ô buff hoặc choke để đồng đội bám theo cờ và giao tranh đúng chỗ.', { supportFocus: 'BANNER_ANCHOR', secondaryTarget: 'AURA_FORMATION' }),
+  hero_support_02: AB('AOE_BUFF_CARRIER', 'KEEP_DISTANCE', ['ON_LOW_HP'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Hộ ấn sư nhìn đồng minh sắp vỡ tuyến là đặt ấn che ngay, ưu tiên tank đang chắn lane hẹp.', { supportFocus: 'MARK_SHIELD', secondaryTarget: 'FRONTLINE_SAVE' }),
+  hero_support_03: AB('HIGH_THREAT', 'KITING', ['ON_TRAP_TRIGGER', 'ON_CROWD_ENTER'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Phong hành sư vừa thả diều vừa đổi góc liên tục quanh choke để quấy rối quái lao nhanh.', { supportFocus: 'WIND_KITE', secondaryTarget: 'FAST_CHASER' }),
+  hero_hex_charm: AB('HIGH_THREAT', 'KITING', ['INTERRUPT_CHANNEL', 'ON_TRAP_TRIGGER'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Mê vu sư thích bẻ góc nhìn ở khúc cua rồi thả mê hoặc vào mục tiêu nguy hiểm sắp chạm tuyến sau.', { curseFocus: 'CHARM_DISRUPT', secondaryTarget: 'CONTROL_TARGET' }),
+  hero_frail_blade: AB('LOWEST_HP_ALLOY', 'FLANKING', ['ON_LOW_HP'], ['HAZARD_AVOIDER'], 'Đao dễ vỡ không đánh lâu; hắn vòng sườn, chém nhanh vào mục tiêu sắp chết rồi rút ra trước khi bị focus.', { flankLane: 'HIT_AND_RUN', secondaryTarget: 'FRAGILE_EXECUTE' }),
+  hero_cleanse_monk: AB('AOE_BUFF_CARRIER', 'ZONING_ORBIT', ['INTERRUPT_CHANNEL', 'ON_LOW_HP'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Tăng thanh tẩy đi gần lõi đội hình để xóa hiệu ứng xấu và cứu người dính zone độc/câm.', { supportFocus: 'CLEANSE_CORE', secondaryTarget: 'DEBUFFED_ALLY' }),
+  hero_stasis_01: AB('AOE_BUFF_CARRIER', 'TANK_WALL', ['ON_LOW_HP', 'ON_ALLY_DEATH'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Băng giáp cố ý trụ ở cửa choke, dùng lần ngủ đông như một nhịp chặn đường thứ hai.', { guardRole: 'STASIS_WALL', secondaryTarget: 'SECOND_LIFE_ANCHOR' }),
+  hero_stasis_02: AB('HIGH_THREAT', 'CHARGER', ['ON_LOW_HP', 'INTERRUPT_CHANNEL'], ['HAZARD_AVOIDER', 'HERO_BUFF_SEEKER'], 'Tuyết kiếm đâm vào carry nguy hiểm nhất, chấp nhận đổi máu vì biết mình còn một lần ngủ đông.', { finisherBias: 'STASIS_DUELIST', secondaryTarget: 'RESET_DIVE' }),
+  hero_stasis_03: AB('HIGH_THREAT', 'KEEP_DISTANCE', ['ON_CROWD_ENTER', 'ON_LOW_HP'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Hàn tinh giữ khoảng cách, ép quái commit vào mình rồi dùng ngủ đông như bẫy kéo nhịp giao tranh.', { preferredTiles: ['ICE', 'HERO_BUFF_ZONE'], secondaryTarget: 'STASIS_BAIT' }),
+  hero_support_04: AB('LOWEST_HP_ALLOY', 'KEEP_DISTANCE', ['ON_LOW_HP', 'ON_ALLY_DEATH'], ['HERO_BUFF_SEEKER', 'HAZARD_AVOIDER'], 'Khiên sư luôn tìm đồng minh nguy hiểm nhất sắp vỡ máu để trao khiên trước, đặc biệt ở lane có buff tranh chấp.', { supportFocus: 'PROACTIVE_SHIELD', secondaryTarget: 'ALLY_ABOUT_TO_BREAK' }),
+};
+
+for (const hero of HEROES) {
+  const behavior =
+    HERO_AI_BEHAVIORS[hero.id] ||
+    AB('NEAREST', 'CHARGER', 'ON_CROWD_ENTER', 'HAZARD_AVOIDER', 'Fallback AI.');
+  hero.ai_behavior = behavior;
+  hero.brain_logic = behavior.brain_logic;
+}
 
 export const HERO_BY_ID = Object.fromEntries(HEROES.map((h) => [h.id, h]));
 

@@ -1,17 +1,17 @@
-import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=104';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=104';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=104';
-import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=104';
-import { mapUsedCost } from './dungeon.js?v=104';
-import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=104';
-import { ParticleSystem } from '../render/particles.js?v=104';
+import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=112';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=112';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=112';
+import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=112';
+import { mapUsedCost } from './dungeon.js?v=112';
+import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=112';
+import { ParticleSystem } from '../render/particles.js?v=112';
 import {
   getMonsterSprite,
   getHeroSprite,
   drawSpriteAt,
-} from '../render/sprites.js?v=104';
-import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=104';
-import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=104';
+} from '../render/sprites.js?v=112';
+import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=112';
+import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=112';
 import {
   computeHeroAttackDamage,
   applyIncomingDamage,
@@ -47,10 +47,10 @@ import {
   ensureHeroSkillState,
   tryEnterStasisRevive,
   tickStasisRevive,
-} from './ai/skills.js?v=104';
-import { getTileModifiers, spawnMonsterStats, elementAuraActive, elementAuraTag } from './ai/tileModifiers.js?v=104';
-import { dist } from './ai/targeting.js?v=104';
-import { getHeroProfile } from './ai/profiles.js?v=104';
+} from './ai/skills.js?v=112';
+import { getTileModifiers, spawnMonsterStats, elementAuraActive, elementAuraTag } from './ai/tileModifiers.js?v=112';
+import { dist } from './ai/targeting.js?v=112';
+import { getHeroProfile } from './ai/profiles.js?v=112';
 import {
   patternForHero,
   patternForMonster,
@@ -58,7 +58,7 @@ import {
   tickAttack,
   ensureAttackState,
   resolveDisplayAnim,
-} from './ai/attackPatterns.js?v=104';
+} from './ai/attackPatterns.js?v=112';
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
@@ -103,6 +103,7 @@ const TERRAIN_COLORS = {
   FIRE: '#4a2818',
   ICE: '#1a3040',
   POISON: '#2a3820',
+  OIL: '#3a3018',
 };
 
 export class CombatEngine {
@@ -1201,9 +1202,10 @@ export class CombatEngine {
       if (h.rangeCutUntil && this.time < h.rangeCutUntil) {
         h.effectiveRange *= h.rangeCutFactor || 0.55;
       }
-      if (mod.healPerSec > 0) {
+      if (mod.healPerSec > 0 && !mod.healCut) {
         this._applyHealTo(h, mod.healPerSec * dt, { quiet: true });
       }
+      h.tileHealCut = !!mod.healCut;
       if (mod.reveal) h.revealed = true;
       if (mod.silence) h.silenced = true;
       if (mod.defMul !== 1) h.tileDefMul = mod.defMul;
@@ -1244,9 +1246,10 @@ export class CombatEngine {
       }
       if (m._elemAuraDef && m._elemAuraDef !== 1) m.tileDefMul *= m._elemAuraDef;
       if (m._rainbowFragile && m._rainbowFragile !== 1) m.tileDefMul *= m._rainbowFragile;
-      if (mod.healPerSec > 0) {
+      if (mod.healPerSec > 0 && !mod.healCut) {
         this._applyHealTo(m, mod.healPerSec * dt, { quiet: true });
       }
+      m.tileHealCut = !!mod.healCut;
       const terr = this.map.terrain[`${col},${row}`];
       if (terr === 'FIRE' && Math.random() < dt * 1.1) {
         applyBurn(m, this.time, { dps: 14, duration: 1.8 });
@@ -2330,6 +2333,7 @@ export class CombatEngine {
    */
   _applyHealTo(unit, rawAmount, { quiet = false } = {}) {
     if (!unit?.alive) return 0;
+    if (unit.tileHealCut) return 0;
     const mul = Math.max(0, Number(unit.healRecvMul) ?? 1);
     const amount = Math.max(0, Math.round(Number(rawAmount) * mul));
     if (amount <= 0) {
@@ -2843,6 +2847,8 @@ export class CombatEngine {
           if (b.kind === 'FIRE_ZONE') ctx.fillStyle = 'rgba(255,87,34,0.28)';
           else if (b.kind === 'ICE_ZONE') ctx.fillStyle = 'rgba(129,212,250,0.28)';
           else if (b.kind === 'POISON_ZONE') ctx.fillStyle = 'rgba(156,204,101,0.28)';
+          else if (b.kind === 'DEF_SHRED_ZONE') ctx.fillStyle = 'rgba(171,71,188,0.25)';
+          else if (b.kind === 'HEAL_CUT_ZONE') ctx.fillStyle = 'rgba(120,144,156,0.28)';
           else if (b.side === 'monster') ctx.fillStyle = 'rgba(102,187,106,0.22)';
           else if (b.side === 'hero') ctx.fillStyle = 'rgba(239,83,80,0.18)';
           else ctx.fillStyle = 'rgba(255,213,79,0.15)';
@@ -2886,6 +2892,10 @@ export class CombatEngine {
         }
         if (ch === 'p' || terrain === 'POISON') {
           ctx.fillStyle = 'rgba(156,204,101,0.22)';
+          ctx.fillRect(x, y, CELL, CELL);
+        }
+        if (ch === 'q' || terrain === 'OIL') {
+          ctx.fillStyle = 'rgba(180,140,60,0.28)';
           ctx.fillRect(x, y, CELL, CELL);
         }
 

@@ -3,17 +3,17 @@ import {
   TERRAIN_LABELS,
   RARITY_COLORS,
   HERO_CLASS_LABELS,
-} from '../data/constants.js?v=104';
-import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=104';
-import { monsterScaleForLevel } from '../data/heroes.js?v=104';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=104';
-import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=104';
+} from '../data/constants.js?v=112';
+import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=112';
+import { monsterScaleForLevel } from '../data/heroes.js?v=112';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=112';
+import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=112';
 import {
   mapUsedCost,
   placeMonster,
   removePlacement,
   totalPlacements,
-} from '../core/dungeon.js?v=104';
+} from '../core/dungeon.js?v=112';
 import {
   loadoutMaxPoolCost,
   loadoutPoolCost,
@@ -24,18 +24,18 @@ import {
   suggestLoadout,
   tryAddToLoadout,
   tryRemoveFromLoadout,
-} from '../core/loadout.js?v=104';
-import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=104';
-import { attachSetupBoardFx } from './setupBoardFx.js?v=104';
-import { playGhostWalk } from './setupPreview.js?v=104';
-import { saveState } from '../core/storage.js?v=104';
+} from '../core/loadout.js?v=112';
+import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=112';
+import { attachSetupBoardFx } from './setupBoardFx.js?v=112';
+import { playGhostWalk } from './setupPreview.js?v=112';
+import { saveState } from '../core/storage.js?v=112';
 import {
   hideMonsterTip,
   monsterTipHtml,
-} from './monsterTip.js?v=104';
+} from './monsterTip.js?v=112';
 import {
   displayMonsterStats,
-} from '../core/monsterUpgrade.js?v=104';
+} from '../core/monsterUpgrade.js?v=112';
 import {
   validateChallengeLoadout,
   tryAddChallengeLoadout,
@@ -46,7 +46,7 @@ import {
   monsterStageLevelForRun,
   monsterUpgradeLevelForRun,
   monsterStatMulForRun,
-} from '../core/challenge.js?v=104';
+} from '../core/challenge.js?v=112';
 import {
   hardRarityBlockReason,
   hardRaritySummary,
@@ -54,12 +54,91 @@ import {
   suggestHardLoadout,
   tryAddHardLoadout,
   validateHardLoadout,
-} from '../data/hardMode.js?v=104';
+} from '../data/hardMode.js?v=112';
 
 function shortName(name) {
   if (!name) return '?';
   const parts = name.split(/\s+/);
   return parts.slice(-2).join(' ');
+}
+
+function heroRoleCue(h) {
+  const ai = h.ai_behavior || {};
+  switch (ai.movementStyle) {
+    case 'STEALTH_AMBUSH':
+    case 'FLANKING':
+      return 'Lách sườn / đâm tuyến sau';
+    case 'KITING':
+    case 'KEEP_DISTANCE':
+      return 'Giữ khoảng cách / thả diều';
+    case 'TANK_WALL':
+      return 'Tank giữ choke';
+    case 'SUICIDE_CHARGE':
+      return 'Cảm tử mở giao tranh';
+    case 'BULL_RUSH':
+    case 'CHARGER':
+      return 'Lao thẳng phá tuyến';
+    case 'ZONING_ORBIT':
+      return 'Đi vòng chiếm ô mạnh';
+    default:
+      return HERO_CLASS_LABELS[h.class] || h.class;
+  }
+}
+
+function heroDangerCue(h) {
+  const ai = h.ai_behavior || {};
+  switch (ai.targetPriority) {
+    case 'TREASURE_RUSH':
+      return 'Thấy khe hở là lao vào Kho';
+    case 'BACKLINE_DIVE':
+    case 'HIGH_THREAT':
+      return 'Ưu tiên dí carry / support';
+    case 'LOWEST_HP_ALLOY':
+      return 'Săn mục tiêu thấp máu';
+    case 'CROWD_DENSEST':
+      return 'Thích xả vào cụm đông';
+    case 'AOE_BUFF_CARRIER':
+      return 'Bám vùng buff / bảo kê lõi';
+    default:
+      return h.stealth ? 'Có thể lẻn qua tuyến đầu' : 'Gây áp lực lane trực diện';
+  }
+}
+
+function heroCounterCue(h) {
+  const ai = h.ai_behavior || {};
+  if (h.skills?.includes('REVEAL')) return 'Khắc chế: tránh phụ thuộc tàng hình';
+  if (h.skills?.includes('HEAL_ALLY') || h.skills?.includes('SHIELD_ALLY')) {
+    return 'Khắc chế: focus support / anti-heal';
+  }
+  if (h.skills?.includes('STASIS_REVIVE') || h.skills?.includes('REVIVE')) {
+    return 'Khắc chế: giữ burst cho nhịp sống lại';
+  }
+  if (ai.movementStyle === 'STEALTH_AMBUSH' || h.stealth) return 'Khắc chế: reveal / taunt / bẫy';
+  if (ai.movementStyle === 'KITING' || ai.movementStyle === 'KEEP_DISTANCE') {
+    return 'Khắc chế: gap-close / silence';
+  }
+  if (ai.movementStyle === 'TANK_WALL') return 'Khắc chế: DoT / phá khiên / anti-heal';
+  if (ai.movementStyle === 'SUICIDE_CHARGE') return 'Khắc chế: giết sớm từ xa / kéo lệch cụm';
+  return 'Khắc chế: chặn đúng lane và đổi mục tiêu sớm';
+}
+
+function stageWarningCues(run) {
+  const cues = [];
+  const classes = [...new Set(run.wave.map((h) => h.class))];
+  const stealth = run.wave.some((h) => h.stealth || h.ai_behavior?.movementStyle === 'STEALTH_AMBUSH');
+  const supportHeavy = run.wave.some((h) => h.skills?.includes('HEAL_ALLY') || h.skills?.includes('SHIELD_ALLY'));
+  const treasureRush = run.wave.some((h) => h.ai_behavior?.targetPriority === 'TREASURE_RUSH');
+  const crowdBurst = run.wave.some((h) => h.ai_behavior?.targetPriority === 'CROWD_DENSEST');
+
+  if (stealth) cues.push('Có sát thủ lách sườn — canh lane phụ, reveal và taunt.');
+  if (supportHeavy) cues.push('Có support/healer — đừng để giao tranh kéo dài miễn phí.');
+  if (treasureRush) cues.push('Có hero lao Kho — phải giữ choke và không bỏ lane trống.');
+  if (crowdBurst) cues.push('Có AoE trừng phạt cụm đông — đừng dồn quái một cục.');
+  if (classes.includes('TANK') || classes.includes('WARRIOR')) cues.push('Tuyến đầu khá dày — chuẩn bị DoT, phá khiên hoặc anti-heal.');
+  if (classes.includes('MAGE') && !crowdBurst) cues.push('Có phép tầm xa — silence hoặc áp sát sớm sẽ lời.');
+  if (classes.includes('ARCHER')) cues.push('Có tầm xa giữ góc — cần gap-close hoặc ép chúng đổi vị trí.');
+
+  return [...new Set(cues)].slice(0, 3);
 }
 
 /** Cap gốc cho pool loadout (map.costCap là Cap sân = 3×). */
@@ -75,6 +154,8 @@ const BUFF_KIND_VI = {
   HEAL_TICK: 'hồi máu dần',
   REVEAL_AURA: 'soi tàng hình',
   SILENCE_ZONE: 'câm chú',
+  DEF_SHRED_ZONE: 'xé giáp',
+  HEAL_CUT_ZONE: 'cắt hồi',
   FIRE_ZONE: 'vùng lửa',
   ICE_ZONE: 'vùng băng',
   POISON_ZONE: 'vùng độc',
@@ -129,6 +210,10 @@ function cellTooltip(map, col, row, ch) {
     parts.push(
       'Ô độc (p): quái Buff độc đứng đây +40% ATK — ngoài độc bị yếu; Hero có thể nhiễm độc'
     );
+  } else if (terrain === 'OIL') {
+    parts.push(
+      'Ô dầu (q): Hero chậm — lửa/sét kích hoạt combo nguy hiểm; quái hệ lửa hưởng lợi'
+    );
   } else if (terrain === 'LOW_CEILING') {
     parts.push(
       'Ô trần thấp (l): quái Sợ trần cao đứng đây +200% ATK — trần cao bị −50%'
@@ -155,7 +240,6 @@ function heroFormationHtml(wave) {
     .map((h) => {
       const f = h.formation || {};
       const t = (f.spawnAt ?? h.spawnDelay ?? 0).toFixed(1);
-      const skills = (h.skills || []).join(', ') || '—';
       return `
         <div class="formation-slot ${h.class}">
           <span class="formation-order">#${f.order || '?'}</span>
@@ -163,9 +247,10 @@ function heroFormationHtml(wave) {
           <div class="formation-meta">
             <strong>${h.name}</strong>
             <span class="formation-cls">${HERO_CLASS_LABELS[h.class] || h.class}${h.stealth ? ' · Tàng hình' : ''}</span>
-            <span class="formation-role">${f.roleLine || ''}</span>
+            <span class="formation-role">${heroRoleCue(h)}</span>
+            <span class="formation-stats"><b>Nguy</b> ${heroDangerCue(h)}</span>
+            <span class="formation-stats"><b>Khắc</b> ${heroCounterCue(h)}</span>
             <span class="formation-stats">HP ${h.maxHp || h.hp} · ATK ${h.atk} · SPD ${h.speed}</span>
-            <span class="formation-stats">Tầm ${h.range}${h.aoeRadius ? ` · AoE ${h.aoeRadius}` : ''} · Skill ${skills}</span>
             <span class="formation-gate">Cổng (${f.col ?? '?'},${f.row ?? '?'}) · vào sau ${t}s</span>
           </div>
         </div>`;
@@ -316,22 +401,7 @@ export function renderScout(root, ctx) {
   } else if (run.isReplay) {
     tips.unshift('Replay — thắng không tăng tiến độ, thưởng giảm');
   }
-  if (classes.includes('MAGE')) tips.push('Có Pháp sư → Silence / áp sát');
-  if (classes.includes('WARRIOR')) tips.push('Có Chiến sĩ → Boss burst / DoT');
-  if (classes.includes('ARCHER')) tips.push('Có Cung thủ → gap-close / chase tầm xa');
-  if (classes.includes('TANK')) tips.push('Có Thuần tank → DoT / %HP / Boss');
-  if (classes.includes('BERSERKER')) tips.push('Có Berserker → burst sớm hoặc CC / slow');
-  if (classes.includes('ROGUE')) {
-    tips.push(
-      run.wave.some((h) => h.stealth)
-        ? 'Có Đạo tặc ẩn → Mắt thần / Bẫy trên đường phụ'
-        : 'Có Đạo tặc → focus DPS / chậm'
-    );
-  }
-  if (classes.includes('HEALER')) tips.push('Có Healer → ưu tiên hạ hồi máu / mang anti-heal');
-  if (classes.includes('HEXER')) tips.push('Có Diệt hồi → heal quái bị giảm — vẫn focus hexer nếu cần');
-  if (classes.includes('BOSS')) tips.push('Hero Boss — focus boss, map dài, pool mang ×5');
-  if (classes.includes('SCOUT')) tips.push('Có Trinh sát → quái tàng hình dễ bị lộ');
+  tips.push(...stageWarningCues(run));
 
   function loadoutPanelHtml() {
     const loadout = run.loadout || {};

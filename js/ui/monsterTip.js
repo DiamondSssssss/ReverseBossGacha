@@ -1,10 +1,10 @@
-import { RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=104';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=104';
-import { describeMonsterKit, describeMonsterSummary } from '../data/skillDesc.js?v=104';
+import { RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=112';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=112';
+import { describeMonsterKit, describeMonsterSummary } from '../data/skillDesc.js?v=112';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,
-} from '../core/monsterUpgrade.js?v=104';
+} from '../core/monsterUpgrade.js?v=112';
 
 function escapeHtml(str) {
   return String(str ?? '')
@@ -12,6 +12,41 @@ function escapeHtml(str) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+function monsterCue(m) {
+  const b = m.monster_behavior || {};
+  const role =
+    b.movementStyle === 'STATIC_TRAP'
+      ? 'Bẫy giữ vùng'
+      : b.movementStyle === 'BUFF_ANCHOR' || b.movementStyle === 'SENTRY_HOLD'
+        ? 'Giữ vị trí mạnh'
+        : b.movementStyle === 'FLANK_DIVE' || b.movementStyle === 'RAPID_INTERCEPT'
+          ? 'Đột kích bắt lẻ'
+          : b.movementStyle === 'ANCHOR_BLOCK'
+            ? 'Chặn lane / câu đòn'
+            : b.movementStyle === 'VISION_SENTINEL'
+              ? 'Canh tàng hình'
+              : 'Ép giao tranh trực diện';
+
+  let danger = 'Đè lane bằng chỉ số và passive.';
+  if (b.targetPriority === 'CASTER_HUNTER') danger = 'Ưu tiên dí Pháp sư / nguồn phép.';
+  else if (b.targetPriority === 'STEALTH_PUNISH') danger = 'Canh bắt rogue/tàng hình.';
+  else if (b.targetPriority === 'EXECUTE_DRAINER') danger = 'Rất thích dí hero đang lao vào Kho.';
+  else if (b.targetPriority === 'BACKLINE_DIVE') danger = 'Lẻn sang tuyến sau nếu có khe hở.';
+  else if (b.targetPriority === 'FRONTLINE_LOCK') danger = 'Khóa giao tranh ở choke hoặc cửa hẹp.';
+  else if (b.targetPriority === 'SHIELD_BREAK') danger = 'Đè tank/warrior đứng tuyến đầu.';
+  else if (b.targetPriority === 'ZONE_DENIAL') danger = 'Ép bạn né vùng đặt bẫy hoặc ô xấu.';
+
+  let counter = 'Khắc chế: đổi lane, focus đúng mục tiêu và không dồn sai chỗ.';
+  if (b.targetPriority === 'CASTER_HUNTER') counter = 'Khắc chế: che pháp sư bằng taunt/tank, hạ nó sớm.';
+  else if (b.targetPriority === 'STEALTH_PUNISH') counter = 'Khắc chế: đừng all-in vào tàng hình ở lane nó đang giữ.';
+  else if (b.targetPriority === 'EXECUTE_DRAINER') counter = 'Khắc chế: đừng để hero hút Kho đi lẻ, giữ choke chặt.';
+  else if (b.targetPriority === 'BACKLINE_DIVE') counter = 'Khắc chế: trap, stun, taunt hoặc cắt đường flank.';
+  else if (b.targetPriority === 'FRONTLINE_LOCK') counter = 'Khắc chế: DoT, anti-heal, phá khiên hoặc kéo lệch giao tranh.';
+  else if (b.targetPriority === 'ZONE_DENIAL') counter = 'Khắc chế: đặt quái lệch cụm và buộc nó kích hoạt lệch nhịp.';
+
+  return { role, danger, counter };
 }
 
 /** HTML nội dung tip cho 1 quái (đã tính nâng cấp + scale ải). */
@@ -70,6 +105,7 @@ export function monsterTipHtml(monsterOrId, state, extra = {}) {
         ? `<div class="mtip-note">HP/ATK trong trận theo <b>${stageName}</b> (gốc ${st.baseHp}/${st.baseAtk} → trận ${st.hp}/${st.atk}).</div>`
         : '';
   const note = extra.note ? `<div class="mtip-note">${escapeHtml(extra.note)}</div>` : '';
+  const cue = monsterCue(m);
 
   return `
     <div class="mtip-name" style="--r:${RARITY_COLORS[m.rarity]}">${escapeHtml(m.name)} ${stageBadge}</div>
@@ -84,6 +120,9 @@ export function monsterTipHtml(monsterOrId, state, extra = {}) {
       <span><b>RNG</b> ${st.range}</span>
       <span><b>AS</b> ${st.atkSpeed}</span>
     </div>
+    <div class="mtip-desc"><b>Vai trò:</b> ${escapeHtml(cue.role)}</div>
+    <div class="mtip-desc"><b>Mối nguy:</b> ${escapeHtml(cue.danger)}</div>
+    <div class="mtip-desc"><b>Khắc chế:</b> ${escapeHtml(cue.counter)}</div>
     <div class="mtip-tags">${escapeHtml(tags)}</div>
     ${kitHtml}
     ${m.drawback ? `<div class="mtip-drawback">⚠ ${escapeHtml(m.drawback)}</div>` : ''}

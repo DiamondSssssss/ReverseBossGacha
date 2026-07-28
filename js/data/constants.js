@@ -323,6 +323,7 @@ export const TERRAIN_HINTS = {
   LOW_CEILING: 'Buff quái trần thấp (đặt đúng ô l)',
   DARK: 'Buff quái bóng tối; Hero giảm tầm',
   HIGH: 'Trần cao — quái trần thấp yếu đi',
+  OIL: 'Dầu — Hero chậm; combo lửa/sét nguy hiểm',
 };
 
 /** Ải cuối chế độ chính (thắng → dungeonLevel = MAX_STAGE + 1). */

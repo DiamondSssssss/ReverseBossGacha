@@ -1,23 +1,23 @@
-import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=104';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=104';
-import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=104';
-import { CombatEngine } from '../core/combatEngine.js?v=104';
-import { saveState } from '../core/storage.js?v=104';
-import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=104';
+import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=112';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=112';
+import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=112';
+import { CombatEngine } from '../core/combatEngine.js?v=112';
+import { saveState } from '../core/storage.js?v=112';
+import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=112';
 import {
   evaluateChallengeResult,
   grantChallengeReward,
   titleName,
-} from '../core/challenge.js?v=104';
-import { loadoutPoolCost } from '../core/loadout.js?v=104';
+} from '../core/challenge.js?v=112';
+import { loadoutPoolCost } from '../core/loadout.js?v=112';
 import {
   frontierForMode,
   recordPersonalBestCost,
-} from '../data/hardMode.js?v=104';
-import { submitStageBestCost } from '../core/stageRecords.js?v=104';
-import { isLoggedIn } from '../core/auth.js?v=104';
-import { monsterSpriteUrl } from '../render/sprites.js?v=104';
-import { bindMonsterTips, hideMonsterTip } from './monsterTip.js?v=104';
+} from '../data/hardMode.js?v=112';
+import { submitStageBestCost } from '../core/stageRecords.js?v=112';
+import { isLoggedIn } from '../core/auth.js?v=112';
+import { monsterSpriteUrl } from '../render/sprites.js?v=112';
+import { bindMonsterTips, hideMonsterTip } from './monsterTip.js?v=112';
 
 const REPLAY_REWARD_MUL = 0.35;
 

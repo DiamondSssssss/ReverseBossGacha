@@ -1,7 +1,7 @@
 /** Per-stage continuous battle maps — 1 ải = 1 map */
 
-import { TERRAIN } from './rooms.js?v=104';
-import { RAW_WIDE_MAPS } from './mapsWide.js?v=104';
+import { TERRAIN } from './rooms.js?v=112';
+import { RAW_WIDE_MAPS } from './mapsWide.js?v=112';
 
 export const TILE = {
   WALL: '#',
@@ -15,6 +15,7 @@ export const TILE = {
   FIRE: 'f',
   ICE: 'i',
   POISON: 'p',
+  OIL: 'q',
   GATE: 'G',
   TREASURE: 'T',
   /** Hành lang — Hero đi được, không đặt quái (chống gatekeep) */
@@ -29,6 +30,7 @@ const CHAR_TERRAIN = {
   f: TERRAIN.FIRE,
   i: TERRAIN.ICE,
   p: TERRAIN.POISON,
+  q: TERRAIN.OIL,
   '.': TERRAIN.NORMAL,
   G: TERRAIN.NORMAL,
   T: TERRAIN.NORMAL,

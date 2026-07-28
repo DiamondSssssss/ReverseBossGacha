@@ -3,26 +3,26 @@ import {
   saveState,
   resetState,
   inventoryCopy,
-} from './core/storage.js?v=104';
-import { createRunState } from './core/dungeon.js?v=104';
-import { createChallengeRunState } from './core/challenge.js?v=104';
-import { loadoutFingerprint } from './core/loadout.js?v=104';
-import { evaluateAchievements } from './core/achievements.js?v=104';
-import { initAuth, onAuthChange } from './core/auth.js?v=104';
-import { renderHub } from './ui/hub.js?v=104';
-import { renderStages } from './ui/stagesUI.js?v=104';
-import { renderChallenges } from './ui/challengesUI.js?v=104';
-import { renderGacha } from './ui/gachaUI.js?v=104';
-import { renderCollection } from './ui/collection.js?v=104';
-import { renderHeroes } from './ui/heroesUI.js?v=104';
-import { renderScout, renderSetup } from './ui/setup.js?v=104';
-import { renderCombat, renderReward, stopCombatIfAny, getCombatEngine } from './ui/combat.js?v=104';
-import { renderAchievements, announceUnlocks } from './ui/achievementsUI.js?v=104';
-import { renderLeaderboard } from './ui/leaderboardUI.js?v=104';
-import { renderAdmin } from './ui/adminUI.js?v=104';
-import { startGuidedTour, showTipBanner } from './ui/tutorial.js?v=104';
-import { renderAccountBar } from './ui/authUI.js?v=104';
-import { hideMonsterTip } from './ui/monsterTip.js?v=104';
+} from './core/storage.js?v=112';
+import { createRunState } from './core/dungeon.js?v=112';
+import { createChallengeRunState } from './core/challenge.js?v=112';
+import { loadoutFingerprint } from './core/loadout.js?v=112';
+import { evaluateAchievements } from './core/achievements.js?v=112';
+import { initAuth, onAuthChange } from './core/auth.js?v=112';
+import { renderHub } from './ui/hub.js?v=112';
+import { renderStages } from './ui/stagesUI.js?v=112';
+import { renderChallenges } from './ui/challengesUI.js?v=112';
+import { renderGacha } from './ui/gachaUI.js?v=112';
+import { renderCollection } from './ui/collection.js?v=112';
+import { renderHeroes } from './ui/heroesUI.js?v=112';
+import { renderScout, renderSetup } from './ui/setup.js?v=112';
+import { renderCombat, renderReward, stopCombatIfAny, getCombatEngine } from './ui/combat.js?v=112';
+import { renderAchievements, announceUnlocks } from './ui/achievementsUI.js?v=112';
+import { renderLeaderboard } from './ui/leaderboardUI.js?v=112';
+import { renderAdmin } from './ui/adminUI.js?v=112';
+import { startGuidedTour, showTipBanner } from './ui/tutorial.js?v=112';
+import { renderAccountBar } from './ui/authUI.js?v=112';
+import { hideMonsterTip } from './ui/monsterTip.js?v=112';
 
 const state = loadState();
 // Mở ấn đủ điều kiện + backfill Gem cho ấn đã mở (bảng thưởng mới)

@@ -1,5 +1,5 @@
-import { getHeroProfile } from './profiles.js?v=104';
-import { scoreMonsterForHero, dist } from './targeting.js?v=104';
+import { getHeroProfile } from './profiles.js?v=112';
+import { scoreMonsterForHero, dist } from './targeting.js?v=112';
 import {
   ensureHeroSkillState,
   tryActivateShield,
@@ -8,8 +8,218 @@ import {
   tryHealAlly,
   applySlow,
   tryShieldAlly,
-} from './skills.js?v=104';
-import { findPath, findPathAway, buildBlockedFromMap } from '../pathfinding.js?v=104';
+} from './skills.js?v=112';
+import { findPath, findPathAway, buildBlockedFromMap } from '../pathfinding.js?v=112';
+
+function hasFlag(value, flag) {
+  return Array.isArray(value) ? value.includes(flag) : value === flag;
+}
+
+function unitCell(unit, cellSize, originY = 0, map = null) {
+  return {
+    col: Math.max(0, Math.min((map?.cols || Infinity) - 1, Math.floor(unit.x / cellSize))),
+    row: Math.max(0, Math.min((map?.rows || Infinity) - 1, Math.floor((unit.y - originY) / cellSize))),
+  };
+}
+
+function isBadHeroCell(map, key) {
+  if (map.hazard?.has(key)) return true;
+  const terrain = map.terrain?.[key];
+  return terrain === 'FIRE' || terrain === 'POISON' || terrain === 'OIL';
+}
+
+function chooseHeroBuffGoal(hero, ctx) {
+  const { map, cellSize, originY } = ctx;
+  const here = unitCell(hero, cellSize, originY, map);
+  let best = null;
+  let bestScore = Infinity;
+  for (const [key, buffs] of Object.entries(map.buffIndex || {})) {
+    if (!buffs.some((b) => b.side === 'hero' || b.side === 'both')) continue;
+    const [colRaw, rowRaw] = key.split(',');
+    const col = Number(colRaw);
+    const row = Number(rowRaw);
+    if (!Number.isFinite(col) || !Number.isFinite(row)) continue;
+    if (col === here.col && row === here.row) continue;
+    const forward = Math.max(0, col - here.col);
+    if (col < here.col) continue;
+    const density = buffs.length;
+    const score = Math.abs(col - here.col) + Math.abs(row - here.row) - forward * 0.75 - density * 0.4;
+    if (score < bestScore) {
+      bestScore = score;
+      best = { col, row };
+    }
+  }
+  return best;
+}
+
+function chooseFlankGoal(hero, ctx) {
+  const { map, cellSize, originY } = ctx;
+  const here = unitCell(hero, cellSize, originY, map);
+  if (here.col >= Math.floor(map.cols * 0.65)) return null;
+  const top = 1;
+  const bottom = Math.max(1, map.rows - 2);
+  const preferTop = ((hero.formation?.order || 0) + hero.templateId.length) % 2 === 0;
+  return {
+    col: Math.min(map.cols - 3, here.col + 4),
+    row: preferTop ? top : bottom,
+  };
+}
+
+function chooseChargeGoal(hero, ctx, target) {
+  const { map, cellSize, originY } = ctx;
+  if (target) {
+    return {
+      col: Math.max(0, Math.min(map.cols - 1, target.col ?? Math.floor(target.x / cellSize))),
+      row: Math.max(0, Math.min(map.rows - 1, target.row ?? Math.floor((target.y - originY) / cellSize))),
+    };
+  }
+  const treasure = map.treasure?.[0];
+  return treasure ? { col: Math.max(0, treasure.col - 1), row: treasure.row } : null;
+}
+
+function pickAdvanceGoal(hero, ctx, target = null) {
+  const behavior = hero.ai_behavior || {};
+  const movement = behavior.movementStyle;
+  const env = behavior.environmentalReaction || [];
+  if (hasFlag(env, 'HERO_BUFF_SEEKER')) {
+    const goal = chooseHeroBuffGoal(hero, ctx);
+    if (goal) return goal;
+  }
+  if (movement === 'FLANKING' || movement === 'STEALTH_AMBUSH') {
+    return chooseFlankGoal(hero, ctx);
+  }
+  if (movement === 'CHARGER' || movement === 'BULL_RUSH' || movement === 'SUICIDE_CHARGE') {
+    return chooseChargeGoal(hero, ctx, target);
+  }
+  return null;
+}
+
+function pickProtectedAlly(hero, allies, ctx) {
+  const behavior = hero.ai_behavior || {};
+  const guardRole = behavior.guardRole || '';
+  const supportFocus = behavior.supportFocus || '';
+  if (!guardRole && !supportFocus) return null;
+  const { cellSize, originY, map } = ctx;
+  const here = unitCell(hero, cellSize, originY, map);
+  let best = null;
+  let bestScore = -Infinity;
+  for (const ally of allies || []) {
+    if (!ally?.alive || ally === hero) continue;
+    const allyCell = unitCell(ally, cellSize, originY, map);
+    let score = 0;
+    score -= Math.abs(allyCell.col - here.col) * 0.8 + Math.abs(allyCell.row - here.row) * 0.5;
+    score += allyCell.col * 0.35;
+    if (
+      guardRole === 'BODYGUARD' ||
+      guardRole === 'AURA_ESCORT' ||
+      guardRole === 'BACKLINE_SHIELD' ||
+      supportFocus === 'ALLY_WITH_AURA'
+    ) {
+      if (['HEALER', 'MAGE', 'ARCHER', 'SCOUT'].includes(ally.class)) score += 6;
+      if (ally.skills?.includes('HEAL_ALLY') || ally.skills?.includes('SHIELD_ALLY')) score += 4;
+    }
+    if (
+      supportFocus === 'TANK_ANCHOR' ||
+      supportFocus === 'FRONTLINE_SAVE' ||
+      supportFocus === 'PUSH_SUPPORT'
+    ) {
+      if (['WARRIOR', 'TANK', 'BOSS'].includes(ally.class)) score += 7;
+      score += (ally.maxHp || ally.hp || 0) / 250;
+    }
+    if (supportFocus === 'LEAD_DIVER' || supportFocus === 'EMERGENCY_HEAL') {
+      score += (ally.atk || 0) / 40;
+      if ((ally.hp || 0) / Math.max(1, ally.maxHp || ally.hp || 1) < 0.55) score += 5;
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      best = ally;
+    }
+  }
+  return best;
+}
+
+function escortGoalForAlly(hero, ally, ctx) {
+  if (!ally) return null;
+  const { map, cellSize, originY } = ctx;
+  const allyCell = unitCell(ally, cellSize, originY, map);
+  const supportFocus = hero.ai_behavior?.supportFocus || '';
+  const behind =
+    supportFocus === 'EMERGENCY_HEAL' ||
+    supportFocus === 'CLEANSE_CORE' ||
+    supportFocus === 'PROACTIVE_SHIELD';
+  return {
+    col: Math.max(0, Math.min(map.cols - 1, allyCell.col + (behind ? -1 : 1))),
+    row: Math.max(0, Math.min(map.rows - 1, allyCell.row)),
+  };
+}
+
+function pickInterceptTarget(hero, allies, monsters, ctx) {
+  const behavior = hero.ai_behavior || {};
+  if (!behavior.guardRole && !behavior.supportFocus && !behavior.visionRole) return null;
+  const protectedAlly = pickProtectedAlly(hero, allies, ctx);
+  const ref = protectedAlly || hero;
+  let best = null;
+  let bestScore = Infinity;
+  for (const m of monsters || []) {
+    if (!m?.alive || m.isTrap) continue;
+    const d = dist(ref, m);
+    if (behavior.visionRole && m.stealth) return m;
+    let score = d;
+    if (behavior.guardRole) score -= (m.atk || 0) * 0.05;
+    if (behavior.supportFocus === 'EMERGENCY_HEAL' && d < ctx.cellSize * 2.8) score -= ctx.cellSize * 1.4;
+    if (score < bestScore) {
+      bestScore = score;
+      best = m;
+    }
+  }
+  return best;
+}
+
+function pickSpecialTarget(hero, monsters) {
+  const behavior = hero.ai_behavior || {};
+  const secondary = behavior.secondaryTarget || '';
+  const curseFocus = behavior.curseFocus || '';
+  let best = null;
+  let bestScore = -Infinity;
+  for (const m of monsters || []) {
+    if (!m?.alive || m.isTrap) continue;
+    let score = 0;
+    if (secondary.includes('SHIELD') || curseFocus.includes('SHIELD')) {
+      score += (m.shieldHp || 0) * 1.2;
+    }
+    if (secondary.includes('DEF') || curseFocus === 'DEF_BREAK') {
+      score += (m.tileDefMul || 1) * 80 + (m.maxHp || 0) * 0.02;
+    }
+    if (
+      secondary.includes('HEALER') ||
+      secondary.includes('HEAL') ||
+      curseFocus.includes('HEAL') ||
+      curseFocus === 'BOSS_DENIAL'
+    ) {
+      if (
+        m.passive === 'HEAL_AURA' ||
+        m.passive === 'HEAL_PULSE' ||
+        m.passive === 'ANTI_HEAL_AURA' ||
+        m.tags?.includes('support')
+      ) {
+        score += 180;
+      }
+    }
+    if (secondary.includes('FAST') || secondary.includes('DIVER')) {
+      score += (m.speed || 0) * 60;
+    }
+    if (secondary.includes('BOSS') || secondary.includes('CARRY') || curseFocus === 'BOSS_DENIAL') {
+      if (m.isBoss) score += 260;
+      score += (m.atk || 0) * 0.8;
+      score += (m.rangeCells || 0) * 45;
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      best = m;
+    }
+  }
+  return bestScore > 0 ? best : null;
+}
 
 /**
  * Decide hero combat intent for this frame.
@@ -30,6 +240,8 @@ export function tickHeroBrain(hero, ctx) {
   } = ctx;
 
   const profile = getHeroProfile(hero.templateId, hero.class);
+  const behavior = hero.ai_behavior || {};
+  const allies = ctx.heroes || combat?.heroes || [];
   hero.aiProfile = profile;
   ensureHeroSkillState(hero, time);
   tryActivateShield(hero, profile, time);
@@ -41,7 +253,6 @@ export function tickHeroBrain(hero, ctx) {
 
   // Healer / Support: hồi máu hoặc trao khiên đồng minh
   if (profile.healPriority || hero.skills?.includes('HEAL_ALLY') || hero.class === 'HEALER') {
-    const allies = ctx.heroes || combat?.heroes || [];
     tryShieldAlly(
       hero,
       allies,
@@ -77,11 +288,23 @@ export function tickHeroBrain(hero, ctx) {
       // can still fight if very close and not rushing
       if (profile.stealthRush && dist(hero, m) > cellSize * 1.2) continue;
     }
-    const s = scoreMonsterForHero(hero, m, profile, cellSize);
+    const s = scoreMonsterForHero(hero, m, profile, cellSize, monsters, map);
     if (s < bestScore) {
       bestScore = s;
       best = m;
     }
+  }
+
+  const intercept = pickInterceptTarget(hero, allies, monsters, ctx);
+  if (intercept) {
+    const currentBestScore = best ? dist(hero, best) : Infinity;
+    if (!best || dist(hero, intercept) <= currentBestScore + cellSize * 1.2) {
+      best = intercept;
+    }
+  }
+  const special = pickSpecialTarget(hero, monsters);
+  if (special && (!best || dist(hero, special) <= dist(hero, best) + cellSize * 1.5)) {
+    best = special;
   }
 
   // Forced taunt from monster TAUNT_SELF
@@ -112,10 +335,22 @@ export function tickHeroBrain(hero, ctx) {
 
   const dToTarget = best ? dist(hero, best) : Infinity;
   const range = hero.effectiveRange ?? hero.range;
+  const hpPct = hero.hp / Math.max(1, hero.maxHp || hero.hp || 1);
+  const triggers = behavior.skillTrigger || [];
+  const movement = behavior.movementStyle;
+  const targetPriority = behavior.targetPriority;
+  hero.aiGoalCell = pickAdvanceGoal(hero, ctx, best);
+  if (!hero.aiGoalCell) {
+    const protectedAlly = pickProtectedAlly(hero, allies, ctx);
+    const escortGoal = escortGoalForAlly(hero, protectedAlly, ctx);
+    if (escortGoal) hero.aiGoalCell = escortGoal;
+  }
 
   // Mage / Archer / Hexer / Scout / ranged boss kite
   if (
-    (profile.archetype === 'mage' ||
+    (movement === 'KITING' ||
+      movement === 'KEEP_DISTANCE' ||
+      profile.archetype === 'mage' ||
       profile.archetype === 'archer' ||
       profile.archetype === 'hexer' ||
       profile.archetype === 'scout' ||
@@ -138,12 +373,32 @@ export function tickHeroBrain(hero, ctx) {
     return { action: 'advance', target: null, profile };
   }
 
+  if (
+    targetPriority === 'TREASURE_RUSH' &&
+    best &&
+    best.passive !== 'TAUNT' &&
+    dToTarget > cellSize * 0.95 &&
+    !profile.holdFight
+  ) {
+    return { action: 'advance', target: null, profile };
+  }
+
   const shouldEngage =
     best &&
     dToTarget <= range &&
     (!profile.stealthRush || hero.revealed || dToTarget <= cellSize * 1.3 || profile.brawler);
 
-  if (shouldEngage && !hero.panicking) {
+  const lowHpAggro =
+    hasFlag(triggers, 'ON_LOW_HP') &&
+    hpPct <= 0.3 &&
+    best &&
+    dToTarget <= range * 1.1;
+  const suicideCommit =
+    movement === 'SUICIDE_CHARGE' &&
+    best &&
+    (hpPct <= 0.12 || dToTarget <= cellSize * 1.25);
+
+  if ((shouldEngage || lowHpAggro || suicideCommit) && !hero.panicking) {
     tryTauntSelf(hero, profile, time, monsters, cellSize, combat._float?.bind(combat));
     return { action: 'fight', target: best, profile };
   }
@@ -194,6 +449,11 @@ export function rebuildHeroPath(hero, ctx) {
       if (!best || d < best.d) return { ...g, d };
       return best;
     }, null);
+  } else if (hero.aiGoalCell) {
+    goal = {
+      col: Math.max(0, Math.min(map.cols - 1, hero.aiGoalCell.col)),
+      row: Math.max(0, Math.min(map.rows - 1, hero.aiGoalCell.row)),
+    };
   } else {
     goal = map.treasure.reduce((best, t) => {
       const d = Math.abs(t.col - col) + Math.abs(t.row - row);
@@ -206,6 +466,22 @@ export function rebuildHeroPath(hero, ctx) {
     ...(blockedExtra || []),
     ...(dynamicBlocked || []),
   ]);
+  const env = hero.ai_behavior?.environmentalReaction || [];
+  const movement = hero.ai_behavior?.movementStyle;
+  const avoidHazards =
+    hasFlag(env, 'HAZARD_AVOIDER') &&
+    movement !== 'CHARGER' &&
+    movement !== 'BULL_RUSH' &&
+    movement !== 'SUICIDE_CHARGE';
+  if (avoidHazards) {
+    for (let c = 0; c < map.cols; c++) {
+      for (let r = 0; r < map.rows; r++) {
+        const key = `${c},${r}`;
+        if (key === `${goal.col},${goal.row}`) continue;
+        if (isBadHeroCell(map, key)) blocked.add(key);
+      }
+    }
+  }
   // Allow standing on treasure/gate
   for (const t of map.treasure) blocked.delete(`${t.col},${t.row}`);
   for (const g of map.gate) blocked.delete(`${g.col},${g.row}`);
@@ -217,7 +493,24 @@ export function rebuildHeroPath(hero, ctx) {
     map.rows,
     blocked
   );
-  hero.path = path || [{ col: goal.col, row: goal.row }];
+  if (!path && avoidHazards) {
+    const relaxedBlocked = buildBlockedFromMap(map, [
+      ...(blockedExtra || []),
+      ...(dynamicBlocked || []),
+    ]);
+    for (const t of map.treasure) relaxedBlocked.delete(`${t.col},${t.row}`);
+    for (const g of map.gate) relaxedBlocked.delete(`${g.col},${g.row}`);
+    const fallback = findPath(
+      { col, row },
+      { col: goal.col, row: goal.row },
+      map.cols,
+      map.rows,
+      relaxedBlocked
+    );
+    hero.path = fallback || [{ col: goal.col, row: goal.row }];
+  } else {
+    hero.path = path || [{ col: goal.col, row: goal.row }];
+  }
   hero.pathIdx = 0;
 }
 

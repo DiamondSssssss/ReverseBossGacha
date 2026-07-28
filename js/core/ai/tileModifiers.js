@@ -1,7 +1,7 @@
-import { TERRAIN } from '../../data/rooms.js?v=104';
-import { COMBAT, MONSTER_UPGRADE } from '../../data/constants.js?v=104';
-import { monsterStatMul, raritySurvivabilityMul } from '../monsterUpgrade.js?v=104';
-import { monsterScaleForLevel } from '../../data/heroes.js?v=104';
+import { TERRAIN } from '../../data/rooms.js?v=112';
+import { COMBAT, MONSTER_UPGRADE } from '../../data/constants.js?v=112';
+import { monsterStatMul, raritySurvivabilityMul } from '../monsterUpgrade.js?v=112';
+import { monsterScaleForLevel } from '../../data/heroes.js?v=112';
 
 /**
  * Buff / debuff địa hình theo passive element.
@@ -184,6 +184,7 @@ export function getTileModifiers(map, col, row, side, unit) {
     healPerSec: 0,
     reveal: false,
     silence: false,
+    healCut: false,
   };
 
   const key = `${col},${row}`;
@@ -195,6 +196,7 @@ export function getTileModifiers(map, col, row, side, unit) {
     if (terrain === TERRAIN.FIRE) out.speedMul *= 0.9;
     if (terrain === TERRAIN.ICE) out.speedMul *= 0.75;
     if (terrain === TERRAIN.POISON) out.speedMul *= 0.92;
+    if (terrain === TERRAIN.OIL || terrain === 'OIL') out.speedMul *= 0.88;
   }
 
   if (side === 'monster' && unit) {
@@ -240,6 +242,13 @@ export function getTileModifiers(map, col, row, side, unit) {
       case 'POISON_ZONE':
         if (side === 'monster') out.atkMul *= b.value || 1.25;
         if (side === 'hero') out.speedMul *= 0.9;
+        break;
+      case 'DEF_SHRED_ZONE':
+        out.defMul *= side === 'monster' ? b.value || 0.65 : b.value || 0.85;
+        break;
+      case 'HEAL_CUT_ZONE':
+        out.healCut = true;
+        out.healPerSec = 0;
         break;
       default:
         break;

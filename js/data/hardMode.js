@@ -1,6 +1,6 @@
-import { MAX_STAGE } from './constants.js?v=104';
-import { MONSTER_BY_ID } from './monsters.js?v=104';
-import { tryAddToLoadout, loadoutMaxPoolCost } from '../core/loadout.js?v=104';
+import { MAX_STAGE } from './constants.js?v=112';
+import { MONSTER_BY_ID } from './monsters.js?v=112';
+import { tryAddToLoadout, loadoutMaxPoolCost } from '../core/loadout.js?v=112';
 
 /** @typedef {'normal' | 'hard'} StageMode */
 
@@ -12,8 +12,7 @@ import { tryAddToLoadout, loadoutMaxPoolCost } from '../core/loadout.js?v=104';
  */
 
 /**
- * Band modifiers for Hard mode (same maps as Normal).
- * hero↑ monster↓ cap/treasure tighter + light map buff overlay for heroes.
+ * Band modifiers for Hard mode — map riêng 42×8 (mapsHard.js), Hero↑ pool lớn hơn.
  * Rarity caps scale by band; see HARD_STAGE_RARITY_OVERRIDES for per-stage tweaks.
  */
 const HARD_BANDS = [
@@ -28,9 +27,7 @@ const HARD_BANDS = [
     maxMythic: 0,
     maxRainbow: 0,
     rules: 'Hero mạnh hơn · Cap −1 · ≤1 Legendary · cấm Mythic/Rainbow',
-    extraMapBuffs: [
-      { cells: ['1,3', '1,4'], side: 'hero', kind: 'ATK_UP', value: 1.12 },
-    ],
+    extraMapBuffs: [],
   },
   {
     max: 20,
@@ -43,10 +40,7 @@ const HARD_BANDS = [
     maxMythic: 0,
     maxRainbow: 0,
     rules: 'Hero ↑ · Cap −1 · ≤2 Legendary · cấm Mythic/Rainbow',
-    extraMapBuffs: [
-      { cells: ['1,3', '1,4'], side: 'hero', kind: 'ATK_UP', value: 1.15 },
-      { cells: ['2,2', '2,5'], side: 'hero', kind: 'SPEED_UP', value: 1.1 },
-    ],
+    extraMapBuffs: [],
   },
   {
     max: 30,
@@ -59,10 +53,7 @@ const HARD_BANDS = [
     maxMythic: 1,
     maxRainbow: 0,
     rules: 'Mid hard · ≤2 Legendary · ≤1 Mythic · cấm Rainbow',
-    extraMapBuffs: [
-      { cells: ['1,3', '1,4'], side: 'hero', kind: 'ATK_UP', value: 1.18 },
-      { cells: ['2,3', '2,4'], side: 'hero', kind: 'DEF_UP', value: 1.12 },
-    ],
+    extraMapBuffs: [],
   },
   {
     max: 40,
@@ -75,10 +66,7 @@ const HARD_BANDS = [
     maxMythic: 1,
     maxRainbow: 0,
     rules: 'Cap −2 · ≤3 Legendary · ≤1 Mythic · cấm Rainbow',
-    extraMapBuffs: [
-      { cells: ['1,2', '1,5'], side: 'hero', kind: 'ATK_UP', value: 1.2 },
-      { cells: ['2,3', '2,4'], side: 'hero', kind: 'SPEED_UP', value: 1.12 },
-    ],
+    extraMapBuffs: [],
   },
   {
     max: 50,
@@ -91,10 +79,7 @@ const HARD_BANDS = [
     maxMythic: 2,
     maxRainbow: 0,
     rules: 'Late hard · ≤3 Legendary · ≤2 Mythic · cấm Rainbow',
-    extraMapBuffs: [
-      { cells: ['1,3', '1,4'], side: 'hero', kind: 'ATK_UP', value: 1.22 },
-      { cells: ['2,2', '2,5'], side: 'hero', kind: 'DEF_UP', value: 1.15 },
-    ],
+    extraMapBuffs: [],
   },
   {
     max: 60,
@@ -107,11 +92,7 @@ const HARD_BANDS = [
     maxMythic: 2,
     maxRainbow: 1,
     rules: 'Endgame Khó · ≤4 Legendary · ≤2 Mythic · ≤1 Rainbow',
-    extraMapBuffs: [
-      { cells: ['1,3', '1,4'], side: 'hero', kind: 'ATK_UP', value: 1.25 },
-      { cells: ['2,3', '2,4'], side: 'hero', kind: 'SPEED_UP', value: 1.15 },
-      { cells: ['3,2', '3,5'], side: 'hero', kind: 'DEF_UP', value: 1.12 },
-    ],
+    extraMapBuffs: [],
   },
 ];
 

@@ -1,19 +1,21 @@
-import { getStageMap, isPlaceable, stretchCompiledMap } from '../data/maps.js?v=104';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=104';
-import { MAP_UPGRADE, COMBAT, MAX_STAGE } from '../data/constants.js?v=104';
-import { buildWave, getWavePlan, assignHeroFormation } from '../data/heroes.js?v=104';
+import { getStageMap, isPlaceable } from '../data/maps.js?v=112';
+import { getHardStageMap } from '../data/mapsHard.js?v=112';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=112';
+import { MAP_UPGRADE, COMBAT, MAX_STAGE } from '../data/constants.js?v=112';
+import { buildWave, getWavePlan, assignHeroFormation } from '../data/heroes.js?v=112';
+import { buildHardWave, getHardWavePlan } from '../data/hardWaves.js?v=112';
 import {
   sanitizeLoadout,
   suggestLoadout,
   placeMaxCost,
   loadoutPoolMultForLevel,
-} from './loadout.js?v=104';
+} from './loadout.js?v=112';
 import {
   frontierForMode,
   hardModifiersForLevel,
   sanitizeHardLoadout,
   suggestHardLoadout,
-} from '../data/hardMode.js?v=104';
+} from '../data/hardMode.js?v=112';
 
 function reindexBuffs(map) {
   const buffIndex = {};
@@ -65,11 +67,8 @@ export function createRunState(playerState, opts = {}) {
   if (level > frontier) level = frontier;
 
   const isReplay = level < frontier;
-  const plan = getWavePlan(level);
-  let map = getStageMap(level);
-  if (mode === 'hard' && map.cols < 60) {
-    map = stretchCompiledMap(map, 3);
-  }
+  const plan = mode === 'hard' ? getHardWavePlan(level) : getWavePlan(level);
+  let map = mode === 'hard' ? getHardStageMap(level) : getStageMap(level);
   const hardMods = mode === 'hard' ? hardModifiersForLevel(level) : null;
   if (hardMods) applyHardMapMods(map, hardMods);
 
@@ -83,7 +82,10 @@ export function createRunState(playerState, opts = {}) {
   const basePoolMult = map.poolMultOverride || loadoutPoolMultForLevel(level);
   map.poolMult = basePoolMult + (hardMods?.poolMultBonus || 0);
 
-  let wave = assignHeroFormation(buildWave(level), map);
+  let wave = assignHeroFormation(
+    mode === 'hard' ? buildHardWave(level) : buildWave(level),
+    map
+  );
   if (hardMods) wave = scaleWaveHeroes(wave, hardMods.heroStatMul);
 
   const inv = playerState.inventory || {};

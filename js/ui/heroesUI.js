@@ -1,6 +1,6 @@
-import { HEROES } from '../data/heroes.js?v=104';
-import { HERO_CLASS_LABELS } from '../data/constants.js?v=104';
-import { heroSpriteUrl } from '../render/sprites.js?v=104';
+import { HEROES } from '../data/heroes.js?v=112';
+import { HERO_CLASS_LABELS } from '../data/constants.js?v=112';
+import { heroSpriteUrl } from '../render/sprites.js?v=112';
 
 const filters = {
   q: '',
@@ -79,6 +79,27 @@ function skillTags(h) {
   return tags;
 }
 
+function heroCue(h) {
+  const ai = h.ai_behavior || {};
+  let role = HERO_CLASS_LABELS[h.class] || h.class;
+  if (ai.movementStyle === 'STEALTH_AMBUSH' || ai.movementStyle === 'FLANKING') role = 'Lách sườn';
+  else if (ai.movementStyle === 'KITING' || ai.movementStyle === 'KEEP_DISTANCE') role = 'Thả diều';
+  else if (ai.movementStyle === 'TANK_WALL') role = 'Giữ choke';
+  else if (ai.movementStyle === 'SUICIDE_CHARGE') role = 'Cảm tử';
+  else if (ai.movementStyle === 'CHARGER' || ai.movementStyle === 'BULL_RUSH') role = 'Lao thẳng';
+  else if (ai.movementStyle === 'ZONING_ORBIT') role = 'Chiếm ô mạnh';
+
+  let danger = 'Ép lane trực diện.';
+  if (ai.targetPriority === 'TREASURE_RUSH') danger = 'Thấy hở là đâm Kho.';
+  else if (ai.targetPriority === 'BACKLINE_DIVE' || ai.targetPriority === 'HIGH_THREAT') {
+    danger = 'Ưu tiên dí carry/support.';
+  } else if (ai.targetPriority === 'LOWEST_HP_ALLOY') danger = 'Săn mục tiêu thấp máu.';
+  else if (ai.targetPriority === 'CROWD_DENSEST') danger = 'Thích xả vào cụm đông.';
+  else if (ai.targetPriority === 'AOE_BUFF_CARRIER') danger = 'Bám buff hoặc bảo kê lõi.';
+
+  return { role, danger };
+}
+
 function renderCards() {
   const list = filterList();
   const cards = list
@@ -86,6 +107,7 @@ function renderCards() {
       const src = heroSpriteUrl(h.id, h.class, h.color);
       const tags = skillTags(h);
       const cls = HERO_CLASS_LABELS[h.class] || h.class;
+      const cue = heroCue(h);
       return `
       <article class="monster-card hero-card" data-hid="${h.id}">
         <img class="card-sprite" src="${src}" alt="" width="64" height="64" />
@@ -100,7 +122,7 @@ function renderCards() {
               ? `<div class="hero-tags">${tags.map((t) => `<span class="hero-tag">${t}</span>`).join('')}</div>`
               : ''
           }
-          <div class="desc">${h.description}</div>
+          <div class="desc"><b>${cue.role}</b> · ${cue.danger}</div>
         </div>
       </article>`;
     })
