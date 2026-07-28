@@ -56,7 +56,7 @@ export function scoreMonsterForHero(hero, monster, profile, cellSize) {
  * Score hero for a monster (lower = better)
  */
 export function scoreHeroForMonster(monster, hero, ai) {
-  if (!hero.alive || hero.spawnProtect > 0) return Infinity;
+  if (!hero.alive || hero.spawnProtect > 0 || hero.inStasis) return Infinity;
   if (hero.stealth && !hero.revealed && monster.passive !== 'REVEAL') {
     return Infinity;
   }

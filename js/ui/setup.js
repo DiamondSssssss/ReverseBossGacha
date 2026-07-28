@@ -3,17 +3,17 @@ import {
   TERRAIN_LABELS,
   RARITY_COLORS,
   HERO_CLASS_LABELS,
-} from '../data/constants.js?v=101';
-import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=101';
-import { monsterScaleForLevel } from '../data/heroes.js?v=101';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=101';
-import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=101';
+} from '../data/constants.js?v=102';
+import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=102';
+import { monsterScaleForLevel } from '../data/heroes.js?v=102';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=102';
+import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=102';
 import {
   mapUsedCost,
   placeMonster,
   removePlacement,
   totalPlacements,
-} from '../core/dungeon.js?v=101';
+} from '../core/dungeon.js?v=102';
 import {
   loadoutMaxPoolCost,
   loadoutPoolCost,
@@ -24,18 +24,18 @@ import {
   suggestLoadout,
   tryAddToLoadout,
   tryRemoveFromLoadout,
-} from '../core/loadout.js?v=101';
-import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=101';
-import { attachSetupBoardFx } from './setupBoardFx.js?v=101';
-import { playGhostWalk } from './setupPreview.js?v=101';
-import { saveState } from '../core/storage.js?v=101';
+} from '../core/loadout.js?v=102';
+import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=102';
+import { attachSetupBoardFx } from './setupBoardFx.js?v=102';
+import { playGhostWalk } from './setupPreview.js?v=102';
+import { saveState } from '../core/storage.js?v=102';
 import {
   hideMonsterTip,
   monsterTipHtml,
-} from './monsterTip.js?v=101';
+} from './monsterTip.js?v=102';
 import {
   displayMonsterStats,
-} from '../core/monsterUpgrade.js?v=101';
+} from '../core/monsterUpgrade.js?v=102';
 import {
   validateChallengeLoadout,
   tryAddChallengeLoadout,
@@ -46,7 +46,7 @@ import {
   monsterStageLevelForRun,
   monsterUpgradeLevelForRun,
   monsterStatMulForRun,
-} from '../core/challenge.js?v=101';
+} from '../core/challenge.js?v=102';
 
 function shortName(name) {
   if (!name) return '?';

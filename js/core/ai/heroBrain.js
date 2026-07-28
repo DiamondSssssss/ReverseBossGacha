@@ -1,5 +1,5 @@
-import { getHeroProfile } from './profiles.js?v=101';
-import { scoreMonsterForHero, dist } from './targeting.js?v=101';
+import { getHeroProfile } from './profiles.js?v=102';
+import { scoreMonsterForHero, dist } from './targeting.js?v=102';
 import {
   ensureHeroSkillState,
   tryActivateShield,
@@ -7,8 +7,9 @@ import {
   tickStealthRegen,
   tryHealAlly,
   applySlow,
-} from './skills.js?v=101';
-import { findPath, findPathAway, buildBlockedFromMap } from '../pathfinding.js?v=101';
+  tryShieldAlly,
+} from './skills.js?v=102';
+import { findPath, findPathAway, buildBlockedFromMap } from '../pathfinding.js?v=102';
 
 /**
  * Decide hero combat intent for this frame.
@@ -38,9 +39,17 @@ export function tickHeroBrain(hero, ctx) {
     return { action: 'flee' };
   }
 
-  // Healer: ưu tiên hồi máu đồng minh trước khi đánh
+  // Healer / Support: hồi máu hoặc trao khiên đồng minh
   if (profile.healPriority || hero.skills?.includes('HEAL_ALLY') || hero.class === 'HEALER') {
     const allies = ctx.heroes || combat?.heroes || [];
+    tryShieldAlly(
+      hero,
+      allies,
+      time,
+      cellSize,
+      combat?._float?.bind(combat),
+      combat?.particles
+    );
     tryHealAlly(
       hero,
       allies,

@@ -1,17 +1,17 @@
-import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=101';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=101';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=101';
-import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=101';
-import { mapUsedCost } from './dungeon.js?v=101';
-import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=101';
-import { ParticleSystem } from '../render/particles.js?v=101';
+import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=102';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=102';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=102';
+import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=102';
+import { mapUsedCost } from './dungeon.js?v=102';
+import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=102';
+import { ParticleSystem } from '../render/particles.js?v=102';
 import {
   getMonsterSprite,
   getHeroSprite,
   drawSpriteAt,
-} from '../render/sprites.js?v=101';
-import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=101';
-import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=101';
+} from '../render/sprites.js?v=102';
+import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=102';
+import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=102';
 import {
   computeHeroAttackDamage,
   applyIncomingDamage,
@@ -45,10 +45,12 @@ import {
   tryActivateMonsterShield,
   tryMonsterTauntSelf,
   ensureHeroSkillState,
-} from './ai/skills.js?v=101';
-import { getTileModifiers, spawnMonsterStats, elementAuraActive, elementAuraTag } from './ai/tileModifiers.js?v=101';
-import { dist } from './ai/targeting.js?v=101';
-import { getHeroProfile } from './ai/profiles.js?v=101';
+  tryEnterStasisRevive,
+  tickStasisRevive,
+} from './ai/skills.js?v=102';
+import { getTileModifiers, spawnMonsterStats, elementAuraActive, elementAuraTag } from './ai/tileModifiers.js?v=102';
+import { dist } from './ai/targeting.js?v=102';
+import { getHeroProfile } from './ai/profiles.js?v=102';
 import {
   patternForHero,
   patternForMonster,
@@ -56,7 +58,7 @@ import {
   tickAttack,
   ensureAttackState,
   resolveDisplayAnim,
-} from './ai/attackPatterns.js?v=101';
+} from './ai/attackPatterns.js?v=102';
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
@@ -82,6 +84,8 @@ function intentLabel(intent) {
       return { text: 'CHOÁNG', color: '#90a4ae' };
     case 'frozen':
       return { text: 'ĐÓNG BĂNG', color: '#81d4fa' };
+    case 'stasis':
+      return { text: 'NGỦ ĐÔNG', color: '#4fc3f7' };
     case 'kiting':
       return { text: 'KITE', color: '#ce93d8' };
     case 'moving':
@@ -188,7 +192,7 @@ export class CombatEngine {
   }
 
   _damageHero(hero, raw, color = '#ff7043', text = null) {
-    if (!hero?.alive) return 0;
+    if (!hero?.alive || hero.inStasis) return 0;
     let dmg = Math.max(0, Math.round(raw));
     if (hero.frailUntil && this.time < hero.frailUntil) {
       dmg = Math.round(dmg * (hero.frailMul || 1.25));
@@ -199,8 +203,7 @@ export class CombatEngine {
     this._float(hero.x, hero.y - 8, text || `-${dmg}`, color);
     this.particles.burst(hero.x, hero.y, color);
     if (hero.hp <= 0) {
-      hero.alive = false;
-      this._float(hero.x, hero.y, 'Hạ!', color);
+      this._processHeroDeath(hero);
     } else {
       this._propagateSoulLink(hero, dmg, color);
     }
@@ -1591,6 +1594,8 @@ export class CombatEngine {
         bobPhase: Math.random() * Math.PI * 2,
         spawnProtect: 0.55,
         hasRevived: false,
+        inStasis: false,
+        stasisUntil: 0,
       });
       this.particles.magic(gateX, entry.y, h.color);
       this.particles.burst(gateX, entry.y, '#81c784');
@@ -1601,7 +1606,14 @@ export class CombatEngine {
   }
 
   _processHeroDeath(hero) {
-    if (!hero.alive || hero.hp > 0) return;
+    if (!hero.alive || hero.hp > 0 || hero.inStasis) return;
+    const canStasis =
+      !hero.hasRevived &&
+      (hero.skills?.includes('STASIS_REVIVE') || hero.tags?.includes('stasis_revive'));
+    if (canStasis) {
+      tryEnterStasisRevive(hero, this.time, this._float?.bind(this), this.particles);
+      return;
+    }
     const canRevive =
       !hero.hasRevived &&
       (hero.skills?.includes('REVIVE') || hero.tags?.includes('revive'));
@@ -1664,6 +1676,14 @@ export class CombatEngine {
       // Lethal từ frame trước (vd. Báo Bóng đánh khi hero đang choáng)
       this._processHeroDeath(hero);
       if (!hero.alive) continue;
+
+      if (hero.inStasis) {
+        tickStasisRevive(hero, this.time, dt, this._float?.bind(this), this.particles);
+        hero.intent = 'stasis';
+        hero.fightTarget = null;
+        hero.telegraph = null;
+        continue;
+      }
 
       if (!hero.panicking && hero.hp / hero.maxHp <= COMBAT.PANIC_HP_RATIO) {
         hero.panicking = true;
@@ -3036,17 +3056,17 @@ export class CombatEngine {
       if (!h.alive) continue;
       const spr = getHeroSprite(h.templateId, h.class, h.color);
       const bob = Math.sin(this.time * 5 + h.bobPhase) * 2.5;
-      const alpha = h.stealth && !h.revealed ? 0.45 : 1;
+      const alpha = h.inStasis ? 0.5 : h.stealth && !h.revealed ? 0.45 : 1;
       const poseInfo = resolveDisplayAnim(h);
       const size = CELL * 1.05;
       const poseT = poseInfo.animT ?? 0;
       const drawn = drawSpriteAt(ctx, spr, h.x, h.y, {
         size,
         facing: h.facing || 1,
-        bob,
+        bob: h.inStasis ? 0 : bob,
         flash: h.flash || 0,
         alpha,
-        pose: poseInfo.anim,
+        pose: h.inStasis ? 'idle' : poseInfo.anim,
         poseT,
         lungeX: h.lungeX || 0,
         lungeY: h.lungeY || 0,

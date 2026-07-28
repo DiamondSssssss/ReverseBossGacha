@@ -6,10 +6,62 @@ export function ensureHeroSkillState(hero, time) {
   if (hero.tauntUntil == null) hero.tauntUntil = 0;
   if (hero.outOfCombat == null) hero.outOfCombat = 0;
   if (hero.lastCombatTime == null) hero.lastCombatTime = time;
+  if (hero.inStasis == null) hero.inStasis = false;
+}
+
+export const STASIS_REVIVE_DURATION = 5;
+
+export function hasStasisRevive(unit) {
+  return unit.skills?.includes('STASIS_REVIVE') || unit.tags?.includes('stasis_revive');
+}
+
+export function isInStasis(unit, time) {
+  return !!unit.inStasis && time < (unit.stasisUntil || 0);
+}
+
+/** Lần đầu hết máu: ngủ đông, không thể bị nhắm, hồi máu trong 5 giây. */
+export function tryEnterStasisRevive(hero, time, floatFn, particles) {
+  if (!hasStasisRevive(hero)) return false;
+  if (hero.hasRevived) return false;
+  hero.hasRevived = true;
+  hero.alive = true;
+  hero.hp = 0;
+  hero.inStasis = true;
+  hero.stasisUntil = time + STASIS_REVIVE_DURATION;
+  hero.panicking = false;
+  hero.draining = false;
+  hero.fightTarget = null;
+  hero.shieldHp = 0;
+  hero.shieldUntil = 0;
+  hero.flash = 0.5;
+  floatFn?.(hero.x, hero.y - 14, 'Ngủ đông!', '#81d4fa');
+  particles?.frost?.(hero.x, hero.y);
+  return true;
+}
+
+/** Tick hồi máu khi đang ngủ đông; trả về true nếu vừa tỉnh dậy. */
+export function tickStasisRevive(hero, time, dt, floatFn, particles) {
+  if (!hero.inStasis) return false;
+  const healRate = hero.maxHp / STASIS_REVIVE_DURATION;
+  hero.hp = Math.min(hero.maxHp, hero.hp + healRate * dt);
+  if (Math.random() < dt * 0.7) {
+    particles?.heal?.(hero.x, hero.y - 8);
+  }
+  if (hero.hp >= hero.maxHp || time >= hero.stasisUntil) {
+    hero.inStasis = false;
+    hero.stasisUntil = 0;
+    hero.hp = hero.maxHp;
+    hero.flash = 0.45;
+    floatFn?.(hero.x, hero.y - 14, 'Tỉnh dậy!', '#fff59d');
+    particles?.magic?.(hero.x, hero.y, '#81d4fa');
+    return true;
+  }
+  return false;
 }
 
 export function applyIncomingDamage(unit, dmg, time) {
   ensureHeroSkillState(unit, time);
+  if (unit.inStasis) return 0;
   if (unit.invulnUntil && time < unit.invulnUntil) return 0;
   if (unit.shieldHp > 0 && time < unit.shieldUntil) {
     const absorbed = Math.min(unit.shieldHp, dmg);
@@ -550,6 +602,38 @@ export function tryHealAlly(hero, allies, time, floatFn, particles) {
   if (hero.skills?.includes('SLOW_AURA_ALLY')) {
     hero._justHealedSlow = true;
   }
+  return true;
+}
+
+/** Support — trao khiên chủ động cho đồng minh thiếu máu / chưa có khiên. */
+export function tryShieldAlly(hero, allies, time, cellSize, floatFn, particles) {
+  ensureHeroSkillState(hero, time);
+  if (!hero.skills?.includes('SHIELD_ALLY')) return false;
+  if (hero.silenced) return false;
+  if (hero.shieldAllyCdUntil && time < hero.shieldAllyCdUntil) return false;
+
+  let best = null;
+  let bestScore = Infinity;
+  const range = (hero.range || 3) * cellSize * 1.1;
+  for (const a of allies) {
+    if (!a.alive || a === hero || a.inStasis) continue;
+    const d = Math.hypot(a.x - hero.x, a.y - hero.y);
+    if (d > range) continue;
+    const shieldActive = a.shieldHp > 0 && time < (a.shieldUntil || 0);
+    const score = a.hp / a.maxHp + (shieldActive ? 0.35 : 0);
+    if (score < bestScore) {
+      bestScore = score;
+      best = a;
+    }
+  }
+  if (!best || bestScore > 0.92) return false;
+
+  const amount = Math.round(best.maxHp * 0.25);
+  best.shieldHp = Math.max(best.shieldHp || 0, amount);
+  best.shieldUntil = time + 4.2;
+  hero.shieldAllyCdUntil = time + 6.5;
+  floatFn?.(best.x, best.y - 10, 'Khiên!', '#90caf9');
+  particles?.magic?.(best.x, best.y - 8, '#90caf9');
   return true;
 }
 

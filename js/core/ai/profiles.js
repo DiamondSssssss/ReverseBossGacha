@@ -480,6 +480,33 @@ export const HERO_PROFILES = {
     engageBias: 0.35,
     preferStealth: true,
   },
+  hero_support_04: {
+    archetype: 'healer',
+    idealRange: 3.2,
+    kiteBelow: 1.5,
+    engageBias: 0.15,
+    healPriority: true,
+    shieldAt: 0.5,
+  },
+  hero_stasis_01: {
+    archetype: 'tank',
+    engageBias: 1.4,
+    holdFight: true,
+    tauntSelf: true,
+    shieldAt: 0.45,
+  },
+  hero_stasis_02: {
+    archetype: 'warrior',
+    engageBias: 1.2,
+    holdFight: true,
+    shieldAt: 0.4,
+  },
+  hero_stasis_03: {
+    archetype: 'mage',
+    idealRange: 3.2,
+    kiteBelow: 1.6,
+    engageBias: 0.35,
+  },
 };
 
 export function getHeroProfile(heroId, heroClass) {

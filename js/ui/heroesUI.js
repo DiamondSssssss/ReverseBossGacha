@@ -1,6 +1,6 @@
-import { HEROES } from '../data/heroes.js?v=101';
-import { HERO_CLASS_LABELS } from '../data/constants.js?v=101';
-import { heroSpriteUrl } from '../render/sprites.js?v=101';
+import { HEROES } from '../data/heroes.js?v=102';
+import { HERO_CLASS_LABELS } from '../data/constants.js?v=102';
+import { heroSpriteUrl } from '../render/sprites.js?v=102';
 
 const filters = {
   q: '',
@@ -65,6 +65,8 @@ function skillTags(h) {
   if (skills.includes('HEAL_ALLY')) tags.push('Hồi máu');
   if (skills.includes('HERO_AURA_ATK')) tags.push('Buff công');
   if (skills.includes('HERO_AURA_SHIELD')) tags.push('Buff khiên');
+  if (skills.includes('SHIELD_ALLY')) tags.push('Trao khiên');
+  if (skills.includes('STASIS_REVIVE')) tags.push('Ngủ đông');
   if (skills.includes('HERO_AURA_SPEED')) tags.push('Buff tốc chạy');
   if (skills.includes('AOE_FIRE') || skills.includes('AOE_FROST')) tags.push('AoE');
   if (skills.includes('FREEZE')) tags.push('Đóng băng');

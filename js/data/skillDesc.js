@@ -60,6 +60,10 @@ export const PASSIVE_INFO = {
     name: 'Sống lại',
     desc: 'Chết lần đầu: hồi 40% maxHp + khiên 15% maxHp trong 2.5 giây. Vẫn chiếm cost đến khi chết hẳn.',
   },
+  STASIS_REVIVE: {
+    name: 'Ngủ đông hồi sinh',
+    desc: 'Chết lần đầu: ngủ đông 5 giây — không thể bị nhắm, hồi máu dần; tỉnh lại full HP. Chỉ 1 lần/trận.',
+  },
   STUN_ON_HIT: {
     name: 'Choáng khi đánh',
     desc: 'Mỗi đòn đánh trúng: choáng mục tiêu 0.85 giây.',
@@ -317,6 +321,10 @@ export const SKILL_INFO = {
     name: 'Aura hộ ấn',
     desc: 'Mỗi ~5 giây, Hero gần nhận một lớp khiên nhỏ (~12% máu tối đa).',
   },
+  SHIELD_ALLY: {
+    name: 'Trao khiên',
+    desc: 'Chủ động trao khiên ~25% maxHp cho đồng minh thiếu máu trong tầm. CD ~6.5 giây.',
+  },
   HERO_AURA_SPEED: {
     name: 'Aura phong hành',
     desc: 'Hero gần được buff tốc chạy khoảng ×1.28 khi ở trong aura.',
@@ -339,6 +347,7 @@ export const SKILL_INFO = {
   THORNS_PASSIVE: PASSIVE_INFO.THORNS_PASSIVE,
   SELF_DESTRUCT: PASSIVE_INFO.SELF_DESTRUCT,
   REVIVE: PASSIVE_INFO.REVIVE,
+  STASIS_REVIVE: PASSIVE_INFO.STASIS_REVIVE,
   BURN_ON_HIT: PASSIVE_INFO.BURN_ON_HIT,
   POISON_ON_HIT: PASSIVE_INFO.POISON_ON_HIT,
   FREEZE: {

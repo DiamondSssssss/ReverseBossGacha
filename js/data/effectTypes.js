@@ -122,6 +122,12 @@ export const EFFECTS = {
     name: 'Bất tử tạm',
     desc: 'Không nhận sát thương trong thời gian ngắn.',
   },
+  STASIS: {
+    id: 'STASIS',
+    category: EFFECT_CATEGORY.BUFF,
+    name: 'Ngủ đông',
+    desc: 'Không thể bị nhắm, hồi máu dần trong thời gian ngắn.',
+  },
   THORNS_PASSIVE: {
     id: 'THORNS_PASSIVE',
     category: EFFECT_CATEGORY.BUFF,
