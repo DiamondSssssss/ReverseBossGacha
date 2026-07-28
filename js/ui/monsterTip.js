@@ -1,10 +1,10 @@
-import { RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=112';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=112';
-import { describeMonsterKit, describeMonsterSummary } from '../data/skillDesc.js?v=112';
+import { RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=113';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=113';
+import { describeMonsterKit, describeMonsterSummary } from '../data/skillDesc.js?v=113';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,
-} from '../core/monsterUpgrade.js?v=112';
+} from '../core/monsterUpgrade.js?v=113';
 
 function escapeHtml(str) {
   return String(str ?? '')
@@ -165,21 +165,36 @@ function positionTip(anchor) {
   const pad = 8;
   const vw = window.innerWidth;
   const vh = window.innerHeight;
+  const desktopDock = vw >= 980;
+  const mobileCompact = vw < 760;
 
   el.style.display = 'block';
   el.style.visibility = 'hidden';
   el.style.left = '0px';
   el.style.top = '0px';
+  el.classList.toggle('docked-right', desktopDock);
+  el.classList.toggle('mobile-compact', mobileCompact);
 
   const tw = Math.max(el.offsetWidth, 200);
   const th = Math.max(el.offsetHeight, 80);
 
-  let left = rect.left + rect.width / 2 - tw / 2;
-  let top = rect.bottom + pad;
+  let left;
+  let top;
 
-  if (top + th > vh - pad) {
-    top = rect.top - th - pad;
+  if (desktopDock) {
+    left = Math.max(pad, vw - tw - 14);
+    top = Math.min(vh - th - pad, Math.max(pad, rect.top));
+  } else if (mobileCompact) {
+    left = pad;
+    top = rect.top > vh * 0.45 ? pad : Math.max(pad, vh - th - pad);
+  } else {
+    left = rect.left + rect.width / 2 - tw / 2;
+    top = rect.bottom + pad;
+    if (top + th > vh - pad) {
+      top = rect.top - th - pad;
+    }
   }
+
   if (top < pad) top = pad;
   if (left < pad) left = pad;
   if (left + tw > vw - pad) left = Math.max(pad, vw - pad - tw);

@@ -1,4 +1,4 @@
-import { COMBAT } from './constants.js?v=112';
+import { COMBAT } from './constants.js?v=113';
 
 /** @deprecated Multi-room strip removed — see maps.js STAGE_MAPS */
 

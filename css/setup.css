@@ -1312,7 +1312,9 @@ body.play-fit .screen.active > .combat-wrap {
 .monster-tip {
   position: fixed !important;
   z-index: 9999 !important;
-  width: min(280px, calc(100vw - 16px));
+  width: min(320px, calc(100vw - 16px));
+  max-height: min(72vh, 680px);
+  overflow: auto;
   padding: 10px 12px;
   background: #f7f1e6;
   border: 2.5px solid #1a1612;
@@ -1325,6 +1327,15 @@ body.play-fit .screen.active > .combat-wrap {
   color: #1a1612;
   font-family: var(--font-body, 'DM Sans', sans-serif);
   box-sizing: border-box;
+}
+
+.monster-tip.docked-right {
+  width: min(340px, calc(100vw - 24px));
+}
+
+.monster-tip.mobile-compact {
+  width: calc(100vw - 16px);
+  max-height: 42vh;
 }
 
 .monster-tip.show {

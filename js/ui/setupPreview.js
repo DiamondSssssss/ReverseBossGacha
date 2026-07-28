@@ -2,7 +2,7 @@
  * Ghost Hero walks path on setup board (preview).
  */
 
-import { heroSpriteUrl } from '../render/sprites.js?v=112';
+import { heroSpriteUrl } from '../render/sprites.js?v=113';
 
 /**
  * @param {HTMLElement} boardEl
