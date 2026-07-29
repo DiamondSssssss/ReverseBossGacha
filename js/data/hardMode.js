@@ -1,6 +1,6 @@
-import { MAX_STAGE } from './constants.js?v=127';
-import { MONSTER_BY_ID } from './monsters.js?v=127';
-import { tryAddToLoadout, loadoutMaxPoolCost } from '../core/loadout.js?v=127';
+import { MAX_STAGE } from './constants.js?v=129';
+import { MONSTER_BY_ID } from './monsters.js?v=129';
+import { tryAddToLoadout, loadoutMaxPoolCost } from '../core/loadout.js?v=129';
 
 /** @typedef {'normal' | 'hard'} StageMode */
 

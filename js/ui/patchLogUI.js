@@ -1,4 +1,4 @@
-import { PATCH_LOGS, latestPatchLog } from '../data/patchLog.js?v=127';
+import { PATCH_LOGS, latestPatchLog } from '../data/patchLog.js?v=129';
 
 function patchCardHtml(entry, featured = false) {
   const highlights = Array.isArray(entry.highlights) ? entry.highlights.filter(Boolean) : [];

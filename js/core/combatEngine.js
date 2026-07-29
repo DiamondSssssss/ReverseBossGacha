@@ -1,18 +1,18 @@
-import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=127';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=127';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=127';
-import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=127';
-import { mapUsedCost } from './dungeon.js?v=127';
-import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=127';
-import { ParticleSystem } from '../render/particles.js?v=127';
-import { getEquippedMonsterAppearance } from './monsterSkins.js?v=127';
+import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=129';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=129';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=129';
+import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=129';
+import { mapUsedCost } from './dungeon.js?v=129';
+import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=129';
+import { ParticleSystem } from '../render/particles.js?v=129';
+import { getEquippedMonsterAppearance } from './monsterSkins.js?v=129';
 import {
   getMonsterSprite,
   getHeroSprite,
   drawSpriteAt,
-} from '../render/sprites.js?v=127';
-import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=127';
-import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=127';
+} from '../render/sprites.js?v=129';
+import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=129';
+import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=129';
 import {
   computeHeroAttackDamage,
   applyIncomingDamage,
@@ -48,10 +48,10 @@ import {
   ensureHeroSkillState,
   tryEnterStasisRevive,
   tickStasisRevive,
-} from './ai/skills.js?v=127';
-import { getTileModifiers, spawnMonsterStats, elementAuraActive, elementAuraTag } from './ai/tileModifiers.js?v=127';
-import { dist } from './ai/targeting.js?v=127';
-import { getHeroProfile } from './ai/profiles.js?v=127';
+} from './ai/skills.js?v=129';
+import { getTileModifiers, spawnMonsterStats, elementAuraActive, elementAuraTag } from './ai/tileModifiers.js?v=129';
+import { dist } from './ai/targeting.js?v=129';
+import { getHeroProfile } from './ai/profiles.js?v=129';
 import {
   patternForHero,
   patternForMonster,
@@ -59,7 +59,7 @@ import {
   tickAttack,
   ensureAttackState,
   resolveDisplayAnim,
-} from './ai/attackPatterns.js?v=127';
+} from './ai/attackPatterns.js?v=129';
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
@@ -1629,8 +1629,10 @@ export class CombatEngine {
       this.particles.magic(gateX, entry.y, h.color);
       this.particles.burst(gateX, entry.y, '#81c784');
       this._float(gateX, entry.y - 24, `${h.name} vào!`, h.color);
-      const viewW = this._viewWorldW();
-      this.cameraX = Math.max(COMBAT.CAMERA_MIN_X, Math.min(0, gateX - viewW * 0.25));
+      if (!this._camUserLocked) {
+        const viewW = this._viewWorldW();
+        this.cameraX = Math.max(COMBAT.CAMERA_MIN_X, Math.min(0, gateX - viewW * 0.25));
+      }
     }
   }
 
@@ -1924,6 +1926,7 @@ export class CombatEngine {
 
     // Camera is player-controlled (pan / focus buttons). Keep clamped only.
     this.cameraX = this.clampCameraX(this.cameraX);
+    this.cameraY = this.clampCameraY(this.cameraY);
   }
 
   /** @returns {boolean} busy in attack */

@@ -3,17 +3,17 @@ import {
   TERRAIN_LABELS,
   RARITY_COLORS,
   HERO_CLASS_LABELS,
-} from '../data/constants.js?v=127';
-import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=127';
-import { monsterScaleForLevel } from '../data/heroes.js?v=127';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=127';
-import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=127';
+} from '../data/constants.js?v=129';
+import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=129';
+import { monsterScaleForLevel } from '../data/heroes.js?v=129';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=129';
+import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=129';
 import {
   mapUsedCost,
   placeMonster,
   removePlacement,
   totalPlacements,
-} from '../core/dungeon.js?v=127';
+} from '../core/dungeon.js?v=129';
 import {
   loadoutMaxPoolCost,
   loadoutPoolCost,
@@ -24,18 +24,18 @@ import {
   suggestLoadout,
   tryAddToLoadout,
   tryRemoveFromLoadout,
-} from '../core/loadout.js?v=127';
-import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=127';
-import { attachSetupBoardFx } from './setupBoardFx.js?v=127';
-import { playGhostWalk } from './setupPreview.js?v=127';
-import { saveState } from '../core/storage.js?v=127';
+} from '../core/loadout.js?v=129';
+import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=129';
+import { attachSetupBoardFx } from './setupBoardFx.js?v=129';
+import { playGhostWalk } from './setupPreview.js?v=129';
+import { saveState } from '../core/storage.js?v=129';
 import {
   hideMonsterTip,
   monsterTipHtml,
-} from './monsterTip.js?v=127';
+} from './monsterTip.js?v=129';
 import {
   displayMonsterStats,
-} from '../core/monsterUpgrade.js?v=127';
+} from '../core/monsterUpgrade.js?v=129';
 import {
   validateChallengeLoadout,
   tryAddChallengeLoadout,
@@ -46,7 +46,7 @@ import {
   monsterStageLevelForRun,
   monsterUpgradeLevelForRun,
   monsterStatMulForRun,
-} from '../core/challenge.js?v=127';
+} from '../core/challenge.js?v=129';
 import {
   hardRarityBlockReason,
   hardRaritySummary,
@@ -54,11 +54,11 @@ import {
   suggestHardLoadout,
   tryAddHardLoadout,
   validateHardLoadout,
-} from '../data/hardMode.js?v=127';
+} from '../data/hardMode.js?v=129';
 import {
   addMonsterDeployments,
   getEquippedMonsterAppearance,
-} from '../core/monsterSkins.js?v=127';
+} from '../core/monsterSkins.js?v=129';
 
 function shortName(name) {
   if (!name) return '?';
@@ -886,6 +886,10 @@ export function renderSetup(root, ctx) {
   function paint() {
     hideMonsterTip(true);
     stopFx();
+    const prevBoardStage = root.querySelector('.board-stage.single-map');
+    const keepBoardScroll = prevBoardStage
+      ? { left: prevBoardStage.scrollLeft, top: prevBoardStage.scrollTop }
+      : null;
     pathCache = hintPath(map);
     const used = mapUsedCost(map);
     const selected = selectedId ? MONSTER_BY_ID[selectedId] : null;
@@ -1098,8 +1102,18 @@ export function renderSetup(root, ctx) {
     `;
 
     const boardEl = root.querySelector('.room-board');
+    const boardStageEl = root.querySelector('.board-stage.single-map');
     disposeFx = attachSetupBoardFx(boardEl, { path: showPath ? pathCache : [] });
     boardEl._setupFx?.setPath(showPath ? pathCache : []);
+
+    if (keepBoardScroll && boardStageEl) {
+      const restoreScroll = () => {
+        boardStageEl.scrollLeft = keepBoardScroll.left;
+        boardStageEl.scrollTop = keepBoardScroll.top;
+      };
+      restoreScroll();
+      requestAnimationFrame(restoreScroll);
+    }
 
     if (fxPulse) {
       const cell = root.querySelector(

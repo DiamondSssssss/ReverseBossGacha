@@ -1,7 +1,7 @@
 /** Per-stage continuous battle maps — 1 ải = 1 map */
 
-import { TERRAIN } from './rooms.js?v=127';
-import { RAW_WIDE_MAPS } from './mapsWide.js?v=127';
+import { TERRAIN } from './rooms.js?v=129';
+import { RAW_WIDE_MAPS } from './mapsWide.js?v=129';
 
 export const TILE = {
   WALL: '#',
