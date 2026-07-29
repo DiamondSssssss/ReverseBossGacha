@@ -1,4 +1,4 @@
-import { SPELLS } from './constants.js?v=119';
+import { SPELLS } from './constants.js?v=120';
 
 /**
  * Boss hầm ngục — mỗi boss có 2 skill riêng, không dùng chung spell ID.

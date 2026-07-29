@@ -1,5 +1,5 @@
-import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=119';
-import { BOSS_FIGHT_STAGES } from '../data/constants.js?v=119';
+import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=120';
+import { BOSS_FIGHT_STAGES } from '../data/constants.js?v=120';
 
 /**
  * Pool mang vào ải = bội số Cap map.

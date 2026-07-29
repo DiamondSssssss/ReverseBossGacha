@@ -1,30 +1,30 @@
-import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=119';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=119';
-import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=119';
-import { CombatEngine } from '../core/combatEngine.js?v=119';
-import { saveState } from '../core/storage.js?v=119';
-import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=119';
+import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=120';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=120';
+import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=120';
+import { CombatEngine } from '../core/combatEngine.js?v=120';
+import { saveState } from '../core/storage.js?v=120';
+import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=120';
 import {
   evaluateChallengeResult,
   grantChallengeReward,
   titleName,
-} from '../core/challenge.js?v=119';
-import { loadoutPoolCost } from '../core/loadout.js?v=119';
+} from '../core/challenge.js?v=120';
+import { loadoutPoolCost } from '../core/loadout.js?v=120';
 import {
   frontierForMode,
   recordPersonalBestCost,
-} from '../data/hardMode.js?v=119';
-import { submitStageBestCost } from '../core/stageRecords.js?v=119';
-import { isLoggedIn } from '../core/auth.js?v=119';
-import { monsterSpriteUrl } from '../render/sprites.js?v=119';
-import { bindMonsterTips, hideMonsterTip } from './monsterTip.js?v=119';
+} from '../data/hardMode.js?v=120';
+import { submitStageBestCost } from '../core/stageRecords.js?v=120';
+import { isLoggedIn } from '../core/auth.js?v=120';
+import { monsterSpriteUrl } from '../render/sprites.js?v=120';
+import { bindMonsterTips, hideMonsterTip } from './monsterTip.js?v=120';
 import {
   addLoadoutWinStats,
   addMonsterDeployments,
   evaluateMonsterSkinUnlocks,
   getEquippedMonsterAppearance,
   recordHardWinWithLoadout,
-} from '../core/monsterSkins.js?v=119';
+} from '../core/monsterSkins.js?v=120';
 
 const REPLAY_REWARD_MUL = 0.35;
 

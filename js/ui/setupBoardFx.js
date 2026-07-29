@@ -2,7 +2,7 @@
  * Setup board FX — ít particle, đúng chỗ: place/remove + path pulse theo ô.
  */
 
-import { ParticleSystem } from '../render/particles.js?v=119';
+import { ParticleSystem } from '../render/particles.js?v=120';
 
 /**
  * @param {HTMLElement} boardEl

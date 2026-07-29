@@ -1,4 +1,4 @@
-import { PATCH_LOGS, latestPatchLog } from '../data/patchLog.js?v=119';
+import { PATCH_LOGS, latestPatchLog } from '../data/patchLog.js?v=120';
 
 function patchCardHtml(entry, featured = false) {
   return `

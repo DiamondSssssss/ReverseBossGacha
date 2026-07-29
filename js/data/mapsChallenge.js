@@ -1,4 +1,4 @@
-import { compileMap } from './maps.js?v=119';
+import { compileMap } from './maps.js?v=120';
 
 function M(id, name, costCap, tiles, extras = {}) {
   return { id, name, costCap, tiles, ...extras };

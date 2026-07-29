@@ -1,21 +1,21 @@
-import { MONSTERS } from '../data/monsters.js?v=119';
+import { MONSTERS } from '../data/monsters.js?v=120';
 import {
   RARITY_COLORS,
   RARITY_LABELS,
   INVENTORY_CAP,
   MONSTER_UPGRADE,
-} from '../data/constants.js?v=119';
-import { monsterDisplayUrl } from '../render/sprites.js?v=119';
+} from '../data/constants.js?v=120';
+import { monsterDisplayUrl } from '../render/sprites.js?v=120';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,
   tryUpgradeMonster,
   upgradeMonsterCost,
-} from '../core/monsterUpgrade.js?v=119';
-import { evaluateAchievements } from '../core/achievements.js?v=119';
-import { describeMonsterKit, describeMonsterSummary } from '../data/skillDesc.js?v=119';
-import { inventoryOwnCap } from '../core/storage.js?v=119';
-import { saveState } from '../core/storage.js?v=119';
+} from '../core/monsterUpgrade.js?v=120';
+import { evaluateAchievements } from '../core/achievements.js?v=120';
+import { describeMonsterKit, describeMonsterSummary } from '../data/skillDesc.js?v=120';
+import { inventoryOwnCap } from '../core/storage.js?v=120';
+import { saveState } from '../core/storage.js?v=120';
 import {
   describeSkinProgress,
   describeSkinUnlock,
@@ -28,7 +28,7 @@ import {
   getTotalMonsterSkinCount,
   getUnlockedMonsterSkinCount,
   isMonsterSkinUnlocked,
-} from '../core/monsterSkins.js?v=119';
+} from '../core/monsterSkins.js?v=120';
 
 const filters = {
   q: '',
@@ -89,10 +89,14 @@ function matchesRole(m, role) {
 function matchesSkinFilter(state, m, mode) {
   if (mode === 'all') return true;
   const skins = getMonsterSkinList(m.id);
-  if (!skins.length) return mode === 'locked';
-  const unlockedCount = skins.filter((skin) => isMonsterSkinUnlocked(state, m.id, skin.id)).length;
-  if (mode === 'unlocked') return unlockedCount > 1;
-  if (mode === 'locked') return unlockedCount < skins.length;
+  // skins list always includes 'base'; extra skins = length > 1
+  const hasExtraSkins = skins.length > 1;
+  if (mode === 'has_skin') return hasExtraSkins;
+  if (mode === 'base_only') return !hasExtraSkins;
+  if (mode === 'unlocked') {
+    if (!hasExtraSkins) return false;
+    return skins.some((skin) => skin.id !== 'base' && isMonsterSkinUnlocked(state, m.id, skin.id));
+  }
   return true;
 }
 
@@ -346,9 +350,10 @@ export function renderCollection(root, ctx) {
       </div>
 
       <div class="filter-row" data-group="skin">
-        ${chip(filters.skin === 'all', 'data-skin="all"', 'Mọi skin')}
-        ${chip(filters.skin === 'unlocked', 'data-skin="unlocked"', 'Có skin mở')}
-        ${chip(filters.skin === 'locked', 'data-skin="locked"', 'Còn skin khóa')}
+        ${chip(filters.skin === 'all', 'data-skin="all"', 'Mọi')}
+        ${chip(filters.skin === 'has_skin', 'data-skin="has_skin"', 'Có skin')}
+        ${chip(filters.skin === 'unlocked', 'data-skin="unlocked"', 'Đã mở skin')}
+        ${chip(filters.skin === 'base_only', 'data-skin="base_only"', 'Chỉ base')}
       </div>
 
       <div class="filter-row" data-group="rarity">

@@ -1,6 +1,6 @@
-import { MONSTER_BY_ID } from '../data/monsters.js?v=119';
-import { MONSTER_SKINS } from '../data/monsterSkins.js?v=119';
-import { saveState } from './storage.js?v=119';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=120';
+import { MONSTER_SKINS } from '../data/monsterSkins.js?v=120';
+import { saveState } from './storage.js?v=120';
 
 function defaultLifetimeStats() {
   return {

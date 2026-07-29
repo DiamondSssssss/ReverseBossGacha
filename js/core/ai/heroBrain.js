@@ -1,5 +1,5 @@
-import { getHeroProfile } from './profiles.js?v=119';
-import { scoreMonsterForHero, dist } from './targeting.js?v=119';
+import { getHeroProfile } from './profiles.js?v=120';
+import { scoreMonsterForHero, dist } from './targeting.js?v=120';
 import {
   ensureHeroSkillState,
   tryActivateShield,
@@ -8,8 +8,8 @@ import {
   tryHealAlly,
   applySlow,
   tryShieldAlly,
-} from './skills.js?v=119';
-import { findPath, findPathAway, buildBlockedFromMap } from '../pathfinding.js?v=119';
+} from './skills.js?v=120';
+import { findPath, findPathAway, buildBlockedFromMap } from '../pathfinding.js?v=120';
 
 function hasFlag(value, flag) {
   return Array.isArray(value) ? value.includes(flag) : value === flag;
