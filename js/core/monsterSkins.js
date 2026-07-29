@@ -1,12 +1,13 @@
-import { MONSTER_BY_ID } from '../data/monsters.js?v=121';
-import { MONSTER_SKINS } from '../data/monsterSkins.js?v=121';
-import { saveState } from './storage.js?v=121';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=122';
+import { MONSTER_SKINS } from '../data/monsterSkins.js?v=122';
+import { saveState } from './storage.js?v=122';
 
 function defaultLifetimeStats() {
   return {
     deployments: 0,
     winsWithInLoadout: 0,
     hardWinsByLevel: {},
+    normalWinsByLevel: {},
   };
 }
 
@@ -103,6 +104,10 @@ function unlockProgress(state, monsterId, skin) {
       const done = !!stats.hardWinsByLevel?.[Number(unlock.level) || 0];
       return { value: done ? 1 : 0, target: 1 };
     }
+    case 'normal_win_with_loadout': {
+      const done = !!stats.normalWinsByLevel?.[Number(unlock.level) || 0];
+      return { value: done ? 1 : 0, target: 1 };
+    }
     default:
       return { value: 0, target: Number(unlock.value) || 0 };
   }
@@ -162,6 +167,8 @@ export function describeSkinUnlock(skin) {
       return `Mở ${unlock.value} ấn chương`;
     case 'hard_win_with_loadout':
       return `Mang quái này trong loadout và thắng ải Khó ${unlock.level}`;
+    case 'normal_win_with_loadout':
+      return `Mang quái này trong loadout và thắng ải Thường ${unlock.level}`;
     default:
       return 'Điều kiện đặc biệt';
   }
@@ -263,6 +270,18 @@ export function recordHardWinWithLoadout(state, level, loadout = {}) {
     const stats = getMonsterLifetimeStats(state, monsterId);
     stats.hardWinsByLevel = {
       ...(stats.hardWinsByLevel || {}),
+      [lv]: true,
+    };
+  }
+}
+
+export function recordNormalWinWithLoadout(state, level, loadout = {}) {
+  ensureMonsterSkinState(state);
+  const lv = Math.max(1, Number(level) || 1);
+  for (const monsterId of Object.keys(loadout || {})) {
+    const stats = getMonsterLifetimeStats(state, monsterId);
+    stats.normalWinsByLevel = {
+      ...(stats.normalWinsByLevel || {}),
       [lv]: true,
     };
   }

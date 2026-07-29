@@ -1,10 +1,10 @@
 import {
   ACHIEVEMENTS,
   backfillAchievementGems,
-} from '../data/achievements.js?v=121';
-import { MONSTERS } from '../data/monsters.js?v=121';
-import { MAX_STAGE } from '../data/constants.js?v=121';
-import { saveState } from './storage.js?v=121';
+} from '../data/achievements.js?v=122';
+import { MONSTERS } from '../data/monsters.js?v=122';
+import { MAX_STAGE } from '../data/constants.js?v=122';
+import { saveState } from './storage.js?v=122';
 
 function checkCtx() {
   return {
