@@ -1,21 +1,21 @@
-import { MONSTERS } from '../data/monsters.js?v=120';
+import { MONSTERS } from '../data/monsters.js?v=121';
 import {
   RARITY_COLORS,
   RARITY_LABELS,
   INVENTORY_CAP,
   MONSTER_UPGRADE,
-} from '../data/constants.js?v=120';
-import { monsterDisplayUrl } from '../render/sprites.js?v=120';
+} from '../data/constants.js?v=121';
+import { monsterDisplayUrl } from '../render/sprites.js?v=121';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,
   tryUpgradeMonster,
   upgradeMonsterCost,
-} from '../core/monsterUpgrade.js?v=120';
-import { evaluateAchievements } from '../core/achievements.js?v=120';
-import { describeMonsterKit, describeMonsterSummary } from '../data/skillDesc.js?v=120';
-import { inventoryOwnCap } from '../core/storage.js?v=120';
-import { saveState } from '../core/storage.js?v=120';
+} from '../core/monsterUpgrade.js?v=121';
+import { evaluateAchievements } from '../core/achievements.js?v=121';
+import { describeMonsterKit, describeMonsterSummary } from '../data/skillDesc.js?v=121';
+import { inventoryOwnCap } from '../core/storage.js?v=121';
+import { saveState } from '../core/storage.js?v=121';
 import {
   describeSkinProgress,
   describeSkinUnlock,
@@ -28,7 +28,7 @@ import {
   getTotalMonsterSkinCount,
   getUnlockedMonsterSkinCount,
   isMonsterSkinUnlocked,
-} from '../core/monsterSkins.js?v=120';
+} from '../core/monsterSkins.js?v=121';
 
 const filters = {
   q: '',

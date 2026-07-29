@@ -305,4 +305,234 @@ export const MONSTER_SKINS = {
       },
     },
   ],
+
+  // ——— Legendary skins (rarity 5) — mở bằng hard_win_with_loadout ———
+  dragon_01: [
+    {
+      id: 'base',
+      name: 'Mặc Định',
+      unlockedByDefault: true,
+      visual: { palette: { primary: '#ef5350' } },
+    },
+    {
+      id: 'abyssal_wyvern',
+      name: 'Rồng Vực Bóng Tối',
+      unlock: { type: 'hard_win_with_loadout', level: 5 },
+      visual: {
+        palette: { primary: '#1a237e', accent: '#7c4dff', eye: '#e040fb' },
+        decals: ['shadowVeil', 'voidCrown'],
+        aura: 'shadow',
+        vfx: 'darkWingBlaze',
+      },
+    },
+  ],
+  abyss_hydra: [
+    {
+      id: 'base',
+      name: 'Mặc Định',
+      unlockedByDefault: true,
+      visual: { palette: { primary: '#7b1fa2' } },
+    },
+    {
+      id: 'primordial_maw',
+      name: 'Hydra Nguyên Thủy',
+      unlock: { type: 'hard_win_with_loadout', level: 10 },
+      visual: {
+        palette: { primary: '#4a148c', accent: '#00e5ff', eye: '#f0f4ff' },
+        decals: ['runes', 'scar'],
+        aura: 'swamp',
+        vfx: 'tideSurge',
+      },
+    },
+  ],
+  solar_phoenix: [
+    {
+      id: 'base',
+      name: 'Mặc Định',
+      unlockedByDefault: true,
+      visual: { palette: { primary: '#ff6f00' } },
+    },
+    {
+      id: 'infernal_rebirth',
+      name: 'Phượng Hoàng Địa Ngục',
+      unlock: { type: 'hard_win_with_loadout', level: 15 },
+      visual: {
+        palette: { primary: '#b71c1c', accent: '#ff6d00', eye: '#fff8e1' },
+        decals: ['ashCracks', 'halo'],
+        aura: 'ember',
+        vfx: 'infernoWings',
+      },
+    },
+  ],
+  frost_tyrant: [
+    {
+      id: 'base',
+      name: 'Mặc Định',
+      unlockedByDefault: true,
+      visual: { palette: { primary: '#4fc3f7' } },
+    },
+    {
+      id: 'permafrost_emperor',
+      name: 'Hoàng Đế Vĩnh Băng',
+      unlock: { type: 'hard_win_with_loadout', level: 20 },
+      visual: {
+        palette: { primary: '#01579b', accent: '#b3e5fc', eye: '#e1f5fe' },
+        decals: ['crown', 'runes'],
+        aura: 'frost',
+        vfx: 'blizzardCrown',
+      },
+    },
+  ],
+  chaos_chimera: [
+    {
+      id: 'base',
+      name: 'Mặc Định',
+      unlockedByDefault: true,
+      visual: { palette: { primary: '#d500f9' } },
+    },
+    {
+      id: 'perfect_chaos',
+      name: 'Chimera Hỗn Loạn Hoàn Hảo',
+      unlock: { type: 'hard_win_with_loadout', level: 25 },
+      visual: {
+        palette: { primary: '#6a1b9a', accent: '#ff4081', eye: '#fff9c4' },
+        decals: ['scar', 'bloodSpikes'],
+        aura: 'violet',
+        vfx: 'chaosFlux',
+      },
+    },
+  ],
+  eclipse_serpent: [
+    {
+      id: 'base',
+      name: 'Mặc Định',
+      unlockedByDefault: true,
+      visual: { palette: { primary: '#1a237e' } },
+    },
+    {
+      id: 'cosmos_devourer',
+      name: 'Xà Nuốt Vũ Trụ',
+      unlock: { type: 'hard_win_with_loadout', level: 30 },
+      visual: {
+        palette: { primary: '#0d0221', accent: '#e040fb', eye: '#fff9c4' },
+        decals: ['shadowVeil', 'runes'],
+        aura: 'shadow',
+        vfx: 'cosmicEclipse',
+      },
+    },
+  ],
+  crown_behemoth: [
+    {
+      id: 'base',
+      name: 'Mặc Định',
+      unlockedByDefault: true,
+      visual: { palette: { primary: '#bf360c' } },
+    },
+    {
+      id: 'apocalypse_herald',
+      name: 'Behemoth Khải Huyền',
+      unlock: { type: 'hard_win_with_loadout', level: 35 },
+      visual: {
+        palette: { primary: '#3e2723', accent: '#ff6d00', eye: '#ffecb3' },
+        decals: ['voidCrown', 'ashCracks'],
+        aura: 'ember',
+        vfx: 'groundBreak',
+      },
+    },
+  ],
+  void_wraith: [
+    {
+      id: 'base',
+      name: 'Mặc Định',
+      unlockedByDefault: true,
+      visual: { palette: { primary: '#311b92' } },
+    },
+    {
+      id: 'eternal_phantom',
+      name: 'Hồn Ma Vô Tận',
+      unlock: { type: 'hard_win_with_loadout', level: 40 },
+      visual: {
+        palette: { primary: '#1a0533', accent: '#ea80fc', eye: '#f8bbd0' },
+        decals: ['soulChains', 'shadowVeil'],
+        aura: 'shadow',
+        vfx: 'phantomVeil',
+      },
+    },
+  ],
+  tide_leviathan: [
+    {
+      id: 'base',
+      name: 'Mặc Định',
+      unlockedByDefault: true,
+      visual: { palette: { primary: '#0277bd' } },
+    },
+    {
+      id: 'world_tide',
+      name: 'Leviathan Khai Mạc',
+      unlock: { type: 'hard_win_with_loadout', level: 45 },
+      visual: {
+        palette: { primary: '#01579b', accent: '#00e5ff', eye: '#e1f5fe' },
+        decals: ['runes', 'moss'],
+        aura: 'swamp',
+        vfx: 'deepTide',
+      },
+    },
+  ],
+  venom_empress: [
+    {
+      id: 'base',
+      name: 'Mặc Định',
+      unlockedByDefault: true,
+      visual: { palette: { primary: '#9ccc65' } },
+    },
+    {
+      id: 'toxic_sovereign',
+      name: 'Nữ Hoàng Độc Tuyệt',
+      unlock: { type: 'hard_win_with_loadout', level: 50 },
+      visual: {
+        palette: { primary: '#1b5e20', accent: '#76ff03', eye: '#f9fbe7' },
+        decals: ['scar', 'flowers'],
+        aura: 'swamp',
+        vfx: 'venomCloud',
+      },
+    },
+  ],
+  cinder_wyrm: [
+    {
+      id: 'base',
+      name: 'Mặc Định',
+      unlockedByDefault: true,
+      visual: { palette: { primary: '#e65100' } },
+    },
+    {
+      id: 'undying_ember',
+      name: 'Wyrm Tro Bất Diệt',
+      unlock: { type: 'hard_win_with_loadout', level: 55 },
+      visual: {
+        palette: { primary: '#bf360c', accent: '#ffab40', eye: '#fff8e1' },
+        decals: ['ashCracks', 'crown'],
+        aura: 'ember',
+        vfx: 'cinderStorm',
+      },
+    },
+  ],
+  sanctum_angel: [
+    {
+      id: 'base',
+      name: 'Mặc Định',
+      unlockedByDefault: true,
+      visual: { palette: { primary: '#fdd835' } },
+    },
+    {
+      id: 'fallen_seraph',
+      name: 'Thiên Sứ Đọa Lạc',
+      unlock: { type: 'hard_win_with_loadout', level: 60 },
+      visual: {
+        palette: { primary: '#4a148c', accent: '#ce93d8', eye: '#fce4ec' },
+        decals: ['halo', 'soulChains'],
+        aura: 'violet',
+        vfx: 'fallenHalo',
+      },
+    },
+  ],
 };

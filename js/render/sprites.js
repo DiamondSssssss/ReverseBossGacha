@@ -61,7 +61,9 @@ function applyAura(ctx, aura, rarity = 1) {
             ? 'rgba(255,112,67,0.2)'
             : aura === 'bloom'
               ? 'rgba(244,143,177,0.18)'
-              : 'rgba(255,255,255,0.12)';
+              : aura === 'frost'
+                ? 'rgba(100,220,255,0.22)'
+                : 'rgba(255,255,255,0.12)';
   const glow = ctx.createRadialGradient(32, 34, 8, 32, 34, 28 + rarity);
   glow.addColorStop(0, auraColor);
   glow.addColorStop(1, 'rgba(0,0,0,0)');
@@ -378,6 +380,208 @@ function drawSpriteVfx(ctx, x, y, size, vfx, t = 0, alpha = 1, palette = {}) {
       ctx.stroke();
       ellipse(ctx, rx, ry - 9, 2.6, 4.2, i % 2 ? '#f48fb1' : accent);
     }
+  } else if (vfx === 'darkWingBlaze') {
+    // Rồng Vực: đôi cánh bóng tối phát sáng tím phía sau
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 1.8;
+    for (let side = -1; side <= 1; side += 2) {
+      const wing = t * 2.2;
+      ctx.beginPath();
+      ctx.moveTo(x, y - size * 0.1);
+      ctx.quadraticCurveTo(
+        x + side * size * 0.42, y - size * 0.28 + Math.sin(wing) * 3,
+        x + side * size * 0.52, y + size * 0.08
+      );
+      ctx.stroke();
+    }
+    for (let i = 0; i < 3; i++) {
+      const ang = t * 2.5 + i * 2.1;
+      ellipse(ctx, x + Math.cos(ang) * size * 0.3, y + Math.sin(ang) * size * 0.18, 2, 2, '#e040fb');
+    }
+  } else if (vfx === 'tideSurge') {
+    // Hydra Nguyên Thủy: vòng sóng nước xanh cyan cuộn quanh
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 1.6;
+    for (let i = 0; i < 2; i++) {
+      const r = size * (0.28 + i * 0.12);
+      const off = i * Math.PI;
+      ctx.beginPath();
+      ctx.ellipse(x, y + size * 0.1, r, r * 0.38, t * 1.4 + off, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    for (let i = 0; i < 4; i++) {
+      const ang = t * 1.8 + i * 1.57;
+      ellipse(ctx, x + Math.cos(ang) * size * 0.32, y + size * 0.1 + Math.sin(ang) * size * 0.12, 2.2, 2.2, '#00e5ff');
+    }
+  } else if (vfx === 'infernoWings') {
+    // Phượng Địa Ngục: cánh lửa đỏ cam lan rộng phập phồng
+    for (let i = 0; i < 5; i++) {
+      const side = i < 3 ? -1 : 1;
+      const idx = i < 3 ? i : i - 3;
+      const spread = (idx + 1) * size * 0.11;
+      const flicker = Math.sin(t * 3.5 + i * 0.7);
+      ctx.fillStyle = i % 2 ? '#ff6d00' : '#b71c1c';
+      ellipse(ctx, x + side * spread, y - size * 0.12 + flicker * 4, 2.8, 5 + Math.abs(flicker) * 2, ctx.fillStyle);
+    }
+    ctx.strokeStyle = '#ffab40';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(x, y - size * 0.18, size * 0.32, 0, Math.PI * 2);
+    ctx.stroke();
+  } else if (vfx === 'blizzardCrown') {
+    // Hoàng Đế Băng: vành tuyết xoay trên đầu
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([3, 4]);
+    ctx.lineDashOffset = -t * 14;
+    ctx.beginPath();
+    ctx.arc(x, y - size * 0.36, size * 0.2, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    for (let i = 0; i < 6; i++) {
+      const ang = t * 1.6 + i * (Math.PI / 3);
+      const rx = x + Math.cos(ang) * size * 0.22;
+      const ry = y - size * 0.36 + Math.sin(ang) * size * 0.08;
+      ellipse(ctx, rx, ry, 1.8, 1.8, '#e1f5fe');
+    }
+    // snowflake drift down
+    for (let i = 0; i < 3; i++) {
+      const fall = ((t * 22 + i * 18) % (size * 0.8)) - size * 0.1;
+      ellipse(ctx, x + (i - 1) * size * 0.12, y - size * 0.36 + fall, 1.5, 1.5, '#b3e5fc');
+    }
+  } else if (vfx === 'chaosFlux') {
+    // Chimera Hỗn Loạn: tia plasma màu random xoay hỗn loạn
+    const cols = ['#ff4081', '#7c4dff', '#ffeb3b', '#00e5ff'];
+    for (let i = 0; i < 4; i++) {
+      const ang = t * 3.2 + i * 1.57 + Math.sin(t * 2 + i) * 0.5;
+      const r = size * (0.24 + Math.abs(Math.sin(t * 2 + i)) * 0.12);
+      ctx.strokeStyle = cols[i];
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + Math.cos(ang) * r, y + Math.sin(ang) * r * 0.55);
+      ctx.stroke();
+    }
+  } else if (vfx === 'cosmicEclipse') {
+    // Xà Vũ Trụ: vầng nhật thực tối với viền sáng tím
+    ctx.fillStyle = 'rgba(13,2,33,0.55)';
+    ellipse(ctx, x, y - size * 0.38, size * 0.2, size * 0.2, ctx.fillStyle);
+    ctx.strokeStyle = '#e040fb';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x, y - size * 0.38, size * 0.2, 0, Math.PI * 2);
+    ctx.stroke();
+    // corona rays
+    for (let i = 0; i < 6; i++) {
+      const ang = t * 0.9 + i * (Math.PI / 3);
+      const r1 = size * 0.22, r2 = size * (0.28 + Math.sin(t * 2 + i) * 0.03);
+      ctx.strokeStyle = 'rgba(224,64,251,0.55)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(x + Math.cos(ang) * r1, y - size * 0.38 + Math.sin(ang) * r1 * 0.5);
+      ctx.lineTo(x + Math.cos(ang) * r2, y - size * 0.38 + Math.sin(ang) * r2 * 0.5);
+      ctx.stroke();
+    }
+  } else if (vfx === 'groundBreak') {
+    // Behemoth Khải Huyền: vết nứt đất nóng phóng ra từ chân
+    const cols2 = ['#ff6d00', '#ffab40'];
+    for (let i = 0; i < 3; i++) {
+      const ang = Math.PI * 0.5 + (i - 1) * 0.38 + Math.sin(t * 2) * 0.08;
+      const len = size * (0.28 + Math.abs(Math.sin(t * 2.4 + i)) * 0.12);
+      ctx.strokeStyle = cols2[i % 2];
+      ctx.lineWidth = 1.8 - i * 0.3;
+      ctx.beginPath();
+      ctx.moveTo(x, y + size * 0.28);
+      ctx.lineTo(x + Math.cos(ang) * len, y + size * 0.28 + Math.sin(ang) * len * 0.45);
+      ctx.stroke();
+    }
+    ellipse(ctx, x, y + size * 0.3, size * 0.12, size * 0.06, 'rgba(255,109,0,0.35)');
+  } else if (vfx === 'phantomVeil') {
+    // Hồn Ma Vô Tận: lớp màn bóng tối nhấp nhô quanh người
+    for (let i = 0; i < 4; i++) {
+      const ang = t * 1.5 + i * 1.57;
+      const drift = Math.sin(t * 2 + i) * 3;
+      ctx.fillStyle = `rgba(98,0,234,${0.12 + i * 0.04})`;
+      ellipse(ctx, x + Math.cos(ang) * size * 0.26 + drift, y + Math.sin(ang) * size * 0.18, size * (0.13 + i * 0.02), size * (0.18 + i * 0.02), ctx.fillStyle);
+    }
+    ctx.strokeStyle = '#ea80fc';
+    ctx.lineWidth = 1.2;
+    ctx.setLineDash([2, 5]);
+    ctx.lineDashOffset = -t * 12;
+    ctx.beginPath();
+    ctx.arc(x, y, size * 0.4, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  } else if (vfx === 'deepTide') {
+    // Leviathan Khai Mạc: sóng biển sâu cuộn xoáy
+    for (let i = 0; i < 3; i++) {
+      const r = size * (0.18 + i * 0.1);
+      ctx.strokeStyle = i === 1 ? '#00e5ff' : accent;
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.ellipse(x, y + size * 0.14, r, r * 0.32, t * (1.2 + i * 0.3), 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    for (let i = 0; i < 3; i++) {
+      const ang = t * 2.2 + i * 2.1;
+      ellipse(ctx, x + Math.cos(ang) * size * 0.28, y + size * 0.14 + Math.sin(ang) * size * 0.1, 2, 2, '#00e5ff');
+    }
+  } else if (vfx === 'venomCloud') {
+    // Nữ Hoàng Độc: bong bóng độc xanh lá nổi lên
+    for (let i = 0; i < 4; i++) {
+      const rise = ((t * 16 + i * 12) % (size * 0.7));
+      const ox = Math.sin(t * 1.8 + i * 1.1) * size * 0.14;
+      const r = 2.8 - rise / (size * 0.7) * 1.5;
+      if (r > 0.5) ellipse(ctx, x + ox, y + size * 0.22 - rise, r, r, i % 2 ? '#76ff03' : accent);
+    }
+    ctx.strokeStyle = '#ccff90';
+    ctx.lineWidth = 1.3;
+    ctx.setLineDash([2, 4]);
+    ctx.lineDashOffset = t * 10;
+    ctx.beginPath();
+    ctx.arc(x, y + size * 0.1, size * 0.32, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  } else if (vfx === 'cinderStorm') {
+    // Wyrm Bất Diệt: tàn lửa vàng cam xoáy quanh như cơn bão
+    for (let i = 0; i < 6; i++) {
+      const ang = t * 3.8 + i * (Math.PI / 3);
+      const r = size * (0.22 + Math.abs(Math.sin(t * 2 + i)) * 0.14);
+      const flicker = Math.abs(Math.sin(t * 4 + i));
+      ctx.fillStyle = i % 2 ? '#ffab40' : '#e65100';
+      ellipse(ctx, x + Math.cos(ang) * r, y + Math.sin(ang) * r * 0.45, 1.8 + flicker, 3 + flicker * 2, ctx.fillStyle);
+    }
+    ctx.strokeStyle = 'rgba(255,109,0,0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(x, y, size * 0.38, 0, Math.PI * 2);
+    ctx.stroke();
+  } else if (vfx === 'fallenHalo') {
+    // Thiên Sứ Đọa Lạc: vòng hào quang vỡ, nửa vàng nửa tím tối
+    const haloY = y - size * 0.38;
+    // broken halo — vẽ 2 cung thay vì vòng tròn hoàn chỉnh
+    ctx.strokeStyle = '#fdd835';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x, haloY, size * 0.2, 0.3 + t * 0.5, Math.PI - 0.3 + t * 0.5);
+    ctx.stroke();
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x, haloY, size * 0.2, Math.PI + 0.3 + t * 0.5, Math.PI * 2 - 0.3 + t * 0.5);
+    ctx.stroke();
+    // falling sparks
+    for (let i = 0; i < 3; i++) {
+      const fall = ((t * 20 + i * 14) % (size * 0.65));
+      ellipse(ctx, x + (i - 1) * size * 0.14, haloY + fall, 1.6, 1.6, i % 2 ? '#ce93d8' : '#fdd835');
+    }
+    // soul chain snippet
+    ctx.strokeStyle = 'rgba(156,39,176,0.45)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(x - size * 0.08, y - size * 0.04);
+    ctx.lineTo(x - size * 0.08, y + size * 0.22);
+    ctx.stroke();
   }
   ctx.restore();
 }

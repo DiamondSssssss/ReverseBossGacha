@@ -5,9 +5,9 @@ import {
   unlockHintChallenge,
   titleName,
   syncChallengeUnlocks,
-} from '../core/challenge.js?v=120';
-import { saveState } from '../core/storage.js?v=120';
-import { CHALLENGE_TITLES } from '../data/challenges.js?v=120';
+} from '../core/challenge.js?v=121';
+import { saveState } from '../core/storage.js?v=121';
+import { CHALLENGE_TITLES } from '../data/challenges.js?v=121';
 
 export function renderChallenges(root, ctx) {
   const { state, go, toast, startChallenge } = ctx;
