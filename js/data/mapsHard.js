@@ -10,7 +10,7 @@
  * 5. Không lặp layout: archetype × variant × seed(level) — 60 combo riêng.
  */
 
-import { compileMap } from './maps.js?v=129';
+import { compileMap } from './maps.js?v=130';
 
 const COLS = 42;
 const ROWS = 8;

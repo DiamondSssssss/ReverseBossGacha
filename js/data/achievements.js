@@ -1,6 +1,6 @@
 /** Achievement definitions — clear goals toward "clearing" the game */
 
-import { MAP_UPGRADE } from './constants.js?v=129';
+import { MAP_UPGRADE } from './constants.js?v=130';
 
 /**
  * Tăng khi đổi bảng Gem ấn — load save sẽ cộng phần chênh cho ấn đã mở.

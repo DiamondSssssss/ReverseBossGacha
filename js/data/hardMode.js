@@ -1,6 +1,6 @@
-import { MAX_STAGE } from './constants.js?v=129';
-import { MONSTER_BY_ID } from './monsters.js?v=129';
-import { tryAddToLoadout, loadoutMaxPoolCost } from '../core/loadout.js?v=129';
+import { MAX_STAGE } from './constants.js?v=130';
+import { MONSTER_BY_ID } from './monsters.js?v=130';
+import { tryAddToLoadout, loadoutMaxPoolCost } from '../core/loadout.js?v=130';
 
 /** @typedef {'normal' | 'hard'} StageMode */
 
@@ -23,10 +23,10 @@ const HARD_BANDS = [
     costCapDelta: -1,
     treasureHpMul: 0.9,
     poolMultBonus: 0,
-    maxLegendary: 1,
-    maxMythic: 0,
-    maxRainbow: 0,
-    rules: 'Hero mạnh hơn · Cap −1 · ≤1 Legendary · cấm Mythic/Rainbow',
+    maxLegendary: 5,
+    maxMythic: 5,
+    maxRainbow: 1,
+    rules: 'Hero mạnh hơn · Cap −1 · ≤5 Legendary · ≤5 Mythic · ≤1 Rainbow',
     extraMapBuffs: [],
   },
   {
@@ -36,10 +36,10 @@ const HARD_BANDS = [
     costCapDelta: -1,
     treasureHpMul: 0.88,
     poolMultBonus: 0,
-    maxLegendary: 2,
-    maxMythic: 0,
-    maxRainbow: 0,
-    rules: 'Hero ↑ · Cap −1 · ≤2 Legendary · cấm Mythic/Rainbow',
+    maxLegendary: 6,
+    maxMythic: 6,
+    maxRainbow: 2,
+    rules: 'Hero ↑ · Cap −1 · ≤6 Legendary · ≤6 Mythic · ≤2 Rainbow',
     extraMapBuffs: [],
   },
   {
@@ -49,10 +49,10 @@ const HARD_BANDS = [
     costCapDelta: -1,
     treasureHpMul: 0.85,
     poolMultBonus: 0,
-    maxLegendary: 2,
-    maxMythic: 1,
-    maxRainbow: 0,
-    rules: 'Mid hard · ≤2 Legendary · ≤1 Mythic · cấm Rainbow',
+    maxLegendary: 7,
+    maxMythic: 7,
+    maxRainbow: 2,
+    rules: 'Mid hard · ≤7 Legendary · ≤7 Mythic · ≤2 Rainbow',
     extraMapBuffs: [],
   },
   {
@@ -62,10 +62,10 @@ const HARD_BANDS = [
     costCapDelta: -2,
     treasureHpMul: 0.82,
     poolMultBonus: 0,
-    maxLegendary: 3,
-    maxMythic: 1,
-    maxRainbow: 0,
-    rules: 'Cap −2 · ≤3 Legendary · ≤1 Mythic · cấm Rainbow',
+    maxLegendary: 8,
+    maxMythic: 8,
+    maxRainbow: 3,
+    rules: 'Cap −2 · ≤8 Legendary · ≤8 Mythic · ≤3 Rainbow',
     extraMapBuffs: [],
   },
   {
@@ -75,10 +75,10 @@ const HARD_BANDS = [
     costCapDelta: -2,
     treasureHpMul: 0.8,
     poolMultBonus: 0,
-    maxLegendary: 3,
-    maxMythic: 2,
-    maxRainbow: 0,
-    rules: 'Late hard · ≤3 Legendary · ≤2 Mythic · cấm Rainbow',
+    maxLegendary: 9,
+    maxMythic: 9,
+    maxRainbow: 3,
+    rules: 'Late hard · ≤9 Legendary · ≤9 Mythic · ≤3 Rainbow',
     extraMapBuffs: [],
   },
   {
@@ -88,29 +88,16 @@ const HARD_BANDS = [
     costCapDelta: -2,
     treasureHpMul: 0.78,
     poolMultBonus: 0,
-    maxLegendary: 4,
-    maxMythic: 2,
-    maxRainbow: 1,
-    rules: 'Endgame Khó · ≤4 Legendary · ≤2 Mythic · ≤1 Rainbow',
+    maxLegendary: 10,
+    maxMythic: 10,
+    maxRainbow: 3,
+    rules: 'Endgame Khó · ≤10 Legendary · ≤10 Mythic · ≤3 Rainbow',
     extraMapBuffs: [],
   },
 ];
 
-/** Giới hạn rarity riêng theo ải (ghi đè band). Boss / ải đặc biệt thường chặt hơn. */
-const HARD_STAGE_RARITY_OVERRIDES = {
-  10: { maxLegendary: 1, maxMythic: 0, maxRainbow: 0 },
-  20: { maxLegendary: 2, maxMythic: 0, maxRainbow: 0 },
-  30: { maxLegendary: 2, maxMythic: 1, maxRainbow: 0 },
-  40: { maxLegendary: 2, maxMythic: 1, maxRainbow: 0 },
-  45: { maxLegendary: 2, maxMythic: 1, maxRainbow: 0 },
-  50: { maxLegendary: 2, maxMythic: 2, maxRainbow: 0 },
-  55: { maxLegendary: 3, maxMythic: 2, maxRainbow: 0 },
-  60: { maxLegendary: 3, maxMythic: 2, maxRainbow: 1 },
-  43: { maxLegendary: 2, maxMythic: 1, maxRainbow: 0 },
-  47: { maxLegendary: 2, maxMythic: 1, maxRainbow: 0 },
-  52: { maxLegendary: 3, maxMythic: 2, maxRainbow: 0 },
-  57: { maxLegendary: 2, maxMythic: 1, maxRainbow: 0 },
-};
+/** Giới hạn rarity riêng theo ải (ghi đè band) — để trống trừ khi cần tweak ải đặc biệt. */
+const HARD_STAGE_RARITY_OVERRIDES = {};
 
 function bandForLevel(level) {
   const lv = Math.max(1, Math.min(MAX_STAGE, level | 0));
