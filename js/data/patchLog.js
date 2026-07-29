@@ -1,5 +1,25 @@
 export const PATCH_LOGS = [
   {
+    id: 'v117-monster-skins-vfx',
+    version: 'v117',
+    date: '29/07/2026',
+    title: 'Ra mắt skin quái, tiến độ mastery và VFX skin hiếm',
+    summary:
+      'Kho quái giờ có hệ skin thật sự: mở khóa bằng chơi game, trang bị trong collection, hiển thị xuyên suốt setup/combat và một số skin hiếm có VFX riêng trong trận.',
+    highlights: [
+      'Thêm catalog skin riêng cho quái và save state lưu skin đã mở, skin đang mặc cùng tiến độ mastery cơ bản.',
+      'Collection có nút Skin, modal preview, badge đếm skin và bộ lọc để soi quái còn skin khóa.',
+      'Thêm nguồn mở skin V1 từ mastery, mốc ải Thường, mốc ải Khó và số ấn chương đã mở.',
+      'Skin hiếm giờ có VFX combat-time nhẹ như vòng rune tím, quầng lửa, bóng đuôi và tia vàng xoay quanh quái.',
+      'Hub có thêm panel theo dõi tiến độ skin và Patch Log được cập nhật để người chơi biết đợt skin này gồm những gì.',
+    ],
+    playerImpact: [
+      'Người chơi có thêm một vòng lặp sưu tầm dài hơi mà không làm thay đổi cân bằng chỉ số.',
+      'Dùng một con quái đủ lâu sẽ thấy rõ phần thưởng mỹ thuật thay vì chỉ tăng level hoặc số lượng sở hữu.',
+      'Một số skin hiếm nhìn nổi bật hơn trong combat nhưng vẫn giữ readability của bàn đấu.',
+    ],
+  },
+  {
     id: 'v114-hard-ai-ui',
     version: 'v114',
     date: '29/07/2026',

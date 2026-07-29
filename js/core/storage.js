@@ -4,11 +4,12 @@ import {
   SPELLS,
   INVENTORY_CAP,
   DUPLICATE_SOUL_REFUND,
-} from '../data/constants.js?v=115';
-import { DEFAULT_BOSS_ID, syncUnlockedBosses } from '../data/dungeonBosses.js?v=115';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=115';
-import { isLoggedIn } from './auth.js?v=115';
-import { pushCloudSave } from './cloudSave.js?v=115';
+} from '../data/constants.js?v=117';
+import { DEFAULT_BOSS_ID, syncUnlockedBosses } from '../data/dungeonBosses.js?v=117';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=117';
+import { isLoggedIn } from './auth.js?v=117';
+import { pushCloudSave } from './cloudSave.js?v=117';
+import { ensureMonsterSkinState } from './monsterSkins.js?v=117';
 
 const LEGACY_KEYS = ['rbg_save_v1'];
 
@@ -37,7 +38,7 @@ export function setCloudSyncEnabled(on) {
 }
 
 function defaultState() {
-  return {
+  const state = {
     souls: STARTING.souls,
     gold: STARTING.gold,
     gems: STARTING.gems,
@@ -72,8 +73,13 @@ function defaultState() {
     challengeProgress: { unlocked: [], cleared: {}, bestTime: {} },
     titles: [],
     equippedTitle: null,
+    monsterSkinsOwned: {},
+    monsterSkinEquipped: {},
+    monsterLifetimeStats: {},
     updatedAt: Date.now(),
   };
+  ensureMonsterSkinState(state);
+  return state;
 }
 
 /** Cap sở hữu theo template (ownCap) hoặc INVENTORY_CAP mặc định. */
@@ -155,10 +161,23 @@ export function loadState() {
       stageBestCost: normalizeStageBestCost(parsed.stageBestCost),
       titles: Array.isArray(parsed.titles) ? [...parsed.titles] : [],
       equippedTitle: parsed.equippedTitle || null,
+      monsterSkinsOwned:
+        parsed.monsterSkinsOwned && typeof parsed.monsterSkinsOwned === 'object'
+          ? { ...parsed.monsterSkinsOwned }
+          : {},
+      monsterSkinEquipped:
+        parsed.monsterSkinEquipped && typeof parsed.monsterSkinEquipped === 'object'
+          ? { ...parsed.monsterSkinEquipped }
+          : {},
+      monsterLifetimeStats:
+        parsed.monsterLifetimeStats && typeof parsed.monsterLifetimeStats === 'object'
+          ? { ...parsed.monsterLifetimeStats }
+          : {},
       updatedAt: parsed.updatedAt || Date.now(),
     };
     clampInventoryToCap(merged);
     syncUnlockedBosses(merged);
+    ensureMonsterSkinState(merged);
     return merged;
   } catch {
     return defaultState();
@@ -207,10 +226,23 @@ export function applySaveData(state, data) {
     stageBestCost: normalizeStageBestCost(data.stageBestCost),
     titles: Array.isArray(data.titles) ? [...data.titles] : [],
     equippedTitle: data.equippedTitle || null,
+    monsterSkinsOwned:
+      data.monsterSkinsOwned && typeof data.monsterSkinsOwned === 'object'
+        ? { ...data.monsterSkinsOwned }
+        : {},
+    monsterSkinEquipped:
+      data.monsterSkinEquipped && typeof data.monsterSkinEquipped === 'object'
+        ? { ...data.monsterSkinEquipped }
+        : {},
+    monsterLifetimeStats:
+      data.monsterLifetimeStats && typeof data.monsterLifetimeStats === 'object'
+        ? { ...data.monsterLifetimeStats }
+        : {},
     updatedAt: data.updatedAt || Date.now(),
   });
   clampInventoryToCap(state);
   syncUnlockedBosses(state);
+  ensureMonsterSkinState(state);
   return state;
 }
 

@@ -1,23 +1,29 @@
-import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=115';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=115';
-import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=115';
-import { CombatEngine } from '../core/combatEngine.js?v=115';
-import { saveState } from '../core/storage.js?v=115';
-import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=115';
+import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=117';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=117';
+import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=117';
+import { CombatEngine } from '../core/combatEngine.js?v=117';
+import { saveState } from '../core/storage.js?v=117';
+import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=117';
 import {
   evaluateChallengeResult,
   grantChallengeReward,
   titleName,
-} from '../core/challenge.js?v=115';
-import { loadoutPoolCost } from '../core/loadout.js?v=115';
+} from '../core/challenge.js?v=117';
+import { loadoutPoolCost } from '../core/loadout.js?v=117';
 import {
   frontierForMode,
   recordPersonalBestCost,
-} from '../data/hardMode.js?v=115';
-import { submitStageBestCost } from '../core/stageRecords.js?v=115';
-import { isLoggedIn } from '../core/auth.js?v=115';
-import { monsterSpriteUrl } from '../render/sprites.js?v=115';
-import { bindMonsterTips, hideMonsterTip } from './monsterTip.js?v=115';
+} from '../data/hardMode.js?v=117';
+import { submitStageBestCost } from '../core/stageRecords.js?v=117';
+import { isLoggedIn } from '../core/auth.js?v=117';
+import { monsterSpriteUrl } from '../render/sprites.js?v=117';
+import { bindMonsterTips, hideMonsterTip } from './monsterTip.js?v=117';
+import {
+  addLoadoutWinStats,
+  addMonsterDeployments,
+  evaluateMonsterSkinUnlocks,
+  getEquippedMonsterAppearance,
+} from '../core/monsterSkins.js?v=117';
 
 const REPLAY_REWARD_MUL = 0.35;
 
@@ -29,7 +35,7 @@ function shortName(name) {
   return parts.slice(-2).join(' ');
 }
 
-function handHtml(hand, selectedId, freeCost) {
+function handHtml(hand, selectedId, freeCost, state) {
   const entries = Object.entries(hand || {}).filter(([, n]) => n > 0);
   if (!entries.length) {
     return `<p class="deploy-empty muted">Tay bài trống — đã thả hết / không mang dư.</p>`;
@@ -43,7 +49,7 @@ function handHtml(hand, selectedId, freeCost) {
       return `
         <button type="button" class="deploy-card ${selected ? 'selected' : ''} ${tooCostly ? 'too-costly' : ''}"
           data-deploy="${id}" title="${m.name} · C${m.cost}${tooCostly ? ' · Thiếu slot' : ''}">
-          <img src="${monsterSpriteUrl(id, m.color, m.rarity)}" alt="" width="36" height="36" />
+          <img src="${monsterSpriteUrl(id, m.color, m.rarity, getEquippedMonsterAppearance(state, id, m))}" alt="" width="36" height="36" />
           <span class="deploy-meta">
             <strong>${shortName(m.name)}</strong>
             <span style="color:${RARITY_COLORS[m.rarity] || '#666'}">C${m.cost} · ×${n}</span>
@@ -114,7 +120,7 @@ export function renderCombat(root, ctx) {
       </div>
       <div class="deploy-row">
         <div class="deploy-label">Tay bài <span id="deploy-hint" class="muted"></span></div>
-        <div class="deploy-hand" id="deploy-hand">${handHtml(initialHand, null, 0)}</div>
+        <div class="deploy-hand" id="deploy-hand">${handHtml(initialHand, null, 0, state)}</div>
       </div>
       <div class="spell-row" id="spell-row">
         ${spells
@@ -161,7 +167,7 @@ export function renderCombat(root, ctx) {
     const key = `${JSON.stringify(snap.hand)}|${snap.selectedDeployId}|${snap.freeCost}|${snap.result || ''}`;
     if (key === lastHandKey) return;
     lastHandKey = key;
-    handEl.innerHTML = handHtml(snap.hand, snap.selectedDeployId, snap.freeCost);
+    handEl.innerHTML = handHtml(snap.hand, snap.selectedDeployId, snap.freeCost, state);
     hintEl.textContent = snap.selectedDeployId
       ? '· chạm ô trên map'
       : snap.freeCost > 0
@@ -205,6 +211,8 @@ export function renderCombat(root, ctx) {
         gold = isReplay ? 0 : 20 + run.challengeId * 5;
         if (gold) state.gold = (state.gold || 0) + gold;
         state.stats.wins += 1;
+        addLoadoutWinStats(state, run.loadout || {});
+        const unlockedSkins = evaluateMonsterSkinUnlocks(state);
         if (state.challengeProgress) {
           state.challengeProgress.bestTime = state.challengeProgress.bestTime || {};
           const prev = state.challengeProgress.bestTime[ch.id];
@@ -222,6 +230,7 @@ export function renderCombat(root, ctx) {
           challengeId: ch.id,
           titleId: reward.titleId,
           titleName: titleName(reward.titleId),
+          unlockedSkins,
           objectivesFailed: [],
           replay: isReplay,
         };
@@ -230,6 +239,7 @@ export function renderCombat(root, ctx) {
         souls = REWARDS.LOSE_SOULS;
         state.souls += souls;
         state.stats.losses += 1;
+        const unlockedSkins = evaluateMonsterSkinUnlocks(state);
         saveState(state);
         refreshChrome();
         ctx.lastReward = {
@@ -238,6 +248,7 @@ export function renderCombat(root, ctx) {
           gold: 0,
           challenge: true,
           challengeId: ch.id,
+          unlockedSkins,
           objectivesFailed: (ev.failed || []).map((o) => o.label || o.type),
           note:
             result === 'win'
@@ -273,6 +284,7 @@ export function renderCombat(root, ctx) {
       state.souls += souls;
       state.gold += gold;
       state.stats.wins += 1;
+      addLoadoutWinStats(state, run.loadout || {});
 
       const poolCost =
         run.loadoutPoolCost != null
@@ -299,6 +311,7 @@ export function renderCombat(root, ctx) {
       const beforeBosses = new Set(state.unlockedBosses || []);
       syncUnlockedBosses(state);
       const newBosses = (state.unlockedBosses || []).filter((id) => !beforeBosses.has(id));
+      const unlockedSkins = evaluateMonsterSkinUnlocks(state);
       saveState(state);
       const unlocked = evaluateAchievements(state);
       announceAchievements?.(unlocked);
@@ -320,6 +333,7 @@ export function renderCombat(root, ctx) {
         advanced,
         poolCost,
         personalBest: isBest,
+        unlockedSkins,
       };
       go('reward');
     } else {
@@ -329,6 +343,7 @@ export function renderCombat(root, ctx) {
       state.souls += souls;
       if (gold > 0) state.gold += gold;
       state.stats.losses += 1;
+      const unlockedSkins = evaluateMonsterSkinUnlocks(state);
       saveState(state);
       evaluateAchievements(state);
       refreshChrome();
@@ -340,6 +355,7 @@ export function renderCombat(root, ctx) {
         mode: stageMode,
         level: run.level,
         isReplay: !!run.isReplay,
+        unlockedSkins,
       };
       go('reward');
     }
@@ -347,8 +363,12 @@ export function renderCombat(root, ctx) {
 
   engine = new CombatEngine(run, canvas, {
     monsterUpgrades: state.monsterUpgrades || {},
+    state,
     bossId: boss.id,
     hand: initialHand,
+    onMonsterDeployed(monsterId) {
+      addMonsterDeployments(state, [monsterId]);
+    },
     onUpdate(snap) {
       const shieldTxt =
         snap.treasureShield > 0 ? ` · Khiên ${Math.ceil(snap.treasureShield)}` : '';
@@ -633,6 +653,13 @@ export function renderReward(root, ctx) {
       }</p>
       <div class="big-num">+${r.souls} LH</div>
       ${r.gold ? `<div class="muted">+${r.gold} Vàng</div>` : ''}
+      ${
+        (r.unlockedSkins || []).length
+          ? `<div class="muted" style="margin-top:8px">Skin mới: ${(r.unlockedSkins || [])
+              .map((s) => `${s.monsterName} · ${s.skinName}`)
+              .join(' ; ')}</div>`
+          : ''
+      }
       <div class="reward-actions">
         <button type="button" class="primary big" id="btn-replay">${replayLabel}</button>
         <button type="button" id="btn-to-gacha">Quay Gacha</button>

@@ -1,10 +1,11 @@
-import { MONSTERS } from '../data/monsters.js?v=115';
-import { RARITY_COLORS, RARITY_LABELS, MAX_STAGE } from '../data/constants.js?v=115';
-import { monsterDisplayUrl } from '../render/sprites.js?v=115';
-import { fetchLeaderboard, fetchPlayerProfile } from '../core/leaderboard.js?v=115';
-import { getUser } from '../core/auth.js?v=115';
-import { titleName } from '../core/challenge.js?v=115';
-import { CHALLENGES } from '../data/challenges.js?v=115';
+import { MONSTERS } from '../data/monsters.js?v=117';
+import { RARITY_COLORS, RARITY_LABELS, MAX_STAGE } from '../data/constants.js?v=117';
+import { monsterDisplayUrl } from '../render/sprites.js?v=117';
+import { fetchLeaderboard, fetchPlayerProfile } from '../core/leaderboard.js?v=117';
+import { getUser } from '../core/auth.js?v=117';
+import { titleName } from '../core/challenge.js?v=117';
+import { CHALLENGES } from '../data/challenges.js?v=117';
+import { getEquippedMonsterAppearance } from '../core/monsterSkins.js?v=117';
 
 const CHALLENGE_TOTAL = CHALLENGES.length || 10;
 
@@ -61,7 +62,13 @@ function renderMonsterGrid(profile) {
     .map((m) => {
       const count = profile.inventory?.[m.id] || 0;
       const upLv = profile.monsterUpgrades?.[m.id] || 0;
-      const src = monsterDisplayUrl(true, m.id, m.color, m.rarity);
+      const src = monsterDisplayUrl(
+        true,
+        m.id,
+        m.color,
+        m.rarity,
+        getEquippedMonsterAppearance(profile, m.id, m)
+      );
       const everOnly = count <= 0;
       return `
         <article class="lb-mon">

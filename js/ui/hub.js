@@ -1,18 +1,23 @@
-import { MAP_UPGRADE, SPELLS, MAX_STAGE } from '../data/constants.js?v=115';
-import { MONSTERS } from '../data/monsters.js?v=115';
+import { MAP_UPGRADE, SPELLS, MAX_STAGE } from '../data/constants.js?v=117';
+import { MONSTERS } from '../data/monsters.js?v=117';
 import {
   DUNGEON_BOSSES,
   getBoss,
   isBossUnlocked,
   unlockHint,
   syncUnlockedBosses,
-} from '../data/dungeonBosses.js?v=115';
-import { tryUpgradeMap, upgradeMapCost } from '../core/dungeon.js?v=115';
-import { saveState } from '../core/storage.js?v=115';
-import { achievementProgress, isGameCleared, evaluateAchievements } from '../core/achievements.js?v=115';
-import { titleName, ensureChallengeProgress } from '../core/challenge.js?v=115';
-import { showTutorial } from './tutorial.js?v=115';
-import { showRedeemModal } from './redeemUI.js?v=115';
+} from '../data/dungeonBosses.js?v=117';
+import { tryUpgradeMap, upgradeMapCost } from '../core/dungeon.js?v=117';
+import { saveState } from '../core/storage.js?v=117';
+import { achievementProgress, isGameCleared, evaluateAchievements } from '../core/achievements.js?v=117';
+import { titleName, ensureChallengeProgress } from '../core/challenge.js?v=117';
+import { showTutorial } from './tutorial.js?v=117';
+import { showRedeemModal } from './redeemUI.js?v=117';
+import {
+  getReadyToUnlockSkinCount,
+  getTotalMonsterSkinCount,
+  getUnlockedMonsterSkinCount,
+} from '../core/monsterSkins.js?v=117';
 
 const GATE_SVG = `
 <svg viewBox="0 0 200 250" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -61,6 +66,9 @@ export function renderHub(root, ctx) {
     : `T ${nFront}/${MAX_STAGE} · K ${hFront}/${MAX_STAGE}`;
   const ownedMonsters = MONSTERS.filter((m) => (state.inventory?.[m.id] || 0) > 0).length;
   const monsterLabel = `${ownedMonsters}/${MONSTERS.length}`;
+  const skinUnlocked = getUnlockedMonsterSkinCount(state);
+  const skinTotal = getTotalMonsterSkinCount();
+  const skinReady = getReadyToUnlockSkinCount(state);
   const activeBoss = getBoss(state.selectedBossId);
   const titleLabel = titleName(state.equippedTitle);
 
@@ -128,6 +136,7 @@ export function renderHub(root, ctx) {
             <li><strong>Linh Hồn</strong> — thắng/thua ải → quay Gacha (trùng tối đa ×3 → hoàn LH)</li>
             <li><strong>Vàng</strong> — thắng ải → nâng cấp quái (Kho)</li>
             <li><strong>Gem</strong> — Ấn chương → cải tạo hầm (tăng Cost)</li>
+            <li><strong>Skin</strong> — mastery, mốc ải, hard mode, ấn chương → chỉ đổi ngoại hình</li>
             <li><strong>Tay bài</strong> — pool mang ~3× Cap; xếp sân ≤ Cap, thả thêm trong trận khi có slot</li>
           </ul>
           <p class="muted" style="margin:8px 0 0;font-size:0.78rem">
@@ -143,6 +152,15 @@ export function renderHub(root, ctx) {
                 ? '<p class="economy-zero">Chưa đủ 100 LH để quay — thắng/thua ải để kiếm Linh Hồn.</p>'
                 : ''
           }
+        </div>
+        <div class="skin-guide">
+          <h3>Tủ tùy quái</h3>
+          <div class="skin-guide-stats">
+            <div><strong>${skinUnlocked}/${skinTotal}</strong><span>Skin mở</span></div>
+            <div><strong>${skinReady}</strong><span>Có thể nhận</span></div>
+          </div>
+          <p class="muted">Thắng trận với loadout yêu thích, đẩy frontier và săn ấn chương để mở skin mới.</p>
+          <button type="button" id="btn-skin-vault">Xem kho skin</button>
         </div>
         <p class="section-label">Cải tạo hầm</p>
         <div class="upgrade-list">
@@ -181,6 +199,7 @@ export function renderHub(root, ctx) {
     });
   };
   root.querySelector('#btn-collection').onclick = () => go('collection');
+  root.querySelector('#btn-skin-vault')?.addEventListener('click', () => go('collection'));
   root.querySelector('#btn-heroes').onclick = () => go('heroes');
   root.querySelector('#btn-ach').onclick = () => go('achievements');
   root.querySelector('#btn-patchlog').onclick = () => go('patchlog');

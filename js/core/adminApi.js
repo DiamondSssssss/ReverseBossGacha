@@ -1,4 +1,4 @@
-import { api } from './auth.js?v=115';
+import { api } from './auth.js?v=117';
 
 export async function fetchAdminStats() {
   const data = await api('/api/admin/stats');

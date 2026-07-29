@@ -1,17 +1,18 @@
-import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=115';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=115';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=115';
-import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=115';
-import { mapUsedCost } from './dungeon.js?v=115';
-import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=115';
-import { ParticleSystem } from '../render/particles.js?v=115';
+import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=117';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=117';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=117';
+import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=117';
+import { mapUsedCost } from './dungeon.js?v=117';
+import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=117';
+import { ParticleSystem } from '../render/particles.js?v=117';
+import { getEquippedMonsterAppearance } from './monsterSkins.js?v=117';
 import {
   getMonsterSprite,
   getHeroSprite,
   drawSpriteAt,
-} from '../render/sprites.js?v=115';
-import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=115';
-import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=115';
+} from '../render/sprites.js?v=117';
+import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=117';
+import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=117';
 import {
   computeHeroAttackDamage,
   applyIncomingDamage,
@@ -47,10 +48,10 @@ import {
   ensureHeroSkillState,
   tryEnterStasisRevive,
   tickStasisRevive,
-} from './ai/skills.js?v=115';
-import { getTileModifiers, spawnMonsterStats, elementAuraActive, elementAuraTag } from './ai/tileModifiers.js?v=115';
-import { dist } from './ai/targeting.js?v=115';
-import { getHeroProfile } from './ai/profiles.js?v=115';
+} from './ai/skills.js?v=117';
+import { getTileModifiers, spawnMonsterStats, elementAuraActive, elementAuraTag } from './ai/tileModifiers.js?v=117';
+import { dist } from './ai/targeting.js?v=117';
+import { getHeroProfile } from './ai/profiles.js?v=117';
 import {
   patternForHero,
   patternForMonster,
@@ -58,7 +59,7 @@ import {
   tickAttack,
   ensureAttackState,
   resolveDisplayAnim,
-} from './ai/attackPatterns.js?v=115';
+} from './ai/attackPatterns.js?v=117';
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
@@ -327,6 +328,9 @@ export class CombatEngine {
   _spawnOneMonster(monsterId, col, row, { fromSetup = false } = {}) {
     const tpl = MONSTER_BY_ID[monsterId];
     if (!tpl) return null;
+    const appearance = this.hooks.state
+      ? getEquippedMonsterAppearance(this.hooks.state, monsterId, tpl)
+      : null;
     const upgrades = this.run?.mode === 'challenge' ? {} : this.hooks.monsterUpgrades || {};
     const terrain = terrainAt(this.map, col, row);
     const upLv = Number(upgrades[monsterId]) || 0;
@@ -352,7 +356,9 @@ export class CombatEngine {
       id: uid(),
       templateId: tpl.id,
       name: tpl.name,
-      color: tpl.color,
+      color: appearance?.color || tpl.color,
+      skinId: appearance?.skinId || 'base',
+      appearance,
       passive: tpl.passive,
       skills: Array.isArray(tpl.skills) ? [...tpl.skills] : [],
       rarity: tpl.rarity,
@@ -459,6 +465,7 @@ export class CombatEngine {
     this.costUsed = this.aliveCost();
     this.particles.burst(unit.x, unit.y, unit.color || '#66bb6a');
     this._float(unit.x, unit.y - 12, `+${tpl.name}`, unit.color || '#81c784');
+    this.hooks.onMonsterDeployed?.(monsterId);
     this.hooks.onUpdate?.(this.snapshot());
     return { ok: true };
   }
@@ -3018,7 +3025,7 @@ export class CombatEngine {
 
     for (const m of this.monsters) {
       if (!m.alive) continue;
-      const spr = getMonsterSprite(m.templateId, m.color, m.rarity);
+      const spr = getMonsterSprite(m.templateId, m.color, m.rarity, m.appearance);
       const bob = m.isTrap ? 0 : Math.sin(this.time * 4 + m.bobPhase) * 2.2;
       const size = m.isTrap ? CELL * 0.88 : CELL * 0.95 + m.rarity * 1.2;
       const poseInfo = resolveDisplayAnim(m);
@@ -3038,6 +3045,9 @@ export class CombatEngine {
         lungeX: m.lungeX || 0,
         lungeY: m.lungeY || 0,
         tint: m.color,
+        vfx: m.appearance?.vfx || null,
+        vfxT: this.time + (m.bobPhase || 0),
+        palette: m.appearance?.palette || null,
         alpha,
       });
       const ax = drawn.x;

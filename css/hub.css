@@ -243,6 +243,43 @@
   line-height: 1.35;
 }
 
+.skin-guide {
+  border: 2px solid var(--ink);
+  background: var(--bone);
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow-stamp);
+}
+
+.skin-guide h3 {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+}
+
+.skin-guide-stats {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 8px;
+}
+
+.skin-guide-stats strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+}
+
+.skin-guide-stats span {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.skin-guide button {
+  width: 100%;
+  margin-top: 8px;
+}
+
 .boss-active {
   margin-bottom: 10px;
   padding: 10px 12px;

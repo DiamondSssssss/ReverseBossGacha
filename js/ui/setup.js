@@ -3,17 +3,17 @@ import {
   TERRAIN_LABELS,
   RARITY_COLORS,
   HERO_CLASS_LABELS,
-} from '../data/constants.js?v=115';
-import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=115';
-import { monsterScaleForLevel } from '../data/heroes.js?v=115';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=115';
-import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=115';
+} from '../data/constants.js?v=117';
+import { MONSTER_BY_ID, MONSTERS } from '../data/monsters.js?v=117';
+import { monsterScaleForLevel } from '../data/heroes.js?v=117';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=117';
+import { findPath, buildBlockedFromMap } from '../core/pathfinding.js?v=117';
 import {
   mapUsedCost,
   placeMonster,
   removePlacement,
   totalPlacements,
-} from '../core/dungeon.js?v=115';
+} from '../core/dungeon.js?v=117';
 import {
   loadoutMaxPoolCost,
   loadoutPoolCost,
@@ -24,18 +24,18 @@ import {
   suggestLoadout,
   tryAddToLoadout,
   tryRemoveFromLoadout,
-} from '../core/loadout.js?v=115';
-import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=115';
-import { attachSetupBoardFx } from './setupBoardFx.js?v=115';
-import { playGhostWalk } from './setupPreview.js?v=115';
-import { saveState } from '../core/storage.js?v=115';
+} from '../core/loadout.js?v=117';
+import { monsterSpriteUrl, heroSpriteUrl } from '../render/sprites.js?v=117';
+import { attachSetupBoardFx } from './setupBoardFx.js?v=117';
+import { playGhostWalk } from './setupPreview.js?v=117';
+import { saveState } from '../core/storage.js?v=117';
 import {
   hideMonsterTip,
   monsterTipHtml,
-} from './monsterTip.js?v=115';
+} from './monsterTip.js?v=117';
 import {
   displayMonsterStats,
-} from '../core/monsterUpgrade.js?v=115';
+} from '../core/monsterUpgrade.js?v=117';
 import {
   validateChallengeLoadout,
   tryAddChallengeLoadout,
@@ -46,7 +46,7 @@ import {
   monsterStageLevelForRun,
   monsterUpgradeLevelForRun,
   monsterStatMulForRun,
-} from '../core/challenge.js?v=115';
+} from '../core/challenge.js?v=117';
 import {
   hardRarityBlockReason,
   hardRaritySummary,
@@ -54,7 +54,11 @@ import {
   suggestHardLoadout,
   tryAddHardLoadout,
   validateHardLoadout,
-} from '../data/hardMode.js?v=115';
+} from '../data/hardMode.js?v=117';
+import {
+  addMonsterDeployments,
+  getEquippedMonsterAppearance,
+} from '../core/monsterSkins.js?v=117';
 
 function shortName(name) {
   if (!name) return '?';
@@ -440,7 +444,7 @@ export function renderScout(root, ctx) {
         const st = displayMonsterStats(m, upLv, stageLv, statMul);
         return `
           <button type="button" class="loadout-chip" data-remove="${id}" data-mid="${id}">
-            <img src="${monsterSpriteUrl(id, m.color, m.rarity)}" alt="" width="36" height="36" />
+            <img src="${monsterSpriteUrl(id, m.color, m.rarity, getEquippedMonsterAppearance(state, id, m))}" alt="" width="36" height="36" />
             <span class="loadout-chip-meta">
               <strong>${shortName(m.name)}</strong>
               <span>C${m.cost} · ×${n}${upLv ? ` · ↑${upLv}` : ''}</span>
@@ -481,7 +485,7 @@ export function renderScout(root, ctx) {
         const banTitle = hardBan || (blocked ? trial.reason : '');
         return `
           <button type="button" class="loadout-pick ${full || blocked ? 'is-full' : ''} ${hardBan ? 'is-banned' : ''}" data-add="${m.id}" data-mid="${m.id}" ${full || blocked ? 'aria-disabled="true"' : ''} title="${banTitle || ''}">
-            <img src="${monsterSpriteUrl(m.id, m.color, m.rarity)}" alt="" width="44" height="44" />
+            <img src="${monsterSpriteUrl(m.id, m.color, m.rarity, getEquippedMonsterAppearance(state, m.id, m))}" alt="" width="44" height="44" />
             <span class="stars" style="color:${RARITY_COLORS[m.rarity]}">${'★'.repeat(m.rarity)}</span>
             <strong>${shortName(m.name)}</strong>
             <span class="muted">C${m.cost} · kho ×${have}${inLoad ? ` · +${inLoad}` : ''}${upLv ? ` · ↑${upLv}` : ''}</span>
@@ -886,7 +890,12 @@ export function renderSetup(root, ctx) {
     const used = mapUsedCost(map);
     const selected = selectedId ? MONSTER_BY_ID[selectedId] : null;
     const ghostSrc = selected
-      ? monsterSpriteUrl(selected.id, selected.color, selected.rarity)
+      ? monsterSpriteUrl(
+          selected.id,
+          selected.color,
+          selected.rarity,
+          getEquippedMonsterAppearance(state, selected.id, selected)
+        )
       : '';
     const pathHint = showPath
       ? new Set(pathCache.map((p) => `${p.col},${p.row}`))
@@ -931,7 +940,12 @@ export function renderSetup(root, ctx) {
         if (p) {
           const m = MONSTER_BY_ID[p.monsterId];
           const trap = m?.tags?.includes('trap');
-          const src = monsterSpriteUrl(p.monsterId, m?.color || '#ccc', m?.rarity || 1);
+          const src = monsterSpriteUrl(
+            p.monsterId,
+            m?.color || '#ccc',
+            m?.rarity || 1,
+            getEquippedMonsterAppearance(state, p.monsterId, m)
+          );
           const just =
             fxPulse && fxPulse.col === col && fxPulse.row === row
               ? fxPulse.kind === 'place'
@@ -983,7 +997,12 @@ export function renderSetup(root, ctx) {
         const m = MONSTER_BY_ID[id];
         if (!m) return '';
         const trap = m.tags?.includes('trap');
-        const src = monsterSpriteUrl(id, m.color, m.rarity);
+        const src = monsterSpriteUrl(
+          id,
+          m.color,
+          m.rarity,
+          getEquippedMonsterAppearance(state, id, m)
+        );
         const upLv = monsterUpgradeLevelForRun(run, state, id);
         const stageLv = monsterStageLevelForRun(run);
         const statMul = monsterStatMulForRun(run);
@@ -1279,6 +1298,11 @@ export function renderSetup(root, ctx) {
       }
       // Phần còn trong khay → tay bài thả trong trận
       run.deployHand = { ...inventory };
+      addMonsterDeployments(
+        state,
+        (run.map.placements || []).map((p) => ({ monsterId: p.monsterId, count: 1 }))
+      );
+      saveState(state);
       hideMonsterTip(true);
       stopFx();
       go('combat');

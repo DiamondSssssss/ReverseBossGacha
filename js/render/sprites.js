@@ -48,6 +48,201 @@ function outlineStroke(ctx) {
   ctx.lineCap = 'round';
 }
 
+function applyAura(ctx, aura, rarity = 1) {
+  if (!aura) return;
+  const auraColor =
+    aura === 'swamp'
+      ? 'rgba(102,187,106,0.22)'
+      : aura === 'violet'
+        ? 'rgba(171,71,188,0.2)'
+        : aura === 'shadow'
+          ? 'rgba(126,87,194,0.18)'
+          : aura === 'ember'
+            ? 'rgba(255,112,67,0.2)'
+            : aura === 'bloom'
+              ? 'rgba(244,143,177,0.18)'
+              : 'rgba(255,255,255,0.12)';
+  const glow = ctx.createRadialGradient(32, 34, 8, 32, 34, 28 + rarity);
+  glow.addColorStop(0, auraColor);
+  glow.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, SIZE, SIZE);
+}
+
+function paintDecoration(ctx, deco, palette = {}) {
+  const accent = palette.accent || '#ffd54f';
+  const detail = palette.eye || '#c62828';
+  switch (deco) {
+    case 'scar':
+      ctx.strokeStyle = detail;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(24, 18);
+      ctx.lineTo(18, 28);
+      ctx.moveTo(20, 18);
+      ctx.lineTo(14, 28);
+      ctx.stroke();
+      break;
+    case 'moss':
+      ctx.fillStyle = shade(accent, 12);
+      ellipse(ctx, 22, 46, 7, 4, shade('#6d8c3e', 10));
+      ellipse(ctx, 41, 48, 6, 3, shade('#4e7d35', 0));
+      break;
+    case 'runes':
+      ctx.strokeStyle = accent;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(20, 50);
+      ctx.lineTo(24, 44);
+      ctx.lineTo(27, 49);
+      ctx.moveTo(35, 50);
+      ctx.lineTo(39, 43);
+      ctx.lineTo(43, 49);
+      ctx.stroke();
+      break;
+    case 'warPaint':
+      ctx.strokeStyle = detail;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(21, 23);
+      ctx.lineTo(28, 26);
+      ctx.moveTo(43, 23);
+      ctx.lineTo(36, 26);
+      ctx.stroke();
+      break;
+    case 'banner':
+      ctx.strokeStyle = '#5d4037';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(46, 18);
+      ctx.lineTo(46, 40);
+      ctx.stroke();
+      ctx.fillStyle = accent;
+      ctx.beginPath();
+      ctx.moveTo(46, 18);
+      ctx.lineTo(58, 22);
+      ctx.lineTo(46, 28);
+      ctx.closePath();
+      ctx.fill();
+      break;
+    case 'lantern':
+      ctx.fillStyle = accent;
+      ellipse(ctx, 48, 16, 5, 6, accent);
+      ctx.strokeStyle = '#6d4c41';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(44, 11, 8, 10);
+      break;
+    case 'halo':
+      ctx.strokeStyle = accent;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(32, 11, 12, 4.5, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      break;
+    case 'flowers':
+      ['#f48fb1', '#ffcc80', '#fff176'].forEach((col, i) => {
+        ellipse(ctx, 22 + i * 8, 17 + (i % 2), 3.2, 3.2, col);
+      });
+      break;
+    case 'shadowVeil':
+      ctx.globalAlpha = 0.22;
+      ellipse(ctx, 32, 32, 20, 22, '#311b92');
+      ctx.globalAlpha = 1;
+      break;
+    case 'coins':
+      ellipse(ctx, 18, 46, 4, 4, '#ffca28');
+      ellipse(ctx, 46, 46, 4, 4, '#ffd54f');
+      break;
+    case 'crown':
+      ctx.fillStyle = accent;
+      ctx.beginPath();
+      ctx.moveTo(22, 12);
+      ctx.lineTo(26, 6);
+      ctx.lineTo(31, 12);
+      ctx.lineTo(36, 5);
+      ctx.lineTo(42, 12);
+      ctx.lineTo(42, 17);
+      ctx.lineTo(22, 17);
+      ctx.closePath();
+      ctx.fill();
+      break;
+    default:
+      break;
+  }
+}
+
+function applySkinDecor(ctx, appearance = null, rarity = 1) {
+  if (!appearance) return;
+  applyAura(ctx, appearance.aura, rarity);
+  for (const deco of appearance.decals || []) {
+    paintDecoration(ctx, deco, appearance.palette || {});
+  }
+}
+
+function drawSpriteVfx(ctx, x, y, size, vfx, t = 0, alpha = 1, palette = {}) {
+  if (!vfx) return;
+  const accent = palette.accent || '#ffd54f';
+  const pulse = 0.55 + 0.45 * Math.sin(t * 2.4);
+  ctx.save();
+  ctx.globalAlpha = Math.max(0.18, alpha * 0.75);
+  if (vfx === 'violetRunes') {
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 1.8;
+    ctx.setLineDash([4, 6]);
+    ctx.lineDashOffset = -t * 18;
+    ctx.beginPath();
+    ctx.arc(x, y, size * (0.44 + pulse * 0.04), 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    for (let i = 0; i < 3; i++) {
+      const ang = t * 1.4 + i * ((Math.PI * 2) / 3);
+      const rx = x + Math.cos(ang) * size * 0.42;
+      const ry = y + Math.sin(ang) * size * 0.28;
+      ctx.strokeStyle = '#f3e5f5';
+      ctx.beginPath();
+      ctx.moveTo(rx - 3, ry + 2);
+      ctx.lineTo(rx, ry - 4);
+      ctx.lineTo(rx + 3, ry + 2);
+      ctx.stroke();
+    }
+  } else if (vfx === 'emberHalo') {
+    for (let i = 0; i < 4; i++) {
+      const ang = t * 1.9 + i * 1.57;
+      const rx = x + Math.cos(ang) * size * 0.28;
+      const ry = y - size * 0.18 - Math.sin(t * 2 + i) * 5;
+      ctx.fillStyle = i % 2 ? '#ffd54f' : accent;
+      ellipse(ctx, rx, ry, 2.4 + pulse, 3.4 + pulse, ctx.fillStyle);
+    }
+    ctx.strokeStyle = 'rgba(255,183,77,0.65)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(x, y - size * 0.12, size * 0.36, 0, Math.PI * 2);
+    ctx.stroke();
+  } else if (vfx === 'shadowTrail') {
+    ctx.fillStyle = 'rgba(49,27,146,0.22)';
+    for (let i = 0; i < 3; i++) {
+      const drift = (i + 1) * size * 0.12;
+      ellipse(
+        ctx,
+        x - drift + Math.sin(t * 2 + i) * 2,
+        y + Math.cos(t * 1.6 + i) * 2,
+        size * (0.16 + i * 0.03),
+        size * (0.22 + i * 0.03),
+        ctx.fillStyle
+      );
+    }
+  } else if (vfx === 'goldSpark') {
+    for (let i = 0; i < 4; i++) {
+      const ang = t * 2.8 + i * (Math.PI / 2);
+      const rx = x + Math.cos(ang) * size * 0.34;
+      const ry = y + Math.sin(ang) * size * 0.24;
+      ctx.fillStyle = i % 2 ? '#fff8e1' : accent;
+      ellipse(ctx, rx, ry, 2.4, 2.4, ctx.fillStyle);
+    }
+  }
+  ctx.restore();
+}
+
 /* ——— Kind painters (0..64 local coords) ——— */
 
 const KINDS = {
@@ -1258,15 +1453,26 @@ function paintBackground(ctx, rarity) {
  * @param {string} color
  * @param {number} [rarity]
  */
-export function getMonsterSprite(id, color = '#66bb6a', rarity = 1) {
-  const key = `m:${id}:${color}:${rarity}`;
+export function getMonsterSprite(id, color = '#66bb6a', rarity = 1, appearance = null) {
+  const primary = appearance?.palette?.primary || color;
+  const appearanceKey = appearance
+    ? JSON.stringify({
+        skinId: appearance.skinId || 'base',
+        kind: appearance.kind || '',
+        palette: appearance.palette || {},
+        decals: appearance.decals || [],
+        aura: appearance.aura || '',
+      })
+    : 'base';
+  const key = `m:${id}:${primary}:${rarity}:${appearanceKey}`;
   if (cache.has(key)) return cache.get(key);
   const canvas = makeCanvas();
   const ctx = canvas.getContext('2d');
   paintBackground(ctx, rarity);
-  const kind = MONSTER_KIND[id] || 'goblin';
+  const kind = appearance?.kind || MONSTER_KIND[id] || 'goblin';
   const fn = KINDS[kind] || KINDS.goblin;
-  fn(ctx, color);
+  fn(ctx, primary);
+  applySkinDecor(ctx, appearance, rarity);
   // rarity stars corner
   if (rarity >= 1) {
     ctx.fillStyle = rarity >= 4 ? '#ffd54f' : rarity >= 2 ? '#81c784' : '#a1887f';
@@ -1317,9 +1523,9 @@ export function getLockedMonsterSprite(rarity = 1) {
  * @param {string} color
  * @param {number} rarity
  */
-export function monsterDisplayUrl(unlocked, id, color, rarity) {
+export function monsterDisplayUrl(unlocked, id, color, rarity, appearance = null) {
   if (!unlocked) return getSpriteDataUrl(getLockedMonsterSprite(rarity || 1));
-  return monsterSpriteUrl(id, color, rarity);
+  return monsterSpriteUrl(id, color, rarity, appearance);
 }
 
 /**
@@ -1362,8 +1568,8 @@ export function getSpriteDataUrl(canvas) {
   return url;
 }
 
-export function monsterSpriteUrl(id, color, rarity) {
-  return getSpriteDataUrl(getMonsterSprite(id, color, rarity));
+export function monsterSpriteUrl(id, color, rarity, appearance = null) {
+  return getSpriteDataUrl(getMonsterSprite(id, color, rarity, appearance));
 }
 
 export function heroSpriteUrl(id, heroClass, color) {
@@ -1389,6 +1595,9 @@ export function drawSpriteAt(ctx, sprite, x, y, anim = {}) {
     lungeY = 0,
     tint = null,
     shake = 0,
+    vfx = null,
+    vfxT = 0,
+    palette = null,
   } = anim;
 
   let sx = squash;
@@ -1483,6 +1692,7 @@ export function drawSpriteAt(ctx, sprite, x, y, anim = {}) {
   if (face < 0) ctx.scale(-1, 1);
   ctx.drawImage(sprite, -drawW / 2, -drawH / 2, drawW, drawH);
   ctx.restore();
+  drawSpriteVfx(ctx, vx, vy, size, vfx, vfxT, a, palette || {});
 
   return { x: vx, y: vy, w: drawW, h: drawH };
 }

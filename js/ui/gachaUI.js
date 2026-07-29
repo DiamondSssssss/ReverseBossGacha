@@ -1,7 +1,8 @@
-import { GACHA, RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=115';
-import { tryPull } from '../core/gacha.js?v=115';
-import { evaluateAchievements } from '../core/achievements.js?v=115';
-import { monsterSpriteUrl, getLockedMonsterSprite, getSpriteDataUrl } from '../render/sprites.js?v=115';
+import { GACHA, RARITY_COLORS, RARITY_LABELS } from '../data/constants.js?v=117';
+import { tryPull } from '../core/gacha.js?v=117';
+import { evaluateAchievements } from '../core/achievements.js?v=117';
+import { monsterSpriteUrl, getLockedMonsterSprite, getSpriteDataUrl } from '../render/sprites.js?v=117';
+import { getEquippedMonsterAppearance } from '../core/monsterSkins.js?v=117';
 
 const CHARGE_MS = {
   1: 700,
@@ -178,11 +179,12 @@ export function renderGacha(root, ctx) {
       .map((r, i) => {
         const m = r.monster;
         const stars = '★'.repeat(m.rarity);
+        const appearance = getEquippedMonsterAppearance(state, m.id, m);
         return `
           <div class="pull-card r${m.rarity} ${r.isNew ? 'is-new' : ''} ${r.refunded ? 'is-refund' : ''}" style="animation-delay:${i * 0.04}s;border-color:${RARITY_COLORS[m.rarity]}">
             ${r.isNew ? '<span class="new-badge">MỚI</span>' : ''}
             ${r.refunded ? `<span class="refund-badge">+${r.soulsRefunded} LH</span>` : ''}
-            <img class="pull-sprite" src="${monsterSpriteUrl(m.id, m.color, m.rarity)}" alt="" width="52" height="52" />
+            <img class="pull-sprite" src="${monsterSpriteUrl(m.id, m.color, m.rarity, appearance)}" alt="" width="52" height="52" />
             <div class="stars" style="color:${m.rarity >= 7 ? '#e040fb' : m.rarity >= 5 ? (m.rarity >= 6 ? '#ef5350' : '#e6b84a') : RARITY_COLORS[m.rarity]}">${stars}</div>
             <div style="font-weight:700;font-family:var(--font-display)">${m.name}</div>
             <div class="muted" style="font-size:0.75rem">${RARITY_LABELS[m.rarity]}${r.rainbowPityHit ? ' · Rainbow Pity' : r.mythicPityHit ? ' · Mythic Pity' : r.naturalMythic ? ' · Mythic (reset pity)' : r.pityHit ? ' · Pity' : ''}${r.refunded ? ' · Trùng' : ''}${m.drawback ? ' · ⚠' : ''}</div>
@@ -194,7 +196,12 @@ export function renderGacha(root, ctx) {
   function buildRevealCard(r, faceDown = true) {
     const m = r.monster;
     const lockedUrl = getSpriteDataUrl(getLockedMonsterSprite(m.rarity));
-    const openUrl = monsterSpriteUrl(m.id, m.color, m.rarity);
+    const openUrl = monsterSpriteUrl(
+      m.id,
+      m.color,
+      m.rarity,
+      getEquippedMonsterAppearance(state, m.id, m)
+    );
     return `
       <div class="reveal-card r${m.rarity} ${r.isNew ? 'is-new' : ''} ${r.refunded ? 'is-refund' : ''} ${faceDown ? 'face-down' : 'revealed'}" data-rarity="${m.rarity}">
         <div class="reveal-card-inner">

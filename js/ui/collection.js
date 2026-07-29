@@ -1,26 +1,41 @@
-import { MONSTERS } from '../data/monsters.js?v=115';
+import { MONSTERS } from '../data/monsters.js?v=117';
 import {
   RARITY_COLORS,
   RARITY_LABELS,
   INVENTORY_CAP,
   MONSTER_UPGRADE,
-} from '../data/constants.js?v=115';
-import { monsterDisplayUrl } from '../render/sprites.js?v=115';
+} from '../data/constants.js?v=117';
+import { monsterDisplayUrl } from '../render/sprites.js?v=117';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,
   tryUpgradeMonster,
   upgradeMonsterCost,
-} from '../core/monsterUpgrade.js?v=115';
-import { evaluateAchievements } from '../core/achievements.js?v=115';
-import { describeMonsterKit, describeMonsterSummary } from '../data/skillDesc.js?v=115';
-import { inventoryOwnCap } from '../core/storage.js?v=115';
+} from '../core/monsterUpgrade.js?v=117';
+import { evaluateAchievements } from '../core/achievements.js?v=117';
+import { describeMonsterKit, describeMonsterSummary } from '../data/skillDesc.js?v=117';
+import { inventoryOwnCap } from '../core/storage.js?v=117';
+import { saveState } from '../core/storage.js?v=117';
+import {
+  describeSkinProgress,
+  describeSkinUnlock,
+  equipMonsterSkin,
+  evaluateMonsterSkinUnlocks,
+  getEquippedMonsterAppearance,
+  getEquippedMonsterSkinId,
+  getMonsterSkinList,
+  getReadyToUnlockSkinCount,
+  getTotalMonsterSkinCount,
+  getUnlockedMonsterSkinCount,
+  isMonsterSkinUnlocked,
+} from '../core/monsterSkins.js?v=117';
 
 const filters = {
   q: '',
   rarity: 'all',
   own: 'all',
   role: 'all',
+  skin: 'all',
   sort: 'rarity',
 };
 
@@ -71,6 +86,16 @@ function matchesRole(m, role) {
   return tags.includes(role);
 }
 
+function matchesSkinFilter(state, m, mode) {
+  if (mode === 'all') return true;
+  const skins = getMonsterSkinList(m.id);
+  if (!skins.length) return mode === 'locked';
+  const unlockedCount = skins.filter((skin) => isMonsterSkinUnlocked(state, m.id, skin.id)).length;
+  if (mode === 'unlocked') return unlockedCount > 1;
+  if (mode === 'locked') return unlockedCount < skins.length;
+  return true;
+}
+
 function filterList(state) {
   let list = MONSTERS.filter((m) => {
     const count = state.inventory[m.id] || 0;
@@ -78,6 +103,7 @@ function filterList(state) {
     if (filters.own === 'locked' && count > 0) return false;
     if (filters.rarity !== 'all' && m.rarity !== Number(filters.rarity)) return false;
     if (!matchesRole(m, filters.role)) return false;
+    if (!matchesSkinFilter(state, m, filters.skin)) return false;
     if (filters.q) {
       const q = filters.q.toLowerCase();
       const kitText = describeMonsterKit(m)
@@ -115,12 +141,19 @@ function renderCards(state) {
     .map((m) => {
       const count = state.inventory[m.id] || 0;
       const unlocked = count > 0;
-      const src = monsterDisplayUrl(unlocked, m.id, m.color, m.rarity);
+      const skins = getMonsterSkinList(m.id);
+      const unlockedSkinCount = skins.filter((skin) => isMonsterSkinUnlocked(state, m.id, skin.id)).length;
+      const appearance = getEquippedMonsterAppearance(state, m.id, m);
+      const src = monsterDisplayUrl(unlocked, m.id, m.color, m.rarity, appearance);
+      const skinBadge = skins.length
+        ? `<div class="skin-badge">Skin ${unlockedSkinCount}/${skins.length}</div>`
+        : '';
       if (!unlocked) {
         return `
       <article class="monster-card locked">
         <img class="card-sprite locked-sprite" src="${src}" alt="Chưa mở khóa" width="64" height="64" />
         <div class="body">
+          ${skinBadge}
           <div class="stars" style="color:${RARITY_COLORS[m.rarity]}">${'★'.repeat(m.rarity)} <span class="rarity-tag">${RARITY_LABELS[m.rarity]}</span></div>
           <div class="name">???</div>
           <div class="muted" style="font-size:0.75rem;margin-top:2px">Cost ? · HP ? · ATK ?</div>
@@ -140,6 +173,7 @@ function renderCards(state) {
       <article class="monster-card" data-mid="${m.id}">
         <img class="card-sprite" src="${src}" alt="" width="64" height="64" />
         <div class="body">
+          ${skinBadge}
           <div class="stars" style="color:${RARITY_COLORS[m.rarity]}">${'★'.repeat(m.rarity)} <span class="rarity-tag">${RARITY_LABELS[m.rarity]}</span></div>
           <div class="name">${escapeHtml(m.name)}</div>
           <div class="muted" style="font-size:0.75rem;margin-top:2px">Cost ${m.cost} · HP ${st.hp} · ATK ${st.atk}${upLv ? ` · Lv↑${upLv}` : ''}</div>
@@ -151,6 +185,7 @@ function renderCards(state) {
             <button type="button" class="btn-upgrade-mon" data-upgrade="${m.id}" ${maxed || !canAfford ? 'disabled' : ''}>
               ${maxed ? 'MAX' : costOk ? `Nâng Lv ${upLv + 1} · ${upCost} vàng` : 'Không nâng được'}
             </button>
+            ${skins.length ? `<button type="button" class="btn-skin-mon" data-skins="${m.id}">Skin</button>` : ''}
           </div>
         </div>
       </article>`;
@@ -167,9 +202,10 @@ function updateGrid(root, ctx) {
   const meta = root.querySelector('#collection-meta');
   if (grid) grid.innerHTML = html;
   if (meta) {
-    meta.innerHTML = `Đã mở <strong>${ownedCount}/${MONSTERS.length}</strong> · Cap ×${INVENTORY_CAP}/loại · Đang hiện ${count}`;
+    meta.innerHTML = `Đã mở <strong>${ownedCount}/${MONSTERS.length}</strong> · Cap ×${INVENTORY_CAP}/loại · Skin <strong>${getUnlockedMonsterSkinCount(state)}/${getTotalMonsterSkinCount()}</strong> · Đang hiện ${count}`;
   }
   bindUpgradeButtons(root, ctx.state ? ctx : { state });
+  bindSkinButtons(root, ctx.state ? ctx : { state });
 }
 
 function bindUpgradeButtons(root, ctx) {
@@ -192,6 +228,91 @@ function bindUpgradeButtons(root, ctx) {
   });
 }
 
+function closeSkinModal(modalEl) {
+  modalEl.classList.remove('show');
+  modalEl.innerHTML = '';
+}
+
+function bindSkinButtons(root, ctx) {
+  root.querySelectorAll('[data-skins]').forEach((btn) => {
+    btn.onclick = () => {
+      const id = btn.getAttribute('data-skins');
+      showSkinModal(id, ctx);
+    };
+  });
+}
+
+function showSkinModal(monsterId, ctx) {
+  const { state } = ctx;
+  const monster = MONSTERS.find((m) => m.id === monsterId);
+  const skins = getMonsterSkinList(monsterId);
+  const modalEl = document.getElementById('modal');
+  if (!monster || !skins.length || !modalEl) return;
+  const newlyUnlocked = evaluateMonsterSkinUnlocks(state, { monsterIds: [monsterId] });
+  if (newlyUnlocked.length) saveState(state);
+  const equippedId = getEquippedMonsterSkinId(state, monsterId);
+  modalEl.classList.add('show');
+  modalEl.innerHTML = `
+    <div class="modal skin-modal">
+      <div class="skin-modal-head">
+        <div>
+          <p class="section-label" style="margin-top:0">Kho skin</p>
+          <h2>${escapeHtml(monster.name)}</h2>
+          <p class="muted">Skin chỉ đổi ngoại hình, không tăng sức mạnh.</p>
+        </div>
+        <button type="button" class="ghost" id="skin-close">Đóng</button>
+      </div>
+      <div class="skin-modal-list">
+        ${skins
+          .map((skin) => {
+            const unlocked = isMonsterSkinUnlocked(state, monsterId, skin.id);
+            const appearance = {
+              skinId: skin.id,
+              kind: skin.visual?.kind || null,
+              palette: skin.visual?.palette || { primary: monster.color },
+              decals: skin.visual?.decals || [],
+              aura: skin.visual?.aura || null,
+              vfx: skin.visual?.vfx || null,
+            };
+            return `
+              <article class="skin-entry ${unlocked ? '' : 'locked'}">
+                <img class="skin-entry-sprite" src="${monsterDisplayUrl(true, monster.id, monster.color, monster.rarity, appearance)}" alt="" width="56" height="56" />
+                <div class="skin-entry-body">
+                  <div class="skin-entry-top">
+                    <strong>${escapeHtml(skin.name)}</strong>
+                    ${equippedId === skin.id ? '<span class="skin-pill active">Đang mặc</span>' : ''}
+                  </div>
+                  <div class="muted">${escapeHtml(describeSkinUnlock(skin))}</div>
+                  <div class="muted">Tiến độ: ${escapeHtml(describeSkinProgress(state, monsterId, skin))}</div>
+                </div>
+                <button type="button" ${!unlocked ? 'disabled' : ''} data-equip-skin="${monsterId}:${skin.id}" class="${equippedId === skin.id ? 'primary' : ''}">
+                  ${equippedId === skin.id ? 'Đang mặc' : unlocked ? 'Trang bị' : 'Chưa mở'}
+                </button>
+              </article>`;
+          })
+          .join('')}
+      </div>
+    </div>
+  `;
+  modalEl.querySelector('#skin-close')?.addEventListener('click', () => closeSkinModal(modalEl));
+  modalEl.onclick = (e) => {
+    if (e.target === modalEl) closeSkinModal(modalEl);
+  };
+  modalEl.querySelectorAll('[data-equip-skin]').forEach((btn) => {
+    btn.onclick = () => {
+      const [mid, skinId] = btn.getAttribute('data-equip-skin').split(':');
+      const res = equipMonsterSkin(state, mid, skinId);
+      if (!res.ok) {
+        ctx.toast?.(res.reason);
+        return;
+      }
+      ctx.toast?.(`${monster.name} mặc skin ${res.skin.name}`);
+      renderCollection(document.getElementById('screen-collection'), ctx);
+      showSkinModal(mid, ctx);
+    };
+  });
+}
+
 export function renderCollection(root, ctx) {
   const { state } = ctx;
   const ownedCount = MONSTERS.filter((m) => (state.inventory[m.id] || 0) > 0).length;
@@ -202,8 +323,9 @@ export function renderCollection(root, ctx) {
       <div>
         <p class="section-label" style="margin-top:0">Sưu tầm</p>
         <h2>Kho quái</h2>
-        <p class="muted" id="collection-meta">Đã mở <strong>${ownedCount}/${MONSTERS.length}</strong> · Cap ×${INVENTORY_CAP}/loại · Đang hiện ${count}</p>
+        <p class="muted" id="collection-meta">Đã mở <strong>${ownedCount}/${MONSTERS.length}</strong> · Cap ×${INVENTORY_CAP}/loại · Skin <strong>${getUnlockedMonsterSkinCount(state)}/${getTotalMonsterSkinCount()}</strong> · Đang hiện ${count}</p>
         <p class="muted" style="font-size:0.78rem;margin:4px 0 0">Dùng <strong>Vàng</strong> nâng HP/ATK (+${Math.round(MONSTER_UPGRADE.STAT_PER_LEVEL * 100)}%/cấp · max Lv ${MONSTER_UPGRADE.MAX_LEVEL}).</p>
+        <p class="muted" style="font-size:0.78rem;margin:4px 0 0">Skin mở bằng mastery, mốc ải, hard mode và ấn chương. Hiện có ${getReadyToUnlockSkinCount(state)} skin đã đủ điều kiện.</p>
       </div>
       <button type="button" class="ghost" id="btn-col-heroes">Catalog Hero</button>
     </div>
@@ -218,6 +340,12 @@ export function renderCollection(root, ctx) {
         ${chip(filters.own === 'all', 'data-own="all"', 'Tất cả')}
         ${chip(filters.own === 'owned', 'data-own="owned"', 'Đã có')}
         ${chip(filters.own === 'locked', 'data-own="locked"', 'Chưa có')}
+      </div>
+
+      <div class="filter-row" data-group="skin">
+        ${chip(filters.skin === 'all', 'data-skin="all"', 'Mọi skin')}
+        ${chip(filters.skin === 'unlocked', 'data-skin="unlocked"', 'Có skin mở')}
+        ${chip(filters.skin === 'locked', 'data-skin="locked"', 'Còn skin khóa')}
       </div>
 
       <div class="filter-row" data-group="rarity">
@@ -274,6 +402,12 @@ export function renderCollection(root, ctx) {
       refreshChips();
     };
   });
+  root.querySelectorAll('[data-skin]').forEach((btn) => {
+    btn.onclick = () => {
+      filters.skin = btn.getAttribute('data-skin');
+      refreshChips();
+    };
+  });
   root.querySelector('#col-sort').onchange = (e) => {
     filters.sort = e.target.value;
     updateGrid(root, ctx);
@@ -282,5 +416,6 @@ export function renderCollection(root, ctx) {
   root.querySelector('#btn-col-heroes')?.addEventListener('click', () => ctx.go('heroes'));
 
   bindUpgradeButtons(root, ctx);
+  bindSkinButtons(root, ctx);
 }
 
