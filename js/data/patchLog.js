@@ -1,5 +1,18 @@
 export const PATCH_LOGS = [
   {
+    id: 'v119-hard-rebalance-waves',
+    version: 'v119',
+    date: '29/07/2026',
+    title: 'Rebalance toàn bộ Ải Khó',
+    summary:
+      '60 ải Khó được rebalance lại: pool mang theo cố định x4, tổng số Hero tăng mạnh và nhịp spawn được tách thành nhiều wave hơn.',
+    highlights: [
+      'Mốc wave Hard tăng lên 5-8 đợt tùy ải, thay cho nhịp cũ thiên về 3 wave.',
+      'Boss stage Hard cũng được dàn lại theo cấu trúc wave mới để đồng bộ với rebalance toàn mode.',
+    ],
+    playerImpact: [],
+  },
+  {
     id: 'v118-mythic-skins-hard-bosses',
     version: 'v118',
     date: '29/07/2026',

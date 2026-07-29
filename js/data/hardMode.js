@@ -1,6 +1,6 @@
-import { MAX_STAGE } from './constants.js?v=122';
-import { MONSTER_BY_ID } from './monsters.js?v=122';
-import { tryAddToLoadout, loadoutMaxPoolCost } from '../core/loadout.js?v=122';
+import { MAX_STAGE } from './constants.js?v=127';
+import { MONSTER_BY_ID } from './monsters.js?v=127';
+import { tryAddToLoadout, loadoutMaxPoolCost } from '../core/loadout.js?v=127';
 
 /** @typedef {'normal' | 'hard'} StageMode */
 
@@ -22,7 +22,7 @@ const HARD_BANDS = [
     monsterStatMul: 0.92,
     costCapDelta: -1,
     treasureHpMul: 0.9,
-    poolMultBonus: 2,
+    poolMultBonus: 0,
     maxLegendary: 1,
     maxMythic: 0,
     maxRainbow: 0,
@@ -35,7 +35,7 @@ const HARD_BANDS = [
     monsterStatMul: 0.9,
     costCapDelta: -1,
     treasureHpMul: 0.88,
-    poolMultBonus: 2,
+    poolMultBonus: 0,
     maxLegendary: 2,
     maxMythic: 0,
     maxRainbow: 0,
@@ -48,7 +48,7 @@ const HARD_BANDS = [
     monsterStatMul: 0.88,
     costCapDelta: -1,
     treasureHpMul: 0.85,
-    poolMultBonus: 2,
+    poolMultBonus: 0,
     maxLegendary: 2,
     maxMythic: 1,
     maxRainbow: 0,
@@ -61,7 +61,7 @@ const HARD_BANDS = [
     monsterStatMul: 0.86,
     costCapDelta: -2,
     treasureHpMul: 0.82,
-    poolMultBonus: 2,
+    poolMultBonus: 0,
     maxLegendary: 3,
     maxMythic: 1,
     maxRainbow: 0,
@@ -74,7 +74,7 @@ const HARD_BANDS = [
     monsterStatMul: 0.85,
     costCapDelta: -2,
     treasureHpMul: 0.8,
-    poolMultBonus: 2,
+    poolMultBonus: 0,
     maxLegendary: 3,
     maxMythic: 2,
     maxRainbow: 0,
@@ -87,7 +87,7 @@ const HARD_BANDS = [
     monsterStatMul: 0.85,
     costCapDelta: -2,
     treasureHpMul: 0.78,
-    poolMultBonus: 2,
+    poolMultBonus: 0,
     maxLegendary: 4,
     maxMythic: 2,
     maxRainbow: 1,

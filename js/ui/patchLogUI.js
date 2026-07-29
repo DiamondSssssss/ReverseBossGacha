@@ -1,6 +1,8 @@
-import { PATCH_LOGS, latestPatchLog } from '../data/patchLog.js?v=122';
+import { PATCH_LOGS, latestPatchLog } from '../data/patchLog.js?v=127';
 
 function patchCardHtml(entry, featured = false) {
+  const highlights = Array.isArray(entry.highlights) ? entry.highlights.filter(Boolean) : [];
+  const playerImpact = Array.isArray(entry.playerImpact) ? entry.playerImpact.filter(Boolean) : [];
   return `
     <article class="patch-card ${featured ? 'featured' : ''}">
       <div class="patch-card-top">
@@ -11,18 +13,18 @@ function patchCardHtml(entry, featured = false) {
         ${featured ? '<span class="patch-badge">Mới</span>' : ''}
       </div>
       <p class="patch-summary">${entry.summary}</p>
-      <div class="patch-block">
+      ${highlights.length ? `<div class="patch-block">
         <strong>Điểm chính</strong>
         <ul>
-          ${(entry.highlights || []).map((x) => `<li>${x}</li>`).join('')}
+          ${highlights.map((x) => `<li>${x}</li>`).join('')}
         </ul>
-      </div>
-      <div class="patch-block">
+      </div>` : ''}
+      ${playerImpact.length ? `<div class="patch-block">
         <strong>Người chơi sẽ thấy gì</strong>
         <ul>
-          ${(entry.playerImpact || []).map((x) => `<li>${x}</li>`).join('')}
+          ${playerImpact.map((x) => `<li>${x}</li>`).join('')}
         </ul>
-      </div>
+      </div>` : ''}
     </article>
   `;
 }

@@ -1,5 +1,5 @@
-import { scoreHeroForMonster, dist } from './targeting.js?v=122';
-import { los } from '../pathfinding.js?v=122';
+import { scoreHeroForMonster, dist } from './targeting.js?v=127';
+import { los } from '../pathfinding.js?v=127';
 
 function hasTag(unit, tag) {
   return Array.isArray(unit?.tags) && unit.tags.includes(tag);

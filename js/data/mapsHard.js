@@ -10,7 +10,7 @@
  * 5. Không lặp layout: archetype × variant × seed(level) — 60 combo riêng.
  */
 
-import { compileMap } from './maps.js?v=122';
+import { compileMap } from './maps.js?v=127';
 
 const COLS = 42;
 const ROWS = 8;
@@ -457,7 +457,7 @@ function costCapForLevel(level) {
 }
 
 function poolMultForLevel(level) {
-  return Math.min(8, 5 + Math.floor(level / 12));
+  return 4;
 }
 
 function generateHardMapDef(level) {

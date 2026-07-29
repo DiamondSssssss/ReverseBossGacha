@@ -1,23 +1,23 @@
-import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=122';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=122';
-import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=122';
-import { CombatEngine } from '../core/combatEngine.js?v=122';
-import { saveState } from '../core/storage.js?v=122';
-import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=122';
+import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=127';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=127';
+import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=127';
+import { CombatEngine } from '../core/combatEngine.js?v=127';
+import { saveState } from '../core/storage.js?v=127';
+import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=127';
 import {
   evaluateChallengeResult,
   grantChallengeReward,
   titleName,
-} from '../core/challenge.js?v=122';
-import { loadoutPoolCost } from '../core/loadout.js?v=122';
+} from '../core/challenge.js?v=127';
+import { loadoutPoolCost } from '../core/loadout.js?v=127';
 import {
   frontierForMode,
   recordPersonalBestCost,
-} from '../data/hardMode.js?v=122';
-import { submitStageBestCost } from '../core/stageRecords.js?v=122';
-import { isLoggedIn } from '../core/auth.js?v=122';
-import { monsterSpriteUrl } from '../render/sprites.js?v=122';
-import { bindMonsterTips, hideMonsterTip } from './monsterTip.js?v=122';
+} from '../data/hardMode.js?v=127';
+import { submitStageBestCost } from '../core/stageRecords.js?v=127';
+import { isLoggedIn } from '../core/auth.js?v=127';
+import { monsterSpriteUrl } from '../render/sprites.js?v=127';
+import { bindMonsterTips, hideMonsterTip } from './monsterTip.js?v=127';
 import {
   addLoadoutWinStats,
   addMonsterDeployments,
@@ -25,7 +25,7 @@ import {
   getEquippedMonsterAppearance,
   recordHardWinWithLoadout,
   recordNormalWinWithLoadout,
-} from '../core/monsterSkins.js?v=122';
+} from '../core/monsterSkins.js?v=127';
 
 const REPLAY_REWARD_MUL = 0.35;
 
@@ -481,14 +481,19 @@ export function renderCombat(root, ctx) {
   function ptrPos(e) {
     const rect = canvas.getBoundingClientRect();
     const src = e.touches?.[0] || e.changedTouches?.[0] || e;
-    return { x: src.clientX - rect.left, y: src.clientY - rect.top, clientX: src.clientX };
+    return {
+      x: src.clientX - rect.left,
+      y: src.clientY - rect.top,
+      clientX: src.clientX,
+      clientY: src.clientY,
+    };
   }
 
   function onPanStart(e) {
     if (!engine || engine.result) return;
     if (e.button != null && e.button !== 0) return;
     const p = ptrPos(e);
-    panPtr = { startX: p.x, startY: p.y, lastX: p.x, dragged: false };
+    panPtr = { startX: p.x, startY: p.y, lastX: p.x, lastY: p.y, dragged: false };
     if (e.pointerId != null) canvas.setPointerCapture?.(e.pointerId);
   }
 
@@ -496,14 +501,16 @@ export function renderCombat(root, ctx) {
     if (!panPtr || !engine) return;
     const p = ptrPos(e);
     const dx = p.x - panPtr.lastX;
+    const dy = p.y - panPtr.lastY;
     const total = Math.hypot(p.x - panPtr.startX, p.y - panPtr.startY);
     if (total >= PAN_THRESH) panPtr.dragged = true;
     if (panPtr.dragged) {
       const scale = engine.drawScale || 1;
-      engine.panCamera(-dx / scale);
+      engine.panCamera(-dx / scale, -dy / scale);
       e.preventDefault?.();
     }
     panPtr.lastX = p.x;
+    panPtr.lastY = p.y;
   }
 
   function onPanEnd(e) {

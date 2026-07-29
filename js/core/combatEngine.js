@@ -1,18 +1,18 @@
-import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=122';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=122';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=122';
-import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=122';
-import { mapUsedCost } from './dungeon.js?v=122';
-import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=122';
-import { ParticleSystem } from '../render/particles.js?v=122';
-import { getEquippedMonsterAppearance } from './monsterSkins.js?v=122';
+import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=127';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=127';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=127';
+import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=127';
+import { mapUsedCost } from './dungeon.js?v=127';
+import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=127';
+import { ParticleSystem } from '../render/particles.js?v=127';
+import { getEquippedMonsterAppearance } from './monsterSkins.js?v=127';
 import {
   getMonsterSprite,
   getHeroSprite,
   drawSpriteAt,
-} from '../render/sprites.js?v=122';
-import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=122';
-import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=122';
+} from '../render/sprites.js?v=127';
+import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=127';
+import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=127';
 import {
   computeHeroAttackDamage,
   applyIncomingDamage,
@@ -48,10 +48,10 @@ import {
   ensureHeroSkillState,
   tryEnterStasisRevive,
   tickStasisRevive,
-} from './ai/skills.js?v=122';
-import { getTileModifiers, spawnMonsterStats, elementAuraActive, elementAuraTag } from './ai/tileModifiers.js?v=122';
-import { dist } from './ai/targeting.js?v=122';
-import { getHeroProfile } from './ai/profiles.js?v=122';
+} from './ai/skills.js?v=127';
+import { getTileModifiers, spawnMonsterStats, elementAuraActive, elementAuraTag } from './ai/tileModifiers.js?v=127';
+import { dist } from './ai/targeting.js?v=127';
+import { getHeroProfile } from './ai/profiles.js?v=127';
 import {
   patternForHero,
   patternForMonster,
@@ -59,7 +59,7 @@ import {
   tickAttack,
   ensureAttackState,
   resolveDisplayAnim,
-} from './ai/attackPatterns.js?v=122';
+} from './ai/attackPatterns.js?v=127';
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
@@ -165,6 +165,7 @@ export class CombatEngine {
     this.costUsed = 0;
     this.selectedDeployId = null;
     this.cameraX = COMBAT.CAMERA_MIN_X;
+    this.cameraY = 0;
     this.drawScale = 1;
     this.drawOffsetY = 40;
     this.speedMul = 1;
@@ -485,7 +486,7 @@ export class CombatEngine {
   screenToCell(cssX, cssY) {
     const scale = this.drawScale || 1;
     const worldX = cssX / scale + this.cameraX;
-    const worldY = (cssY - (this.drawOffsetY || 0)) / scale;
+    const worldY = (cssY - (this.drawOffsetY || 0)) / scale + this.cameraY;
     const col = Math.floor(worldX / this.CELL);
     const row = Math.floor((worldY - this.originY) / this.CELL);
     if (col < 0 || row < 0 || col >= this.map.cols || row >= this.map.rows) {
@@ -519,6 +520,8 @@ export class CombatEngine {
     this.viewW = cssW;
     this.viewH = cssH;
     this._updateDrawLayout();
+    this.cameraX = this.clampCameraX(this.cameraX);
+    this.cameraY = this.clampCameraY(this.cameraY);
   }
 
   _updateDrawLayout() {
@@ -526,7 +529,7 @@ export class CombatEngine {
     const marginT = 36;
     const marginB = 28;
     const avail = Math.max(120, this.viewH - marginT - marginB);
-    this.drawScale = Math.min(2.2, Math.max(0.85, avail / contentH));
+    this.drawScale = Math.min(2.2, Math.max(0.6, avail / contentH));
     const scaledH = contentH * this.drawScale;
     this.drawOffsetY = marginT + Math.max(0, (avail - scaledH) / 2);
   }
@@ -535,11 +538,19 @@ export class CombatEngine {
     return this.viewW / (this.drawScale || 1);
   }
 
+  _viewWorldH() {
+    return this.viewH / (this.drawScale || 1);
+  }
+
   _cameraBounds() {
     const viewW = this._viewWorldW();
+    const viewH = this._viewWorldH();
     const minCam = COMBAT.CAMERA_MIN_X;
     const maxCam = Math.max(minCam, this.totalWidth - viewW + 40);
-    return { minCam, maxCam, viewW };
+    const totalHeight = this.mapHeight + this.originY + 56;
+    const minCamY = 0;
+    const maxCamY = Math.max(minCamY, totalHeight - viewH);
+    return { minCam, maxCam, viewW, minCamY, maxCamY };
   }
 
   clampCameraX(x) {
@@ -547,10 +558,16 @@ export class CombatEngine {
     return Math.max(minCam, Math.min(maxCam, x));
   }
 
+  clampCameraY(y) {
+    const { minCamY, maxCamY } = this._cameraBounds();
+    return Math.max(minCamY, Math.min(maxCamY, y));
+  }
+
   /** Pan camera by world-delta (positive dx → look right) */
-  panCamera(dxWorld) {
+  panCamera(dxWorld, dyWorld = 0) {
     this._camUserLocked = true;
     this.cameraX = this.clampCameraX(this.cameraX + dxWorld);
+    this.cameraY = this.clampCameraY(this.cameraY + dyWorld);
   }
 
   /** Jump camera so gate is visible */
@@ -559,6 +576,7 @@ export class CombatEngine {
     const { viewW } = this._cameraBounds();
     const gateX = (this.map.gate[0]?.col ?? 0) * this.CELL;
     this.cameraX = this.clampCameraX(gateX - viewW * 0.25);
+    this.cameraY = this.clampCameraY(0);
   }
 
   /** Jump camera so treasure is visible */
@@ -568,6 +586,7 @@ export class CombatEngine {
     const tx =
       (this.map.treasure[0]?.col ?? this.map.cols - 1) * this.CELL + this.CELL * 0.5;
     this.cameraX = this.clampCameraX(tx - viewW * 0.65);
+    this.cameraY = this.clampCameraY(0);
   }
 
   start() {
@@ -2825,7 +2844,7 @@ export class CombatEngine {
     ctx.save();
     ctx.translate(0, offsetY);
     ctx.scale(scale, scale);
-    ctx.translate(-this.cameraX, 0);
+    ctx.translate(-this.cameraX, -this.cameraY);
 
     // floor
     ctx.fillStyle = '#100e0c';

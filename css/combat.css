@@ -3,7 +3,7 @@
 .combat-wrap {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   height: 100%;
   min-height: 0;
   overflow: hidden;
@@ -15,6 +15,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .combat-head-right {
@@ -81,6 +82,7 @@
   min-height: 0;
   max-height: none;
   height: auto;
+  min-width: 0;
   background: #1a1612;
   border: 3px solid var(--ink);
   display: block;
@@ -304,6 +306,119 @@
   touch-action: none;
   cursor: grab;
   user-select: none;
+}
+
+@media (max-width: 719px) {
+  .combat-wrap {
+    gap: 4px;
+  }
+
+  .combat-head h2 {
+    font-size: 0.92rem;
+  }
+
+  .combat-legend,
+  .combat-intent,
+  .deploy-label,
+  .combat-cam-row .cam-hint {
+    font-size: 0.64rem;
+  }
+
+  .combat-head-right {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .speed-row {
+    flex-wrap: wrap;
+  }
+
+  .speed-btn,
+  .combat-cam-row .cam-btn {
+    min-height: 26px !important;
+    min-width: 32px;
+    padding: 2px 6px !important;
+    font-size: 0.68rem;
+  }
+
+  .combat-hud {
+    gap: 4px;
+  }
+
+  .combat-hud .stat {
+    padding: 4px 6px;
+    font-size: 0.62rem;
+  }
+
+  .combat-hud .stat b {
+    font-size: 0.8rem;
+  }
+
+  .hero-boss-bar {
+    padding: 5px 8px 6px;
+  }
+
+  .hero-boss-bar-meta {
+    gap: 6px;
+    font-size: 0.66rem;
+  }
+
+  .hero-boss-name {
+    font-size: 0.82rem;
+  }
+
+  .deploy-row {
+    padding: 5px 6px;
+  }
+
+  .deploy-hand {
+    gap: 4px;
+    min-height: 48px;
+  }
+
+  .deploy-card {
+    gap: 4px;
+    min-height: 42px;
+    padding: 3px 6px 3px 3px;
+  }
+
+  .deploy-card .deploy-meta {
+    font-size: 0.62rem;
+  }
+
+  .spell-row {
+    gap: 4px;
+  }
+
+  .spell-row button {
+    min-height: 34px;
+    padding: 4px 6px;
+    font-size: 0.66rem;
+  }
+
+  .spell-row button small {
+    font-size: 0.54rem;
+  }
+
+  .combat-cam-row {
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .combat-cam-row .cam-hint {
+    margin-left: 0;
+  }
+
+  .combat-controls {
+    gap: 4px;
+  }
+
+  .combat-controls button {
+    min-height: 34px;
+    padding: 0.3rem 0.45rem;
+  }
 }
 
 .reward-stage {

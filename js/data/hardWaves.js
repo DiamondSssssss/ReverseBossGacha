@@ -1,5 +1,5 @@
-import { COMBAT } from './constants.js?v=122';
-import { HERO_BY_ID, WAVE_PLANS, heroScaleForLevel } from './heroes.js?v=122';
+import { COMBAT } from './constants.js?v=127';
+import { HERO_BY_ID, WAVE_PLANS, heroScaleForLevel } from './heroes.js?v=127';
 
 const HARD_BOSS_BY_LEVEL = {
   5: 'hero_boss_05',
@@ -242,15 +242,58 @@ function classifyIds(ids) {
 }
 
 function waveCountForLevel(level) {
-  if (level <= 10) return 3;
-  if (level <= 25) return 4;
-  if (level <= 45) return 5;
-  return 6;
+  if (level <= 10) return 5;
+  if (level <= 25) return 6;
+  if (level <= 45) return 7;
+  return 8;
 }
 
 function delayForWave(level, waveIndex) {
-  const base = level <= 15 ? 8.5 : level <= 35 ? 7.5 : 6.75;
+  const base = level <= 15 ? 6.75 : level <= 35 ? 6 : 5.4;
   return Number((0.4 + waveIndex * base).toFixed(2));
+}
+
+function targetHeroCountForLevel(level, isBossStage = false) {
+  let count = 26;
+  if (level > 10) count = 30;
+  if (level > 20) count = 34;
+  if (level > 30) count = 38;
+  if (level > 40) count = 44;
+  if (level > 50) count = 50;
+  return count + (isBossStage ? 2 : 0);
+}
+
+function distributeWaveSizes(totalHeroes, totalWaves, minSize, maxSize) {
+  const weights = Array.from({ length: totalWaves }, (_, i) => i + 2);
+  const totalWeight = weights.reduce((sum, n) => sum + n, 0);
+  const sizes = weights.map((w) =>
+    Math.min(maxSize, Math.max(minSize, Math.round((totalHeroes * w) / totalWeight)))
+  );
+  let sum = sizes.reduce((acc, n) => acc + n, 0);
+
+  while (sum < totalHeroes) {
+    let changed = false;
+    for (let i = totalWaves - 1; i >= 0 && sum < totalHeroes; i--) {
+      if (sizes[i] >= maxSize) continue;
+      sizes[i] += 1;
+      sum += 1;
+      changed = true;
+    }
+    if (!changed) break;
+  }
+
+  while (sum > totalHeroes) {
+    let changed = false;
+    for (let i = 0; i < totalWaves && sum > totalHeroes; i++) {
+      if (sizes[i] <= minSize) continue;
+      sizes[i] -= 1;
+      sum -= 1;
+      changed = true;
+    }
+    if (!changed) break;
+  }
+
+  return sizes;
 }
 
 function pickUniqueFromPool(pool, count, used, rng) {
@@ -269,8 +312,94 @@ function pickUniqueFromPool(pool, count, used, rng) {
   return out;
 }
 
+function fillWaveToSize(ids, desiredSize, pools, used, rng) {
+  const seen = new Set(ids);
+  const poolList = pools.filter((pool) => Array.isArray(pool) && pool.length);
+  let guard = 0;
+  while (ids.length < desiredSize && poolList.length && guard < 200) {
+    const pool = poolList[guard % poolList.length];
+    const shuffled = shuffle(pool.filter((id) => HERO_BY_ID[id]), rng);
+    let picked = false;
+    for (const id of shuffled) {
+      if (seen.has(id) && rng() < 0.82) continue;
+      const times = used[id] || 0;
+      if (times >= 3 && rng() < 0.55) continue;
+      ids.push(id);
+      seen.add(id);
+      used[id] = times + 1;
+      picked = true;
+      break;
+    }
+    if (!picked) {
+      const fallback = shuffled[Math.floor(rng() * shuffled.length)];
+      if (!fallback) break;
+      ids.push(fallback);
+      used[fallback] = (used[fallback] || 0) + 1;
+    }
+    guard += 1;
+  }
+  return ids;
+}
+
+function rebalanceHardPlan(level, seedPlan, bossId = null) {
+  const seedIds = (seedPlan?.waves || []).flatMap((w) => w.ids || []).filter((id) => HERO_BY_ID[id]);
+  const rankedTags = classifyIds(seedIds.length ? seedIds : flattenBasePlan(level));
+  const tags = [...new Set([rankedTags[0], rankedTags[1], rankedTags[2] || 'collapse'])].filter(Boolean);
+  const totalWaves = waveCountForLevel(level);
+  const targetHeroes = targetHeroCountForLevel(level, !!bossId);
+  const minSize = level <= 12 ? 3 : 4;
+  const maxSize = level >= 45 ? 10 : 9;
+  const waveSizes = distributeWaveSizes(targetHeroes, totalWaves, minSize, maxSize);
+  const rng = mulberry32(level * 2654435761 + 701);
+  const used = {};
+  const basePool = shuffle(seedIds.length ? seedIds : flattenBasePlan(level), rng);
+  const thematicPool = shuffle(tags.flatMap((tag) => TAGS[tag]?.pool || []), rng);
+  const collapsePool = shuffle(TAGS.collapse.pool, rng);
+  const waves = [];
+
+  for (let wi = 0; wi < totalWaves; wi++) {
+    const desiredSize = waveSizes[wi];
+    const sourceWave = seedPlan?.waves?.[Math.min(wi, (seedPlan.waves?.length || 1) - 1)] || { ids: [] };
+    const ids = [];
+
+    for (const id of sourceWave.ids || []) {
+      if (!HERO_BY_ID[id]) continue;
+      if (ids.length >= desiredSize) break;
+      ids.push(id);
+      used[id] = (used[id] || 0) + 1;
+    }
+
+    if (bossId && wi >= totalWaves - 3 && !ids.includes(bossId) && ids.length < desiredSize) {
+      ids.unshift(bossId);
+      used[bossId] = (used[bossId] || 0) + 1;
+    }
+
+    if (wi >= 1) {
+      ids.push(...pickUniqueFromPool(thematicPool, Math.min(2, Math.max(1, desiredSize - ids.length)), used, rng));
+    }
+    if (wi >= Math.floor(totalWaves / 2)) {
+      ids.push(...pickUniqueFromPool(collapsePool, 1, used, rng));
+    }
+
+    fillWaveToSize(ids, desiredSize, [thematicPool, basePool, collapsePool], used, rng);
+
+    waves.push({
+      delay: delayForWave(level, wi),
+      ids: ids.filter((id) => HERO_BY_ID[id]).slice(0, desiredSize),
+    });
+  }
+
+  return {
+    theme: seedPlan?.theme || `Khó: ${tags.map((tag) => TAGS[tag]?.label || tag).slice(0, 2).join(' + ')}`,
+    tip: seedPlan?.tip || tags.map((tag) => TAGS[tag]?.tip || '').filter(Boolean).join(' '),
+    waves,
+  };
+}
+
 function buildHardPlan(level) {
-  if (HARD_SPECIAL_BOSS_PLANS[level]) return HARD_SPECIAL_BOSS_PLANS[level];
+  if (HARD_SPECIAL_BOSS_PLANS[level]) {
+    return rebalanceHardPlan(level, HARD_SPECIAL_BOSS_PLANS[level], HARD_BOSS_BY_LEVEL[level] || null);
+  }
   const rng = mulberry32(level * 2654435761 + 97);
   const baseIds = flattenBasePlan(level).filter((id) => HERO_BY_ID[id]);
   const rankedTags = classifyIds(baseIds);
@@ -281,11 +410,18 @@ function buildHardPlan(level) {
   const extraPool = shuffle(tags.flatMap((tag) => TAGS[tag]?.pool || []), rng);
   const bossId = HARD_BOSS_BY_LEVEL[level] || null;
   const totalWaves = waveCountForLevel(level);
-  const openerSize = level <= 12 ? 3 : level <= 30 ? 4 : 5;
+  const targetHeroes = targetHeroCountForLevel(level, !!bossId);
+  const waveSizes = distributeWaveSizes(
+    targetHeroes,
+    totalWaves,
+    level <= 12 ? 3 : 4,
+    level >= 45 ? 10 : 9
+  );
 
   for (let wi = 0; wi < totalWaves; wi++) {
     const ids = [];
-    const baseTake = Math.min(basePool.length, Math.max(2, openerSize - 1 + (wi > 1 ? 1 : 0)));
+    const desiredSize = waveSizes[wi];
+    const baseTake = Math.min(basePool.length, Math.max(2, Math.floor(desiredSize * 0.45)));
     for (let i = 0; i < baseTake; i++) {
       const pick = basePool[(wi * 3 + i) % basePool.length];
       if (!pick) continue;
@@ -295,25 +431,26 @@ function buildHardPlan(level) {
 
     const extraTake = Math.min(
       extraPool.length,
-      wi === 0 ? 1 : wi === totalWaves - 1 ? 3 : 2
+      wi === 0 ? 2 : wi >= totalWaves - 2 ? 4 : 3
     );
     ids.push(...pickUniqueFromPool(extraPool, extraTake, used, rng));
 
-    if (wi >= 1 && level >= 18) {
+    if (wi >= 1) {
       const tacticalTag = tags[wi % tags.length];
-      ids.push(...pickUniqueFromPool(TAGS[tacticalTag]?.pool || [], 1, used, rng));
+      ids.push(...pickUniqueFromPool(TAGS[tacticalTag]?.pool || [], wi >= totalWaves - 2 ? 2 : 1, used, rng));
     }
-    if (level >= 28 && wi === totalWaves - 1) {
-      ids.push(...pickUniqueFromPool(TAGS.collapse.pool, 1, used, rng));
+    if (level >= 20 && wi >= totalWaves - 2) {
+      ids.push(...pickUniqueFromPool(TAGS.collapse.pool, 2, used, rng));
     }
-    if (bossId && wi >= totalWaves - 2) {
+    if (bossId && wi >= totalWaves - 3) {
       ids.unshift(bossId);
     }
 
-    const deduped = ids.filter((id, idx) => HERO_BY_ID[id] && ids.indexOf(id) === idx);
+    fillWaveToSize(ids, desiredSize, [extraPool, basePool, TAGS[tags[wi % tags.length]]?.pool || [], TAGS.collapse.pool], used, rng);
+
     waves.push({
       delay: delayForWave(level, wi),
-      ids: deduped.slice(0, Math.min(9, level >= 45 ? 9 : level >= 25 ? 8 : 7)),
+      ids: ids.filter((id) => HERO_BY_ID[id]).slice(0, desiredSize),
     });
   }
 

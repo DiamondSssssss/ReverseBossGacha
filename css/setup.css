@@ -253,6 +253,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 6px;
+  flex-wrap: wrap;
 }
 
 .setup-top h2 {
@@ -1134,10 +1135,12 @@ body.play-fit .screen.active > .combat-wrap {
   .tray-item { width: 76px; font-size: 0.58rem; }
   .monster-tray { max-height: 74px; }
   .flow-room { min-width: 72px; }
+  .board-hero .map-grid { --map-cell: clamp(30px, 4.5vw, 42px); }
 }
 
 @media (min-width: 1024px) {
-  body.play-fit .app { max-width: 820px; }
+  body.play-fit .app { max-width: 1120px; }
+  .board-hero .map-grid { --map-cell: clamp(32px, 3.2vw, 44px); }
 }
 
 /* ——— Setup v2: bàn đồ giấy da ——— */
@@ -1211,6 +1214,7 @@ body.play-fit .screen.active > .combat-wrap {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 6px 8px;
   background: var(--setup-paper);
@@ -1611,6 +1615,9 @@ body.play-fit .screen.active > .combat-wrap {
   width: 100%;
   padding: 8px;
   overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
   display: block !important;
   grid-template-columns: none !important;
 }
@@ -1625,12 +1632,14 @@ body.play-fit .screen.active > .combat-wrap {
 
 .board-hero .map-grid {
   display: grid !important;
-  width: 100% !important;
-  max-width: 100%;
-  height: auto !important;
-  min-height: 180px;
-  max-height: min(52vh, 440px) !important;
-  aspect-ratio: 14 / 8;
+  --map-cell: clamp(26px, 6vw, 38px);
+  width: max(100%, calc(var(--cols) * var(--map-cell))) !important;
+  min-width: calc(var(--cols) * var(--map-cell));
+  max-width: none;
+  height: calc(var(--rows) * var(--map-cell)) !important;
+  min-height: calc(var(--rows) * var(--map-cell));
+  max-height: none !important;
+  aspect-ratio: auto;
   gap: 2px !important;
   background: var(--setup-grout);
   border: 2px solid var(--ink);
@@ -1784,11 +1793,13 @@ body.play-fit .screen.active > .combat-wrap {
 
 .map-legend-mini {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   padding: 5px 8px 7px;
   background: var(--setup-paper);
   border-top: 1px solid var(--line);
   align-items: center;
+  font-size: 0.68rem;
 }
 
 .map-legend-mini .leg {
@@ -1916,10 +1927,97 @@ body.play-fit .setup-layout.setup-v2 .board-hero {
 
 .map-board.board-hero .map-grid.grid-board {
   display: grid !important;
-  width: 100% !important;
-  height: auto !important;
-  max-height: min(52vh, 440px);
-  aspect-ratio: 14 / 8;
+  width: max(100%, calc(var(--cols) * var(--map-cell))) !important;
+  min-width: calc(var(--cols) * var(--map-cell));
+  height: calc(var(--rows) * var(--map-cell)) !important;
+  max-height: none;
+  aspect-ratio: auto;
+}
+
+@media (max-width: 719px) {
+  .setup-layout.setup-v2 {
+    gap: 4px;
+  }
+
+  .setup-v2 .setup-top h2 {
+    font-size: 1rem;
+  }
+
+  .setup-kicker,
+  .setup-map-name,
+  .enemy-formation-title,
+  .tray-loadout-hint,
+  .board-tip,
+  .map-legend-mini {
+    font-size: 0.64rem;
+  }
+
+  .board-chrome {
+    gap: 6px;
+    padding: 5px 6px;
+  }
+
+  .board-tools {
+    gap: 3px;
+  }
+
+  .tool-btn {
+    min-height: 26px !important;
+    padding: 3px 7px !important;
+    font-size: 0.64rem !important;
+  }
+
+  .cost-ring {
+    width: 38px;
+    height: 38px;
+  }
+
+  .cost-num {
+    font-size: 0.62rem;
+  }
+
+  .enemy-formation-bar.compact {
+    max-height: 52px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex-wrap: nowrap;
+  }
+
+  .setup-tray-bar.sticky-tray {
+    padding: 4px;
+  }
+
+  .sticky-tray {
+    max-height: 84px;
+  }
+
+  .sticky-tray .monster-tray {
+    max-height: 72px;
+  }
+
+  .tray-item {
+    width: 62px;
+    font-size: 0.48rem;
+  }
+
+  .tray-item .tray-sprite {
+    width: 34px;
+    height: 34px;
+  }
+
+  .setup-footer {
+    gap: 4px;
+  }
+
+  .setup-footer button {
+    min-height: 36px;
+    font-size: 0.8rem;
+  }
+
+  .map-legend-mini .leg {
+    width: 10px;
+    height: 10px;
+  }
 }
 
 
