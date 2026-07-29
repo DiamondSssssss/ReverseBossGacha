@@ -1,21 +1,21 @@
-import { getStageMap, isPlaceable } from '../data/maps.js?v=114';
-import { getHardStageMap } from '../data/mapsHard.js?v=114';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=114';
-import { MAP_UPGRADE, COMBAT, MAX_STAGE } from '../data/constants.js?v=114';
-import { buildWave, getWavePlan, assignHeroFormation } from '../data/heroes.js?v=114';
-import { buildHardWave, getHardWavePlan } from '../data/hardWaves.js?v=114';
+import { getStageMap, isPlaceable } from '../data/maps.js?v=115';
+import { getHardStageMap } from '../data/mapsHard.js?v=115';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=115';
+import { MAP_UPGRADE, COMBAT, MAX_STAGE } from '../data/constants.js?v=115';
+import { buildWave, getWavePlan, assignHeroFormation } from '../data/heroes.js?v=115';
+import { buildHardWave, getHardWavePlan } from '../data/hardWaves.js?v=115';
 import {
   sanitizeLoadout,
   suggestLoadout,
   placeMaxCost,
   loadoutPoolMultForLevel,
-} from './loadout.js?v=114';
+} from './loadout.js?v=115';
 import {
   frontierForMode,
   hardModifiersForLevel,
   sanitizeHardLoadout,
   suggestHardLoadout,
-} from '../data/hardMode.js?v=114';
+} from '../data/hardMode.js?v=115';
 
 function reindexBuffs(map) {
   const buffIndex = {};

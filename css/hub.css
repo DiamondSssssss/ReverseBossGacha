@@ -259,6 +259,99 @@
   flex-wrap: wrap;
 }
 
+.patchlog-page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.patchlog-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.patchlog-head h2 {
+  margin: 2px 0 6px;
+}
+
+.patchlog-head .muted {
+  margin: 0;
+  max-width: 60ch;
+}
+
+.patchlog-feature,
+.patchlog-list {
+  display: grid;
+  gap: 12px;
+}
+
+.patch-card {
+  border: 2px solid var(--ink);
+  background: var(--bone);
+  box-shadow: var(--shadow-stamp);
+  padding: 12px 14px;
+}
+
+.patch-card.featured {
+  border-color: var(--seal);
+  background: #fffaf0;
+}
+
+.patch-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.patch-card-top h3 {
+  margin: 2px 0 0;
+  font-size: 1.05rem;
+}
+
+.patch-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1.5px solid var(--seal);
+  background: rgba(196, 60, 40, 0.12);
+  color: var(--seal-deep);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.patch-summary {
+  margin: 8px 0 0;
+  color: var(--ink-soft);
+  line-height: 1.45;
+}
+
+.patch-block {
+  margin-top: 10px;
+}
+
+.patch-block strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.patch-block ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.patch-block li + li {
+  margin-top: 4px;
+}
+
 .boss-active-top strong {
   font-family: var(--font-display);
 }

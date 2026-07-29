@@ -1,18 +1,18 @@
-import { MAP_UPGRADE, SPELLS, MAX_STAGE } from '../data/constants.js?v=114';
-import { MONSTERS } from '../data/monsters.js?v=114';
+import { MAP_UPGRADE, SPELLS, MAX_STAGE } from '../data/constants.js?v=115';
+import { MONSTERS } from '../data/monsters.js?v=115';
 import {
   DUNGEON_BOSSES,
   getBoss,
   isBossUnlocked,
   unlockHint,
   syncUnlockedBosses,
-} from '../data/dungeonBosses.js?v=114';
-import { tryUpgradeMap, upgradeMapCost } from '../core/dungeon.js?v=114';
-import { saveState } from '../core/storage.js?v=114';
-import { achievementProgress, isGameCleared, evaluateAchievements } from '../core/achievements.js?v=114';
-import { titleName, ensureChallengeProgress } from '../core/challenge.js?v=114';
-import { showTutorial } from './tutorial.js?v=114';
-import { showRedeemModal } from './redeemUI.js?v=114';
+} from '../data/dungeonBosses.js?v=115';
+import { tryUpgradeMap, upgradeMapCost } from '../core/dungeon.js?v=115';
+import { saveState } from '../core/storage.js?v=115';
+import { achievementProgress, isGameCleared, evaluateAchievements } from '../core/achievements.js?v=115';
+import { titleName, ensureChallengeProgress } from '../core/challenge.js?v=115';
+import { showTutorial } from './tutorial.js?v=115';
+import { showRedeemModal } from './redeemUI.js?v=115';
 
 const GATE_SVG = `
 <svg viewBox="0 0 200 250" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -86,6 +86,7 @@ export function renderHub(root, ctx) {
             <button type="button" id="btn-redeem">Nhập mã</button>
             <button type="button" id="btn-ach">Ấn chương</button>
             <button type="button" id="btn-heroes">Catalog Hero</button>
+            <button type="button" id="btn-patchlog">Patch Log</button>
           </div>
         </div>
         <div class="hub-meta">
@@ -182,6 +183,7 @@ export function renderHub(root, ctx) {
   root.querySelector('#btn-collection').onclick = () => go('collection');
   root.querySelector('#btn-heroes').onclick = () => go('heroes');
   root.querySelector('#btn-ach').onclick = () => go('achievements');
+  root.querySelector('#btn-patchlog').onclick = () => go('patchlog');
   root.querySelector('#btn-help').onclick = () => {
     if (ctx.startTutorial) ctx.startTutorial();
     else {
