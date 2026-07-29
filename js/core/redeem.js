@@ -1,7 +1,7 @@
-import { REDEEM_CODES, normalizeRedeemCode } from '../data/redeemCodes.js?v=117';
-import { saveState, applySaveData } from './storage.js?v=117';
-import { isLoggedIn } from './auth.js?v=117';
-import { redeemCodeServer } from './adminApi.js?v=117';
+import { REDEEM_CODES, normalizeRedeemCode } from '../data/redeemCodes.js?v=119';
+import { saveState, applySaveData } from './storage.js?v=119';
+import { isLoggedIn } from './auth.js?v=119';
+import { redeemCodeServer } from './adminApi.js?v=119';
 
 /**
  * @returns {Promise<{ ok: boolean, reason?: string, reward?: object, label?: string }>}

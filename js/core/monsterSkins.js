@@ -1,11 +1,12 @@
-import { MONSTER_BY_ID } from '../data/monsters.js?v=117';
-import { MONSTER_SKINS } from '../data/monsterSkins.js?v=117';
-import { saveState } from './storage.js?v=117';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=119';
+import { MONSTER_SKINS } from '../data/monsterSkins.js?v=119';
+import { saveState } from './storage.js?v=119';
 
 function defaultLifetimeStats() {
   return {
     deployments: 0,
     winsWithInLoadout: 0,
+    hardWinsByLevel: {},
   };
 }
 
@@ -98,6 +99,10 @@ function unlockProgress(state, monsterId, skin) {
         value: achievementCount(state),
         target: Number(unlock.value) || 0,
       };
+    case 'hard_win_with_loadout': {
+      const done = !!stats.hardWinsByLevel?.[Number(unlock.level) || 0];
+      return { value: done ? 1 : 0, target: 1 };
+    }
     default:
       return { value: 0, target: Number(unlock.value) || 0 };
   }
@@ -155,6 +160,8 @@ export function describeSkinUnlock(skin) {
       return `Mở đến ải Khó ${unlock.value}`;
     case 'achievement_total':
       return `Mở ${unlock.value} ấn chương`;
+    case 'hard_win_with_loadout':
+      return `Mang quái này trong loadout và thắng ải Khó ${unlock.level}`;
     default:
       return 'Điều kiện đặc biệt';
   }
@@ -246,5 +253,17 @@ export function addLoadoutWinStats(state, loadout = {}) {
   for (const monsterId of Object.keys(loadout || {})) {
     const stats = getMonsterLifetimeStats(state, monsterId);
     stats.winsWithInLoadout += 1;
+  }
+}
+
+export function recordHardWinWithLoadout(state, level, loadout = {}) {
+  ensureMonsterSkinState(state);
+  const lv = Math.max(1, Number(level) || 1);
+  for (const monsterId of Object.keys(loadout || {})) {
+    const stats = getMonsterLifetimeStats(state, monsterId);
+    stats.hardWinsByLevel = {
+      ...(stats.hardWinsByLevel || {}),
+      [lv]: true,
+    };
   }
 }

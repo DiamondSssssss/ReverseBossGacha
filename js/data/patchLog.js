@@ -1,5 +1,23 @@
 export const PATCH_LOGS = [
   {
+    id: 'v118-mythic-skins-hard-bosses',
+    version: 'v118',
+    date: '29/07/2026',
+    title: 'Skin Mythic & Boss mới cho Ải Khó',
+    summary:
+      '6 skin Mythic mở khóa bằng chiến thắng ải khó, 7 boss hero mới cho các ải 5–35 mode Khó cùng đội hình được thiết kế lại.',
+    highlights: [
+      '6 skin Mythic cao cấp với VFX riêng (voidOrbit, bloodMoon, bellStorm, ashPyre, chronoRing, sacrificeFlame) — mở bằng cách mang con đó trong loadout và thắng ải Khó tương ứng.',
+      'Thêm 7 boss hero mới cho ải Khó 5, 10, 15, 20, 25, 30, 35 — mỗi boss có kỹ năng và AI riêng thay vì dùng hero thường.',
+      'Đội hình ải boss được thiết kế lại theo kiểu boss-fight: ít quân nhưng boss trụ cột hơn, sát thương và kỹ năng đặc biệt hơn.',
+      'Hard mode giờ có mốc thưởng rõ ràng: thắng ải càng cao, skin Mythic càng độc.',
+    ],
+    playerImpact: [
+      'Người chơi có lý do cụ thể để leo từng ải Khó thay vì chỉ chơi cho xong.',
+      'Skin Mythic là phần thưởng mỹ thuật duy nhất chỉ lấy được từ Hard Mode.',
+    ],
+  },
+  {
     id: 'v117-monster-skins-vfx',
     version: 'v117',
     date: '29/07/2026',

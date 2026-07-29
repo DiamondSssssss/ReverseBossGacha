@@ -166,6 +166,72 @@ function paintDecoration(ctx, deco, palette = {}) {
       ctx.closePath();
       ctx.fill();
       break;
+    case 'voidCrown':
+      ctx.strokeStyle = accent;
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.moveTo(21, 12);
+      ctx.lineTo(25, 7);
+      ctx.lineTo(31, 14);
+      ctx.lineTo(37, 6);
+      ctx.lineTo(43, 12);
+      ctx.stroke();
+      break;
+    case 'bloodSpikes':
+      ctx.fillStyle = detail;
+      for (const x of [18, 26, 38, 46]) {
+        ctx.beginPath();
+        ctx.moveTo(x, 49);
+        ctx.lineTo(x + 3, 42);
+        ctx.lineTo(x + 6, 49);
+        ctx.closePath();
+        ctx.fill();
+      }
+      break;
+    case 'bell':
+      ctx.fillStyle = accent;
+      ctx.beginPath();
+      ctx.moveTo(26, 11);
+      ctx.quadraticCurveTo(32, 4, 38, 11);
+      ctx.lineTo(40, 20);
+      ctx.lineTo(24, 20);
+      ctx.closePath();
+      ctx.fill();
+      ellipse(ctx, 32, 21, 2, 2, '#6d4c41');
+      break;
+    case 'ashCracks':
+      ctx.strokeStyle = accent;
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(20, 42);
+      ctx.lineTo(26, 36);
+      ctx.lineTo(23, 31);
+      ctx.moveTo(42, 45);
+      ctx.lineTo(38, 39);
+      ctx.lineTo(44, 34);
+      ctx.stroke();
+      break;
+    case 'chronoClock':
+      ctx.strokeStyle = accent;
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.arc(32, 16, 8, 0, Math.PI * 2);
+      ctx.moveTo(32, 16);
+      ctx.lineTo(32, 11);
+      ctx.moveTo(32, 16);
+      ctx.lineTo(36, 18);
+      ctx.stroke();
+      break;
+    case 'soulChains':
+      ctx.strokeStyle = accent;
+      ctx.lineWidth = 1.4;
+      for (const y of [18, 24, 30]) {
+        ctx.beginPath();
+        ctx.arc(20, y, 2.4, 0, Math.PI * 2);
+        ctx.arc(26, y, 2.4, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      break;
     default:
       break;
   }
@@ -238,6 +304,79 @@ function drawSpriteVfx(ctx, x, y, size, vfx, t = 0, alpha = 1, palette = {}) {
       const ry = y + Math.sin(ang) * size * 0.24;
       ctx.fillStyle = i % 2 ? '#fff8e1' : accent;
       ellipse(ctx, rx, ry, 2.4, 2.4, ctx.fillStyle);
+    }
+  } else if (vfx === 'voidOrbit') {
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.ellipse(x, y, size * 0.42, size * 0.2, t, 0, Math.PI * 2);
+    ctx.stroke();
+    for (let i = 0; i < 3; i++) {
+      const ang = t * 2 + i * ((Math.PI * 2) / 3);
+      ellipse(
+        ctx,
+        x + Math.cos(ang) * size * 0.38,
+        y + Math.sin(ang) * size * 0.12,
+        2.2,
+        2.2,
+        '#ede7f6'
+      );
+    }
+  } else if (vfx === 'bloodMoon') {
+    ctx.fillStyle = 'rgba(183,28,28,0.18)';
+    ellipse(ctx, x, y - size * 0.42, size * 0.22, size * 0.22, ctx.fillStyle);
+    ctx.strokeStyle = '#ff8a80';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(x, y - size * 0.42, size * 0.22, 0, Math.PI * 2);
+    ctx.stroke();
+    for (let i = 0; i < 3; i++) {
+      const dx = (i - 1) * size * 0.14;
+      ellipse(ctx, x + dx, y + size * 0.28 - Math.sin(t * 2 + i) * 3, 2.2, 4, '#ef5350');
+    }
+  } else if (vfx === 'bellStorm') {
+    ctx.strokeStyle = '#d1c4e9';
+    ctx.lineWidth = 1.5;
+    for (let i = 0; i < 3; i++) {
+      const sway = Math.sin(t * 3 + i) * 5;
+      ctx.beginPath();
+      ctx.moveTo(x - size * 0.22 + i * 8, y - size * 0.34);
+      ctx.quadraticCurveTo(x + sway, y - size * 0.1, x - size * 0.18 + i * 8, y + size * 0.18);
+      ctx.stroke();
+    }
+  } else if (vfx === 'ashPyre') {
+    for (let i = 0; i < 5; i++) {
+      const flicker = Math.sin(t * 4 + i * 0.8);
+      const rx = x - size * 0.24 + i * size * 0.12;
+      const ry = y + size * 0.18 - Math.abs(flicker) * size * 0.18;
+      ctx.fillStyle = i % 2 ? '#ff7043' : '#ffcc80';
+      ellipse(ctx, rx, ry, 2.4 + Math.abs(flicker) * 2, 5 + Math.abs(flicker) * 2, ctx.fillStyle);
+    }
+  } else if (vfx === 'chronoRing') {
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([3, 5]);
+    ctx.lineDashOffset = -t * 20;
+    ctx.beginPath();
+    ctx.arc(x, y, size * 0.46, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.strokeStyle = '#e0f7fa';
+    ctx.beginPath();
+    ctx.arc(x, y, size * 0.24, 0, Math.PI * 2);
+    ctx.stroke();
+  } else if (vfx === 'sacrificeFlame') {
+    ctx.strokeStyle = accent;
+    ctx.lineWidth = 1.4;
+    for (let i = 0; i < 3; i++) {
+      const ang = t * 1.8 + i * ((Math.PI * 2) / 3);
+      const rx = x + Math.cos(ang) * size * 0.36;
+      const ry = y + Math.sin(ang) * size * 0.26;
+      ctx.beginPath();
+      ctx.moveTo(rx, ry);
+      ctx.lineTo(rx, ry - 7);
+      ctx.stroke();
+      ellipse(ctx, rx, ry - 9, 2.6, 4.2, i % 2 ? '#f48fb1' : accent);
     }
   }
   ctx.restore();
@@ -1421,6 +1560,13 @@ const HERO_KIND = {
   hero_boss_50: 'heroMage',
   hero_boss_55: 'heroArcher',
   hero_boss_60: 'heroBerserker',
+  hero_boss_05: 'heroTank',
+  hero_boss_10: 'heroRogue',
+  hero_boss_15: 'heroMage',
+  hero_boss_20: 'heroBerserker',
+  hero_boss_25: 'heroArcher',
+  hero_boss_30: 'heroTank',
+  hero_boss_35: 'heroMage',
 };
 
 function paintBackground(ctx, rarity) {

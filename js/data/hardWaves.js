@@ -1,10 +1,17 @@
-import { COMBAT } from './constants.js?v=117';
-import { HERO_BY_ID, WAVE_PLANS, heroScaleForLevel } from './heroes.js?v=117';
+import { COMBAT } from './constants.js?v=119';
+import { HERO_BY_ID, WAVE_PLANS, heroScaleForLevel } from './heroes.js?v=119';
 
 const HARD_BOSS_BY_LEVEL = {
-  15: 'hero_boss_40',
-  30: 'hero_boss_45',
-  45: 'hero_boss_50',
+  5: 'hero_boss_05',
+  10: 'hero_boss_10',
+  15: 'hero_boss_15',
+  20: 'hero_boss_20',
+  25: 'hero_boss_25',
+  30: 'hero_boss_30',
+  35: 'hero_boss_35',
+  40: 'hero_boss_40',
+  45: 'hero_boss_45',
+  50: 'hero_boss_50',
   55: 'hero_boss_55',
   60: 'hero_boss_60',
 };
@@ -108,6 +115,74 @@ const TAGS = {
   },
 };
 
+const HARD_SPECIAL_BOSS_PLANS = {
+  5: {
+    theme: 'Boss Khó 5: Kỵ Sĩ Cổng Sương',
+    tip: 'Boss fight mở màn Hard. Dồn boss sớm, đừng để tank băng giữ choke quá lâu.',
+    waves: [
+      { delay: 0.4, ids: ['hero_scout_01', 'hero_warrior_04', 'hero_healer_02'] },
+      { delay: 9, ids: ['hero_boss_05', 'hero_tank_02', 'hero_healer_03', 'hero_archer_02'] },
+      { delay: 19, ids: ['hero_boss_05', 'hero_mage_03', 'hero_warrior_06', 'hero_support_02'] },
+    ],
+  },
+  10: {
+    theme: 'Boss Khó 10: Nhãn Quỷ Săn Đêm',
+    tip: 'Stealth boss stage. Mắt thần, taunt và anti-heal sẽ lời hơn tham full damage.',
+    waves: [
+      { delay: 0.35, ids: ['hero_rogue_04', 'hero_archer_02', 'hero_scout_01'] },
+      { delay: 9, ids: ['hero_boss_10', 'hero_healer_04', 'hero_hex_02', 'hero_archer_03'] },
+      { delay: 21, ids: ['hero_boss_10', 'hero_rogue_06', 'hero_support_03', 'hero_tank_03'] },
+    ],
+  },
+  15: {
+    theme: 'Boss Khó 15: Phù Thủy Chuông Rỗng',
+    tip: 'Boss mage stage. Chia cụm, silence đúng nhịp và đừng để cả bãi đứng cùng một lane.',
+    waves: [
+      { delay: 0.35, ids: ['hero_support_02', 'hero_mage_05', 'hero_warrior_06', 'hero_archer_03'] },
+      { delay: 10, ids: ['hero_boss_15', 'hero_healer_04', 'hero_hex_03', 'hero_tank_03'] },
+      { delay: 23, ids: ['hero_boss_15', 'hero_mage_06', 'hero_support_03', 'hero_berserker_03', 'hero_scout_01'] },
+    ],
+  },
+  20: {
+    theme: 'Boss Khó 20: Hầu Tước Dung Nham',
+    tip: 'Boss bruiser stage. Cần chống nhịp lao đầu và không để hắn hút máu miễn phí.',
+    waves: [
+      { delay: 0.35, ids: ['hero_berserker_03', 'hero_warrior_07', 'hero_support_01'] },
+      { delay: 10, ids: ['hero_boss_20', 'hero_healer_04', 'hero_tank_04', 'hero_mage_06'] },
+      { delay: 23, ids: ['hero_boss_20', 'hero_berserker_04', 'hero_hex_04', 'hero_archer_04', 'hero_support_03'] },
+    ],
+  },
+  25: {
+    theme: 'Boss Khó 25: Thiên Tiễn Độc Hậu',
+    tip: 'Boss archer stage. Gap-close, chia góc và bắt support trước khi boss free-hit quá lâu.',
+    waves: [
+      { delay: 0.35, ids: ['hero_archer_04', 'hero_support_03', 'hero_scout_01', 'hero_healer_04'] },
+      { delay: 10, ids: ['hero_boss_25', 'hero_tank_04', 'hero_hex_04', 'hero_archer_05'] },
+      { delay: 24, ids: ['hero_boss_25', 'hero_archer_06', 'hero_healer_05', 'hero_support_04', 'hero_berserker_04'] },
+    ],
+  },
+  30: {
+    theme: 'Boss Khó 30: Giáo Chủ Huyết Khế',
+    tip: 'Boss support-core stage. Nếu không đục vỡ lõi healer/support đủ nhanh sẽ bị câu đến kiệt tài nguyên.',
+    waves: [
+      { delay: 0.35, ids: ['hero_support_01', 'hero_support_02', 'hero_tank_04', 'hero_healer_05'] },
+      { delay: 11, ids: ['hero_boss_30', 'hero_stasis_01', 'hero_hex_05', 'hero_shatter_01'] },
+      { delay: 25, ids: ['hero_boss_30', 'hero_healer_05', 'hero_support_04', 'hero_warrior_10', 'hero_archer_04'] },
+      { delay: 40, ids: ['hero_boss_30', 'hero_stasis_02', 'hero_support_03', 'hero_healer_06'] },
+    ],
+  },
+  35: {
+    theme: 'Boss Khó 35: Vương Không Ảnh',
+    tip: 'Boss bóng tối trước endgame. Vừa phải soi tàng hình vừa phải dạt đội hình để tránh ăn trọn AoE.',
+    waves: [
+      { delay: 0.3, ids: ['hero_rogue_06', 'hero_support_03', 'hero_mage_06', 'hero_scout_02'] },
+      { delay: 10, ids: ['hero_boss_35', 'hero_hex_05', 'hero_healer_05', 'hero_tank_04'] },
+      { delay: 23, ids: ['hero_boss_35', 'hero_mage_07', 'hero_stasis_03', 'hero_archer_05', 'hero_support_04'] },
+      { delay: 39, ids: ['hero_boss_35', 'hero_rogue_09', 'hero_healer_06', 'hero_hex_07', 'hero_support_03'] },
+    ],
+  },
+};
+
 function mulberry32(seed) {
   let t = seed >>> 0;
   return () => {
@@ -195,6 +270,7 @@ function pickUniqueFromPool(pool, count, used, rng) {
 }
 
 function buildHardPlan(level) {
+  if (HARD_SPECIAL_BOSS_PLANS[level]) return HARD_SPECIAL_BOSS_PLANS[level];
   const rng = mulberry32(level * 2654435761 + 97);
   const baseIds = flattenBasePlan(level).filter((id) => HERO_BY_ID[id]);
   const rankedTags = classifyIds(baseIds);

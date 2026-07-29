@@ -1,29 +1,30 @@
-import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=117';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=117';
-import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=117';
-import { CombatEngine } from '../core/combatEngine.js?v=117';
-import { saveState } from '../core/storage.js?v=117';
-import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=117';
+import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=119';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=119';
+import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=119';
+import { CombatEngine } from '../core/combatEngine.js?v=119';
+import { saveState } from '../core/storage.js?v=119';
+import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=119';
 import {
   evaluateChallengeResult,
   grantChallengeReward,
   titleName,
-} from '../core/challenge.js?v=117';
-import { loadoutPoolCost } from '../core/loadout.js?v=117';
+} from '../core/challenge.js?v=119';
+import { loadoutPoolCost } from '../core/loadout.js?v=119';
 import {
   frontierForMode,
   recordPersonalBestCost,
-} from '../data/hardMode.js?v=117';
-import { submitStageBestCost } from '../core/stageRecords.js?v=117';
-import { isLoggedIn } from '../core/auth.js?v=117';
-import { monsterSpriteUrl } from '../render/sprites.js?v=117';
-import { bindMonsterTips, hideMonsterTip } from './monsterTip.js?v=117';
+} from '../data/hardMode.js?v=119';
+import { submitStageBestCost } from '../core/stageRecords.js?v=119';
+import { isLoggedIn } from '../core/auth.js?v=119';
+import { monsterSpriteUrl } from '../render/sprites.js?v=119';
+import { bindMonsterTips, hideMonsterTip } from './monsterTip.js?v=119';
 import {
   addLoadoutWinStats,
   addMonsterDeployments,
   evaluateMonsterSkinUnlocks,
   getEquippedMonsterAppearance,
-} from '../core/monsterSkins.js?v=117';
+  recordHardWinWithLoadout,
+} from '../core/monsterSkins.js?v=119';
 
 const REPLAY_REWARD_MUL = 0.35;
 
@@ -285,6 +286,9 @@ export function renderCombat(root, ctx) {
       state.gold += gold;
       state.stats.wins += 1;
       addLoadoutWinStats(state, run.loadout || {});
+      if (stageMode === 'hard') {
+        recordHardWinWithLoadout(state, run.level, run.loadout || {});
+      }
 
       const poolCost =
         run.loadoutPoolCost != null

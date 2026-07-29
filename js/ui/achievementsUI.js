@@ -1,6 +1,6 @@
-import { ACHIEVEMENTS, CATEGORY_LABELS } from '../data/achievements.js?v=117';
-import { achievementProgress, isGameCleared } from '../core/achievements.js?v=117';
-import { showTutorial } from './tutorial.js?v=117';
+import { ACHIEVEMENTS, CATEGORY_LABELS } from '../data/achievements.js?v=119';
+import { achievementProgress, isGameCleared } from '../core/achievements.js?v=119';
+import { showTutorial } from './tutorial.js?v=119';
 
 function rewardText(r = {}) {
   const parts = [];

@@ -1,21 +1,21 @@
-import { MONSTERS } from '../data/monsters.js?v=117';
+import { MONSTERS } from '../data/monsters.js?v=119';
 import {
   RARITY_COLORS,
   RARITY_LABELS,
   INVENTORY_CAP,
   MONSTER_UPGRADE,
-} from '../data/constants.js?v=117';
-import { monsterDisplayUrl } from '../render/sprites.js?v=117';
+} from '../data/constants.js?v=119';
+import { monsterDisplayUrl } from '../render/sprites.js?v=119';
 import {
   displayMonsterStats,
   getMonsterUpgradeLevel,
   tryUpgradeMonster,
   upgradeMonsterCost,
-} from '../core/monsterUpgrade.js?v=117';
-import { evaluateAchievements } from '../core/achievements.js?v=117';
-import { describeMonsterKit, describeMonsterSummary } from '../data/skillDesc.js?v=117';
-import { inventoryOwnCap } from '../core/storage.js?v=117';
-import { saveState } from '../core/storage.js?v=117';
+} from '../core/monsterUpgrade.js?v=119';
+import { evaluateAchievements } from '../core/achievements.js?v=119';
+import { describeMonsterKit, describeMonsterSummary } from '../data/skillDesc.js?v=119';
+import { inventoryOwnCap } from '../core/storage.js?v=119';
+import { saveState } from '../core/storage.js?v=119';
 import {
   describeSkinProgress,
   describeSkinUnlock,
@@ -28,7 +28,7 @@ import {
   getTotalMonsterSkinCount,
   getUnlockedMonsterSkinCount,
   isMonsterSkinUnlocked,
-} from '../core/monsterSkins.js?v=117';
+} from '../core/monsterSkins.js?v=119';
 
 const filters = {
   q: '',
@@ -274,9 +274,12 @@ function showSkinModal(monsterId, ctx) {
               aura: skin.visual?.aura || null,
               vfx: skin.visual?.vfx || null,
             };
+            const spriteHtml = unlocked
+              ? `<img class="skin-entry-sprite" src="${monsterDisplayUrl(true, monster.id, monster.color, monster.rarity, appearance)}" alt="" width="56" height="56" />`
+              : `<div class="skin-entry-sprite skin-entry-unknown">?</div>`;
             return `
               <article class="skin-entry ${unlocked ? '' : 'locked'}">
-                <img class="skin-entry-sprite" src="${monsterDisplayUrl(true, monster.id, monster.color, monster.rarity, appearance)}" alt="" width="56" height="56" />
+                ${spriteHtml}
                 <div class="skin-entry-body">
                   <div class="skin-entry-top">
                     <strong>${escapeHtml(skin.name)}</strong>

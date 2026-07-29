@@ -179,4 +179,130 @@ export const MONSTER_SKINS = {
       },
     },
   ],
+  void_sovereign: [
+    {
+      id: 'base',
+      name: 'Mặc Định',
+      unlockedByDefault: true,
+      visual: {
+        palette: { primary: '#311b92' },
+      },
+    },
+    {
+      id: 'astral_throne',
+      name: 'Ngai Sao Hư Không',
+      unlock: { type: 'hard_win_with_loadout', level: 5 },
+      visual: {
+        palette: { primary: '#4527a0', accent: '#b388ff', eye: '#f3e5f5' },
+        decals: ['voidCrown', 'runes'],
+        aura: 'violet',
+        vfx: 'voidOrbit',
+      },
+    },
+  ],
+  blood_idol: [
+    {
+      id: 'base',
+      name: 'Mặc Định',
+      unlockedByDefault: true,
+      visual: {
+        palette: { primary: '#b71c1c' },
+      },
+    },
+    {
+      id: 'crimson_sanctum',
+      name: 'Điện Máu Tế',
+      unlock: { type: 'hard_win_with_loadout', level: 10 },
+      visual: {
+        palette: { primary: '#c62828', accent: '#ff8a80', eye: '#fff5f5' },
+        decals: ['bloodSpikes', 'crown'],
+        aura: 'ember',
+        vfx: 'bloodMoon',
+      },
+    },
+  ],
+  doom_bell: [
+    {
+      id: 'base',
+      name: 'Mặc Định',
+      unlockedByDefault: true,
+      visual: {
+        palette: { primary: '#6a1b9a' },
+      },
+    },
+    {
+      id: 'requiem_archon',
+      name: 'Đại Chuông Cầu Hồn',
+      unlock: { type: 'hard_win_with_loadout', level: 15 },
+      visual: {
+        palette: { primary: '#8e24aa', accent: '#d1c4e9', eye: '#fff8e1' },
+        decals: ['bell', 'runes'],
+        aura: 'violet',
+        vfx: 'bellStorm',
+      },
+    },
+  ],
+  ash_apocalypse: [
+    {
+      id: 'base',
+      name: 'Mặc Định',
+      unlockedByDefault: true,
+      visual: {
+        palette: { primary: '#bf360c' },
+      },
+    },
+    {
+      id: 'world_pyre',
+      name: 'Hỏa Tận Thế',
+      unlock: { type: 'hard_win_with_loadout', level: 20 },
+      visual: {
+        palette: { primary: '#d84315', accent: '#ffcc80', eye: '#fff3e0' },
+        decals: ['ashCracks', 'crown'],
+        aura: 'ember',
+        vfx: 'ashPyre',
+      },
+    },
+  ],
+  chronos_fang: [
+    {
+      id: 'base',
+      name: 'Mặc Định',
+      unlockedByDefault: true,
+      visual: {
+        palette: { primary: '#00bcd4' },
+      },
+    },
+    {
+      id: 'paradox_hunt',
+      name: 'Kẻ Săn Nghịch Thời',
+      unlock: { type: 'hard_win_with_loadout', level: 25 },
+      visual: {
+        palette: { primary: '#26c6da', accent: '#80deea', eye: '#e0f7fa' },
+        decals: ['chronoClock', 'scar'],
+        aura: 'shadow',
+        vfx: 'chronoRing',
+      },
+    },
+  ],
+  blood_tithe_wraith: [
+    {
+      id: 'base',
+      name: 'Mặc Định',
+      unlockedByDefault: true,
+      visual: {
+        palette: { primary: '#880e4f' },
+      },
+    },
+    {
+      id: 'scarlet_dirge',
+      name: 'Ai Ca Huyết Khế',
+      unlock: { type: 'hard_win_with_loadout', level: 30 },
+      visual: {
+        palette: { primary: '#ad1457', accent: '#f48fb1', eye: '#fff1f6' },
+        decals: ['soulChains', 'voidCrown'],
+        aura: 'violet',
+        vfx: 'sacrificeFlame',
+      },
+    },
+  ],
 };
