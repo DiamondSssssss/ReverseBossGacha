@@ -1,23 +1,22 @@
-import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=130';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=130';
-import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=130';
-import { CombatEngine } from '../core/combatEngine.js?v=130';
-import { saveState } from '../core/storage.js?v=130';
-import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=130';
+import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=131';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=131';
+import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=131';
+import { CombatEngine } from '../core/combatEngine.js?v=131';
+import { saveState } from '../core/storage.js?v=131';
+import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=131';
 import {
   evaluateChallengeResult,
   grantChallengeReward,
   titleName,
-} from '../core/challenge.js?v=130';
-import { loadoutPoolCost } from '../core/loadout.js?v=130';
+} from '../core/challenge.js?v=131';
+import { loadoutPoolCost } from '../core/loadout.js?v=131';
 import {
   frontierForMode,
   recordPersonalBestCost,
-} from '../data/hardMode.js?v=130';
-import { submitStageBestCost } from '../core/stageRecords.js?v=130';
-import { isLoggedIn } from '../core/auth.js?v=130';
-import { monsterSpriteUrl } from '../render/sprites.js?v=130';
-import { bindMonsterTips, hideMonsterTip } from './monsterTip.js?v=130';
+} from '../data/hardMode.js?v=131';
+import { submitStageBestCost } from '../core/stageRecords.js?v=131';
+import { isLoggedIn } from '../core/auth.js?v=131';
+import { monsterSpriteUrl } from '../render/sprites.js?v=131';
 import {
   addLoadoutWinStats,
   addMonsterDeployments,
@@ -25,7 +24,7 @@ import {
   getEquippedMonsterAppearance,
   recordHardWinWithLoadout,
   recordNormalWinWithLoadout,
-} from '../core/monsterSkins.js?v=130';
+} from '../core/monsterSkins.js?v=131';
 
 const REPLAY_REWARD_MUL = 0.35;
 
@@ -186,16 +185,6 @@ export function renderCombat(root, ctx) {
         }
       };
     });
-    bindMonsterTips(
-      handEl,
-      '[data-deploy]',
-      (el) => el.getAttribute('data-deploy'),
-      state,
-      (el) =>
-        el.classList.contains('too-costly')
-          ? { note: 'Thiếu slot Cost — chờ quái chết' }
-          : undefined
-    );
   }
 
   function onEnd(result) {

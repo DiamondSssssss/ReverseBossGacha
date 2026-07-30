@@ -1,13 +1,13 @@
-import { MAX_STAGE } from '../data/constants.js?v=130';
-import { getStageMap } from '../data/maps.js?v=130';
-import { getHardStageMap } from '../data/mapsHard.js?v=130';
+import { MAX_STAGE } from '../data/constants.js?v=131';
+import { getStageMap } from '../data/maps.js?v=131';
+import { getHardStageMap } from '../data/mapsHard.js?v=131';
 import {
   frontierForMode,
   hardModifiersForLevel,
   personalBestCost,
   stageAccess,
-} from '../data/hardMode.js?v=130';
-import { fetchStageRecords } from '../core/stageRecords.js?v=130';
+} from '../data/hardMode.js?v=131';
+import { fetchStageRecords } from '../core/stageRecords.js?v=131';
 
 let activeMode = 'normal';
 

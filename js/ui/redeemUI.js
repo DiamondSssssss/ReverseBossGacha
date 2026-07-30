@@ -1,5 +1,5 @@
-import { tryRedeemCode, formatRedeemReward } from '../core/redeem.js?v=130';
-import { saveState } from '../core/storage.js?v=130';
+import { tryRedeemCode, formatRedeemReward } from '../core/redeem.js?v=131';
+import { saveState } from '../core/storage.js?v=131';
 
 export function showRedeemModal(modalEl, { state, toast, refreshChrome }) {
   if (!modalEl) return;
