@@ -3,28 +3,29 @@ import {
   saveState,
   resetState,
   inventoryCopy,
-} from './core/storage.js?v=131';
-import { createRunState } from './core/dungeon.js?v=131';
-import { createChallengeRunState } from './core/challenge.js?v=131';
-import { loadoutFingerprint } from './core/loadout.js?v=131';
-import { evaluateAchievements } from './core/achievements.js?v=131';
-import { initAuth, onAuthChange } from './core/auth.js?v=131';
-import { renderHub } from './ui/hub.js?v=131';
-import { renderStages } from './ui/stagesUI.js?v=131';
-import { renderChallenges } from './ui/challengesUI.js?v=131';
-import { renderGacha } from './ui/gachaUI.js?v=131';
-import { renderCollection } from './ui/collection.js?v=131';
-import { renderHeroes } from './ui/heroesUI.js?v=131';
-import { renderScout, renderSetup } from './ui/setup.js?v=131';
-import { renderCombat, renderReward, stopCombatIfAny, getCombatEngine } from './ui/combat.js?v=131';
-import { renderAchievements, announceUnlocks } from './ui/achievementsUI.js?v=131';
-import { renderLeaderboard } from './ui/leaderboardUI.js?v=131';
-import { renderAdmin } from './ui/adminUI.js?v=131';
-import { renderPatchLog } from './ui/patchLogUI.js?v=131';
-import { startGuidedTour, showTipBanner } from './ui/tutorial.js?v=131';
-import { renderAccountBar } from './ui/authUI.js?v=131';
-import { hideMonsterTip } from './ui/monsterTip.js?v=131';
-import { evaluateMonsterSkinUnlocks } from './core/monsterSkins.js?v=131';
+} from './core/storage.js?v=135';
+import { createRunState } from './core/dungeon.js?v=135';
+import { createChallengeRunState } from './core/challenge.js?v=135';
+import { loadoutFingerprint } from './core/loadout.js?v=135';
+import { evaluateAchievements } from './core/achievements.js?v=135';
+import { initAuth, onAuthChange } from './core/auth.js?v=135';
+import { renderHub } from './ui/hub.js?v=135';
+import { renderStages } from './ui/stagesUI.js?v=135';
+import { renderChallenges } from './ui/challengesUI.js?v=135';
+import { renderGacha } from './ui/gachaUI.js?v=135';
+import { renderCollection } from './ui/collection.js?v=135';
+import { renderHeroes } from './ui/heroesUI.js?v=135';
+import { renderScout, renderSetup } from './ui/setup.js?v=135';
+import { renderCombat, renderReward, stopCombatIfAny, getCombatEngine } from './ui/combat.js?v=135';
+import { renderBattleReport } from './ui/battleReportUI.js?v=135';
+import { renderAchievements, announceUnlocks } from './ui/achievementsUI.js?v=135';
+import { renderLeaderboard } from './ui/leaderboardUI.js?v=135';
+import { renderAdmin } from './ui/adminUI.js?v=135';
+import { renderPatchLog } from './ui/patchLogUI.js?v=135';
+import { startGuidedTour, showTipBanner } from './ui/tutorial.js?v=135';
+import { renderAccountBar } from './ui/authUI.js?v=135';
+import { hideMonsterTip } from './ui/monsterTip.js?v=135';
+import { evaluateMonsterSkinUnlocks } from './core/monsterSkins.js?v=135';
 
 const state = loadState();
 // Mở ấn đủ điều kiện + backfill Gem cho ấn đã mở (bảng thưởng mới)
@@ -33,6 +34,7 @@ evaluateMonsterSkinUnlocks(state, { save: true });
 let run = null;
 let inventory = null;
 let lastReward = null;
+let lastBattleReport = null;
 let currentScreen = 'hub';
 
 const screens = {
@@ -48,6 +50,7 @@ const screens = {
   scout: document.getElementById('screen-scout'),
   setup: document.getElementById('screen-setup'),
   combat: document.getElementById('screen-combat'),
+  'battle-report': document.getElementById('screen-battle-report'),
   reward: document.getElementById('screen-reward'),
   admin: document.getElementById('screen-admin'),
 };
@@ -101,12 +104,14 @@ function startRun(opts = {}) {
   run = createRunState(state, opts);
   inventory = inventoryCopy(state);
   lastReward = null;
+  lastBattleReport = null;
 }
 
-function startChallenge(challengeId) {
-  run = createChallengeRunState(state, challengeId);
+function startChallenge(challengeRef) {
+  run = createChallengeRunState(state, challengeRef);
   inventory = inventoryCopy(state);
   lastReward = null;
+  lastBattleReport = null;
 }
 
 /** Áp loadout → inventory session (chỉ quái mang vào xếp trận). */
@@ -189,6 +194,12 @@ const bag = {
   set lastReward(v) {
     lastReward = v;
   },
+  get lastBattleReport() {
+    return lastBattleReport;
+  },
+  set lastBattleReport(v) {
+    lastBattleReport = v;
+  },
   currentScreen: () => currentScreen,
   go,
   toast,
@@ -258,6 +269,7 @@ function go(name) {
       n === name ||
         (name === 'setup' && n === 'scout') ||
         (name === 'stages' && n === 'scout') ||
+        (name === 'battle-report' && n === 'hub') ||
         (name === 'reward' && n === 'hub') ||
         (name === 'heroes' && n === 'collection')
     );
@@ -268,11 +280,18 @@ function go(name) {
   }
 
   navDock.style.display =
-    name === 'combat' || name === 'reward' || name === 'setup' || name === 'admin' ? 'none' : '';
+    name === 'combat' || name === 'battle-report' || name === 'reward' || name === 'setup' || name === 'admin'
+      ? 'none'
+      : '';
 
   document.body.classList.toggle('admin-mode', name === 'admin');
 
-  const playFit = name === 'setup' || name === 'combat' || name === 'scout' || name === 'reward';
+  const playFit =
+    name === 'setup' ||
+    name === 'combat' ||
+    name === 'scout' ||
+    name === 'battle-report' ||
+    name === 'reward';
   document.documentElement.classList.toggle('play-fit', playFit);
   document.body.classList.toggle('play-fit', playFit);
 
@@ -339,6 +358,9 @@ function renderScreen(name) {
       break;
     case 'reward':
       renderReward(root, bag);
+      break;
+    case 'battle-report':
+      renderBattleReport(root, bag);
       break;
     case 'admin':
       renderAdmin(root, bag);

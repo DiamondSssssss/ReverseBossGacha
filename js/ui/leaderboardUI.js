@@ -1,11 +1,11 @@
-import { MONSTERS } from '../data/monsters.js?v=131';
-import { RARITY_COLORS, RARITY_LABELS, MAX_STAGE } from '../data/constants.js?v=131';
-import { monsterDisplayUrl } from '../render/sprites.js?v=131';
-import { fetchLeaderboard, fetchPlayerProfile } from '../core/leaderboard.js?v=131';
-import { getUser } from '../core/auth.js?v=131';
-import { titleName } from '../core/challenge.js?v=131';
-import { CHALLENGES } from '../data/challenges.js?v=131';
-import { getEquippedMonsterAppearance } from '../core/monsterSkins.js?v=131';
+import { MONSTERS } from '../data/monsters.js?v=135';
+import { RARITY_COLORS, RARITY_LABELS, MAX_STAGE } from '../data/constants.js?v=135';
+import { monsterDisplayUrl } from '../render/sprites.js?v=135';
+import { fetchLeaderboard, fetchPlayerProfile } from '../core/leaderboard.js?v=135';
+import { getUser } from '../core/auth.js?v=135';
+import { titleName } from '../core/challenge.js?v=135';
+import { CHALLENGES } from '../data/challenges.js?v=135';
+import { getEquippedMonsterAppearance } from '../core/monsterSkins.js?v=135';
 
 const CHALLENGE_TOTAL = CHALLENGES.length || 10;
 

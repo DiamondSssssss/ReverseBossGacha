@@ -65,6 +65,20 @@ db.exec(`
     PRIMARY KEY (user_id, mode, stage),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   );
+
+  CREATE TABLE IF NOT EXISTS patch_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    slug TEXT UNIQUE NOT NULL,
+    version TEXT NOT NULL DEFAULT '',
+    date_label TEXT NOT NULL DEFAULT '',
+    title TEXT NOT NULL,
+    summary TEXT NOT NULL DEFAULT '',
+    highlights_json TEXT NOT NULL DEFAULT '[]',
+    player_impact_json TEXT NOT NULL DEFAULT '[]',
+    active INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
 `);
 
 migrateLeaderboardColumns();
@@ -84,6 +98,45 @@ function migrateAdminColumns() {
   if (!cols.has('is_banned')) {
     db.exec('ALTER TABLE users ADD COLUMN is_banned INTEGER NOT NULL DEFAULT 0');
   }
+}
+
+function slugifyPatchLog(text) {
+  return String(text || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+}
+
+function patchLogPublicRow(row) {
+  if (!row) return null;
+  let highlights = [];
+  let playerImpact = [];
+  try {
+    highlights = JSON.parse(row.highlightsJson || '[]');
+  } catch {
+    highlights = [];
+  }
+  try {
+    playerImpact = JSON.parse(row.playerImpactJson || '[]');
+  } catch {
+    playerImpact = [];
+  }
+  return {
+    id: row.id,
+    slug: row.slug,
+    version: row.version,
+    date: row.dateLabel ?? row.date_label,
+    title: row.title,
+    summary: row.summary,
+    highlights: Array.isArray(highlights) ? highlights : [],
+    playerImpact: Array.isArray(playerImpact) ? playerImpact : [],
+    active: !!row.active,
+    createdAt: row.createdAt ?? row.created_at,
+    updatedAt: row.updatedAt ?? row.updated_at,
+  };
 }
 
 function userPublicRow(row) {
@@ -503,7 +556,120 @@ export function getAdminStats() {
   const codes = db.prepare('SELECT COUNT(*) AS n FROM redeem_codes WHERE active = 1').get().n;
   const redemptions = db.prepare('SELECT COUNT(*) AS n FROM redeem_redemptions').get().n;
   const banned = db.prepare('SELECT COUNT(*) AS n FROM users WHERE is_banned = 1').get().n;
-  return { users, saves, codes, redemptions, banned };
+  const patchLogs = db.prepare('SELECT COUNT(*) AS n FROM patch_logs WHERE active = 1').get().n;
+  return { users, saves, codes, redemptions, banned, patchLogs };
+}
+
+export function listPatchLogs({ activeOnly = true } = {}) {
+  const rows = db
+    .prepare(
+      `SELECT id, slug, version, date_label AS dateLabel, title, summary,
+              highlights_json AS highlightsJson, player_impact_json AS playerImpactJson,
+              active, created_at AS createdAt, updated_at AS updatedAt
+       FROM patch_logs
+       ${activeOnly ? 'WHERE active = 1' : ''}
+       ORDER BY id DESC`
+    )
+    .all();
+  return rows.map(patchLogPublicRow);
+}
+
+export function listPatchLogsAdmin() {
+  return listPatchLogs({ activeOnly: false });
+}
+
+export function createPatchLogAdmin(body = {}) {
+  const version = String(body.version || '').trim();
+  const dateLabel = String(body.date || body.dateLabel || '').trim();
+  const title = String(body.title || '').trim();
+  const summary = String(body.summary || '').trim();
+  const highlights = Array.isArray(body.highlights) ? body.highlights.map((x) => String(x || '').trim()).filter(Boolean) : [];
+  const playerImpact = Array.isArray(body.playerImpact)
+    ? body.playerImpact.map((x) => String(x || '').trim()).filter(Boolean)
+    : [];
+  if (!title) throw new Error('Thiếu tiêu đề patch log');
+  const baseSlug = slugifyPatchLog(body.slug || `${version || 'patch'}-${title}`);
+  const slug = baseSlug || `patch-${Date.now()}`;
+  const info = db
+    .prepare(
+      `INSERT INTO patch_logs
+        (slug, version, date_label, title, summary, highlights_json, player_impact_json, active, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
+    )
+    .run(
+      slug,
+      version,
+      dateLabel,
+      title,
+      summary,
+      JSON.stringify(highlights),
+      JSON.stringify(playerImpact),
+      body.active === false ? 0 : 1
+    );
+  return listPatchLogsAdmin().find((entry) => entry.id === info.lastInsertRowid);
+}
+
+export function updatePatchLogAdmin(id, body = {}) {
+  const cur = db.prepare('SELECT id FROM patch_logs WHERE id = ?').get(id);
+  if (!cur) return null;
+  if (body.slug != null) {
+    const slug = slugifyPatchLog(body.slug);
+    if (!slug) throw new Error('Slug không hợp lệ');
+    db.prepare('UPDATE patch_logs SET slug = ?, updated_at = datetime(\'now\') WHERE id = ?').run(slug, id);
+  }
+  if (body.version != null) {
+    db.prepare('UPDATE patch_logs SET version = ?, updated_at = datetime(\'now\') WHERE id = ?').run(
+      String(body.version).trim(),
+      id
+    );
+  }
+  if (body.date !== undefined || body.dateLabel !== undefined) {
+    db.prepare('UPDATE patch_logs SET date_label = ?, updated_at = datetime(\'now\') WHERE id = ?').run(
+      String(body.dateLabel ?? body.date ?? '').trim(),
+      id
+    );
+  }
+  if (body.title != null) {
+    db.prepare('UPDATE patch_logs SET title = ?, updated_at = datetime(\'now\') WHERE id = ?').run(
+      String(body.title).trim(),
+      id
+    );
+  }
+  if (body.summary != null) {
+    db.prepare('UPDATE patch_logs SET summary = ?, updated_at = datetime(\'now\') WHERE id = ?').run(
+      String(body.summary).trim(),
+      id
+    );
+  }
+  if (body.highlights != null) {
+    const highlights = Array.isArray(body.highlights)
+      ? body.highlights.map((x) => String(x || '').trim()).filter(Boolean)
+      : [];
+    db.prepare('UPDATE patch_logs SET highlights_json = ?, updated_at = datetime(\'now\') WHERE id = ?').run(
+      JSON.stringify(highlights),
+      id
+    );
+  }
+  if (body.playerImpact != null) {
+    const playerImpact = Array.isArray(body.playerImpact)
+      ? body.playerImpact.map((x) => String(x || '').trim()).filter(Boolean)
+      : [];
+    db.prepare('UPDATE patch_logs SET player_impact_json = ?, updated_at = datetime(\'now\') WHERE id = ?').run(
+      JSON.stringify(playerImpact),
+      id
+    );
+  }
+  if (body.active != null) {
+    db.prepare('UPDATE patch_logs SET active = ?, updated_at = datetime(\'now\') WHERE id = ?').run(
+      body.active ? 1 : 0,
+      id
+    );
+  }
+  return listPatchLogsAdmin().find((entry) => entry.id === id);
+}
+
+export function deletePatchLogAdmin(id) {
+  db.prepare('DELETE FROM patch_logs WHERE id = ?').run(id);
 }
 
 export function listUsersAdmin({ q = '', limit = 50 } = {}) {

@@ -4,12 +4,13 @@ import {
   SPELLS,
   INVENTORY_CAP,
   DUPLICATE_SOUL_REFUND,
-} from '../data/constants.js?v=131';
-import { DEFAULT_BOSS_ID, syncUnlockedBosses } from '../data/dungeonBosses.js?v=131';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=131';
-import { isLoggedIn } from './auth.js?v=131';
-import { pushCloudSave } from './cloudSave.js?v=131';
-import { ensureMonsterSkinState } from './monsterSkins.js?v=131';
+} from '../data/constants.js?v=135';
+import { DEFAULT_BOSS_ID, syncUnlockedBosses } from '../data/dungeonBosses.js?v=135';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=135';
+import { isLoggedIn } from './auth.js?v=135';
+import { pushCloudSave } from './cloudSave.js?v=135';
+import { ensureMonsterSkinState } from './monsterSkins.js?v=135';
+import { ensureLiveOpsProgress } from './liveOps.js?v=135';
 
 const LEGACY_KEYS = ['rbg_save_v1'];
 
@@ -76,9 +77,11 @@ function defaultState() {
     monsterSkinsOwned: {},
     monsterSkinEquipped: {},
     monsterLifetimeStats: {},
+    liveOpsProgress: { rotations: {} },
     updatedAt: Date.now(),
   };
   ensureMonsterSkinState(state);
+  ensureLiveOpsProgress(state);
   return state;
 }
 
@@ -173,11 +176,16 @@ export function loadState() {
         parsed.monsterLifetimeStats && typeof parsed.monsterLifetimeStats === 'object'
           ? { ...parsed.monsterLifetimeStats }
           : {},
+      liveOpsProgress:
+        parsed.liveOpsProgress && typeof parsed.liveOpsProgress === 'object'
+          ? { ...parsed.liveOpsProgress, rotations: { ...(parsed.liveOpsProgress.rotations || {}) } }
+          : { rotations: {} },
       updatedAt: parsed.updatedAt || Date.now(),
     };
     clampInventoryToCap(merged);
     syncUnlockedBosses(merged);
     ensureMonsterSkinState(merged);
+    ensureLiveOpsProgress(merged);
     return merged;
   } catch {
     return defaultState();
@@ -238,11 +246,16 @@ export function applySaveData(state, data) {
       data.monsterLifetimeStats && typeof data.monsterLifetimeStats === 'object'
         ? { ...data.monsterLifetimeStats }
         : {},
+    liveOpsProgress:
+      data.liveOpsProgress && typeof data.liveOpsProgress === 'object'
+        ? { ...data.liveOpsProgress, rotations: { ...(data.liveOpsProgress.rotations || {}) } }
+        : { rotations: {} },
     updatedAt: data.updatedAt || Date.now(),
   });
   clampInventoryToCap(state);
   syncUnlockedBosses(state);
   ensureMonsterSkinState(state);
+  ensureLiveOpsProgress(state);
   return state;
 }
 

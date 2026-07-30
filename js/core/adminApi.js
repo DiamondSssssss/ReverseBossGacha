@@ -1,4 +1,4 @@
-import { api } from './auth.js?v=131';
+import { api } from './auth.js?v=135';
 
 export async function fetchAdminStats() {
   const data = await api('/api/admin/stats');
@@ -29,6 +29,31 @@ export async function deleteAdminUser(id) {
 export async function fetchRedeemCodesAdmin() {
   const data = await api('/api/admin/redeem-codes');
   return data.codes || [];
+}
+
+export async function fetchPatchLogsAdmin() {
+  const data = await api('/api/admin/patch-logs');
+  return data.logs || [];
+}
+
+export async function createPatchLogAdmin(body) {
+  const data = await api('/api/admin/patch-logs', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+  return data.log;
+}
+
+export async function updatePatchLogAdmin(id, body) {
+  const data = await api(`/api/admin/patch-logs/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  });
+  return data.log;
+}
+
+export async function deletePatchLogAdmin(id) {
+  return api(`/api/admin/patch-logs/${id}`, { method: 'DELETE' });
 }
 
 export async function createRedeemCodeAdmin(body) {

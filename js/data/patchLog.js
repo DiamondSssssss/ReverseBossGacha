@@ -1,5 +1,17 @@
 export const PATCH_LOGS = [
   {
+    id: 'v120-combat-vfx-attacks',
+    version: 'v120',
+    date: '30/07/2026',
+    title: 'Nâng cấp hiệu ứng chiến đấu',
+    summary:
+      'Thêm slash cho cận chiến, projectile + impact cho đánh xa/phép ở cả Hero lẫn Quái.',
+    highlights: [
+      'Đòn đánh giờ đọc dễ hơn: cận chiến có vệt chém, unit đánh xa/phép có projectile và điểm chạm rõ ràng.',
+    ],
+    playerImpact: [],
+  },
+  {
     id: 'v119-hard-rebalance-waves',
     version: 'v119',
     date: '29/07/2026',

@@ -1,16 +1,20 @@
-import { isAdmin } from '../core/auth.js?v=131';
+import { isAdmin } from '../core/auth.js?v=135';
 import {
   fetchAdminStats,
   fetchAdminUsers,
   fetchAdminUser,
   patchAdminUser,
   deleteAdminUser,
+  fetchPatchLogsAdmin,
+  createPatchLogAdmin,
+  updatePatchLogAdmin,
+  deletePatchLogAdmin,
   fetchRedeemCodesAdmin,
   createRedeemCodeAdmin,
   updateRedeemCodeAdmin,
   deleteRedeemCodeAdmin,
-} from '../core/adminApi.js?v=131';
-import { formatRedeemReward } from '../core/redeem.js?v=131';
+} from '../core/adminApi.js?v=135';
+import { formatRedeemReward } from '../core/redeem.js?v=135';
 
 function esc(s) {
   return String(s ?? '')
@@ -60,6 +64,7 @@ export function renderAdmin(root, ctx) {
       <nav class="admin-tabs">
         <button type="button" data-tab="overview" class="${tab === 'overview' ? 'active' : ''}">Tổng quan</button>
         <button type="button" data-tab="players" class="${tab === 'players' ? 'active' : ''}">Người chơi</button>
+        <button type="button" data-tab="patchlogs" class="${tab === 'patchlogs' ? 'active' : ''}">Patch Log</button>
         <button type="button" data-tab="codes" class="${tab === 'codes' ? 'active' : ''}">Mã thưởng</button>
       </nav>
       <div class="admin-body" id="admin-body">
@@ -87,6 +92,7 @@ async function paintBody(root, ctx) {
   try {
     if (tab === 'overview') await paintOverview(body);
     else if (tab === 'players') await paintPlayers(body, ctx);
+    else if (tab === 'patchlogs') await paintPatchLogs(body, ctx);
     else if (tab === 'codes') await paintCodes(body, ctx);
   } catch (e) {
     body.innerHTML = `<p class="admin-error">${esc(e.message || 'Lỗi tải dashboard')}</p>
@@ -101,6 +107,7 @@ async function paintOverview(body) {
       <div class="admin-stat"><span class="lbl">Tài khoản</span><span class="val">${stats.users}</span></div>
       <div class="admin-stat"><span class="lbl">Có save cloud</span><span class="val">${stats.saves}</span></div>
       <div class="admin-stat"><span class="lbl">Mã đang bật</span><span class="val">${stats.codes}</span></div>
+      <div class="admin-stat"><span class="lbl">Patch Log</span><span class="val">${stats.patchLogs ?? 0}</span></div>
       <div class="admin-stat"><span class="lbl">Lượt đổi mã</span><span class="val">${stats.redemptions}</span></div>
       <div class="admin-stat warn"><span class="lbl">Bị khóa</span><span class="val">${stats.banned}</span></div>
     </div>
@@ -108,6 +115,7 @@ async function paintOverview(body) {
       <h3>Hướng dẫn nhanh</h3>
       <ul class="admin-help">
         <li>Tài khoản admin mặc định: <code>admin</code> / <code>admin123</code> (đổi bằng biến môi trường <code>ADMIN_USERNAME</code>, <code>ADMIN_PASSWORD</code> trên server).</li>
+        <li>Tab <strong>Patch Log</strong>: thêm/sửa/xóa ghi chú cập nhật, patch log mới sẽ hiện ở màn Patch Log trong game.</li>
         <li>Mã thưởng tạo ở tab <strong>Mã thưởng</strong> — người chơi đã đăng nhập đổi qua server (Guest vẫn dùng mã tĩnh trong game).</li>
         <li>Tab <strong>Người chơi</strong>: cấp LH/Vàng/Gem, khóa/mở, reset save, xóa tài khoản.</li>
       </ul>
@@ -244,6 +252,103 @@ async function paintUserDetail(el, id, ctx) {
     ctx.toast('Đã xóa user');
     selectedUserId = null;
     await paintPlayers(el.closest('.admin-body'), ctx);
+  });
+}
+
+function parseLineList(raw) {
+  return String(raw || '')
+    .split('\n')
+    .map((x) => x.trim())
+    .filter(Boolean);
+}
+
+async function paintPatchLogs(body, ctx) {
+  const logs = await fetchPatchLogsAdmin();
+  body.innerHTML = `
+    <div class="admin-panel">
+      <h3>Thêm patch log mới</h3>
+      <form class="admin-form" id="patchlog-form">
+        <label>Version <input name="version" placeholder="VD: v121" /></label>
+        <label>Ngày <input name="date" placeholder="30/07/2026" /></label>
+        <label>Tiêu đề <input name="title" required placeholder="Nâng cấp hiệu ứng chiến đấu" /></label>
+        <label>Tóm tắt <textarea name="summary" rows="3" placeholder="Mô tả ngắn"></textarea></label>
+        <label>Highlights (mỗi dòng 1 ý) <textarea name="highlights" rows="4"></textarea></label>
+        <label>Tác động tới người chơi (mỗi dòng 1 ý) <textarea name="playerImpact" rows="3"></textarea></label>
+        <label><input type="checkbox" name="active" checked /> Hiển thị công khai</label>
+        <button type="submit" class="primary">Tạo patch log</button>
+      </form>
+    </div>
+    <div class="admin-panel">
+      <h3>Patch log hiện có</h3>
+      <div class="admin-list">
+        ${
+          logs
+            .map(
+              (log) => `
+          <form class="admin-form admin-patchlog-item" data-patchlog-id="${log.id}">
+            <label>Version <input name="version" value="${esc(log.version || '')}" /></label>
+            <label>Ngày <input name="date" value="${esc(log.date || '')}" /></label>
+            <label>Slug <input name="slug" value="${esc(log.slug || '')}" /></label>
+            <label>Tiêu đề <input name="title" value="${esc(log.title || '')}" /></label>
+            <label>Tóm tắt <textarea name="summary" rows="3">${esc(log.summary || '')}</textarea></label>
+            <label>Highlights <textarea name="highlights" rows="4">${esc((log.highlights || []).join('\n'))}</textarea></label>
+            <label>Tác động <textarea name="playerImpact" rows="3">${esc((log.playerImpact || []).join('\n'))}</textarea></label>
+            <label><input type="checkbox" name="active" ${log.active ? 'checked' : ''} /> Hiển thị công khai</label>
+            <div class="admin-actions">
+              <button type="submit" class="primary">Lưu</button>
+              <button type="button" class="danger" data-del-patchlog="${log.id}">Xóa</button>
+            </div>
+          </form>`
+            )
+            .join('') || '<p class="muted">Chưa có patch log từ admin server.</p>'
+        }
+      </div>
+    </div>`;
+
+  body.querySelector('#patchlog-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    await createPatchLogAdmin({
+      version: fd.get('version'),
+      date: fd.get('date'),
+      title: fd.get('title'),
+      summary: fd.get('summary'),
+      highlights: parseLineList(fd.get('highlights')),
+      playerImpact: parseLineList(fd.get('playerImpact')),
+      active: fd.get('active') === 'on',
+    });
+    ctx.toast('Đã tạo patch log');
+    await paintPatchLogs(body, ctx);
+  });
+
+  body.querySelectorAll('[data-patchlog-id]').forEach((form) => {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = Number(form.getAttribute('data-patchlog-id'));
+      const fd = new FormData(form);
+      await updatePatchLogAdmin(id, {
+        version: fd.get('version'),
+        date: fd.get('date'),
+        slug: fd.get('slug'),
+        title: fd.get('title'),
+        summary: fd.get('summary'),
+        highlights: parseLineList(fd.get('highlights')),
+        playerImpact: parseLineList(fd.get('playerImpact')),
+        active: fd.get('active') === 'on',
+      });
+      ctx.toast('Đã lưu patch log');
+      await paintPatchLogs(body, ctx);
+    });
+  });
+
+  body.querySelectorAll('[data-del-patchlog]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = Number(btn.getAttribute('data-del-patchlog'));
+      if (!confirm('Xóa patch log này?')) return;
+      await deletePatchLogAdmin(id);
+      ctx.toast('Đã xóa patch log');
+      await paintPatchLogs(body, ctx);
+    });
   });
 }
 

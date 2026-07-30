@@ -1,18 +1,26 @@
-import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=131';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=131';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=131';
-import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=131';
-import { mapUsedCost } from './dungeon.js?v=131';
-import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=131';
-import { ParticleSystem } from '../render/particles.js?v=131';
-import { getEquippedMonsterAppearance } from './monsterSkins.js?v=131';
+import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=135';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=135';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=135';
+import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=135';
+import { mapUsedCost } from './dungeon.js?v=135';
+import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=135';
+import { ParticleSystem } from '../render/particles.js?v=135';
+import { getEquippedMonsterAppearance } from './monsterSkins.js?v=135';
+import { CombatStatsTracker } from './combatStats.js?v=135';
+import {
+  createSpawnQueue,
+  isWaveCleared,
+  unlockWaves,
+  waveBaseDelay,
+} from './combatWave.js?v=135';
 import {
   getMonsterSprite,
   getHeroSprite,
   drawSpriteAt,
-} from '../render/sprites.js?v=131';
-import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=131';
-import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=131';
+} from '../render/sprites.js?v=135';
+import { createAttackVfx, drawAttackVfx } from '../render/attackVfx.js?v=135';
+import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=135';
+import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=135';
 import {
   computeHeroAttackDamage,
   applyIncomingDamage,
@@ -48,10 +56,10 @@ import {
   ensureHeroSkillState,
   tryEnterStasisRevive,
   tickStasisRevive,
-} from './ai/skills.js?v=131';
-import { getTileModifiers, spawnMonsterStats, elementAuraActive, elementAuraTag } from './ai/tileModifiers.js?v=131';
-import { dist } from './ai/targeting.js?v=131';
-import { getHeroProfile } from './ai/profiles.js?v=131';
+} from './ai/skills.js?v=135';
+import { getTileModifiers, spawnMonsterStats, elementAuraActive, elementAuraTag } from './ai/tileModifiers.js?v=135';
+import { dist } from './ai/targeting.js?v=135';
+import { getHeroProfile } from './ai/profiles.js?v=135';
 import {
   patternForHero,
   patternForMonster,
@@ -59,7 +67,7 @@ import {
   tickAttack,
   ensureAttackState,
   resolveDisplayAnim,
-} from './ai/attackPatterns.js?v=131';
+} from './ai/attackPatterns.js?v=135';
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
@@ -171,6 +179,7 @@ export class CombatEngine {
     this.speedMul = 1;
     /** Manual pan — no auto-follow */
     this._camUserLocked = false;
+    this.stats = new CombatStatsTracker(run, this.map);
 
     this.monsters = [];
     this.heroes = [];
@@ -203,6 +212,12 @@ export class CombatEngine {
     dmg = applyIncomingDamage(hero, Math.round(dmg / (hero.tileDefMul || 1)), this.time);
     if (dmg <= 0) return 0;
     hero.hp -= dmg;
+    this.stats.recordDamage(
+      { templateId: 'boss_effect', name: text || 'Hiệu ứng hầm' },
+      hero,
+      dmg,
+      { attackerSide: 'monster', targetSide: 'hero', source: 'effect', time: this.time }
+    );
     this._float(hero.x, hero.y - 8, text || `-${dmg}`, color);
     this.particles.burst(hero.x, hero.y, color);
     if (hero.hp <= 0) {
@@ -406,6 +421,7 @@ export class CombatEngine {
       applyThornsPassive(unit, tpl.rarity >= 4 ? 0.22 : 0.18);
     }
     this.monsters.push(unit);
+    this.stats.recordMonsterSpawn(unit, { deployedInCombat: !fromSetup });
     return unit;
   }
 
@@ -464,6 +480,7 @@ export class CombatEngine {
     this.hand[monsterId] -= 1;
     if (this.hand[monsterId] <= 0) delete this.hand[monsterId];
     this.costUsed = this.aliveCost();
+    this.stats.recordDeploy(unit, this.time);
     this.particles.burst(unit.x, unit.y, unit.color || '#66bb6a');
     this._float(unit.x, unit.y - 12, `+${tpl.name}`, unit.color || '#81c784');
     this.hooks.onMonsterDeployed?.(monsterId);
@@ -496,7 +513,7 @@ export class CombatEngine {
   }
 
   _queueHeroes() {
-    this.spawnQueue = this.run.wave.map((h) => ({ ...h, spawned: false }));
+    this.spawnQueue = createSpawnQueue(this.run.wave);
   }
 
   _resize() {
@@ -941,9 +958,14 @@ export class CombatEngine {
     }
 
     this.spellCd[spellId] = spell.cooldown;
+    this.stats.recordSpell(spellId, spell, this.time);
     if (this.challengeStats) this.challengeStats.spellsCast = (this.challengeStats.spellsCast || 0) + 1;
     this.hooks.onUpdate?.(this.snapshot());
     return true;
+  }
+
+  getBattleSummary() {
+    return this.stats.finalize(this.result || 'unknown', this);
   }
 
   snapshot() {
@@ -1001,6 +1023,13 @@ export class CombatEngine {
 
   update(dt) {
     this.time += dt;
+    this.stats.recordSnapshot(this.time, {
+      treasureHp: this.treasureHp,
+      treasureMax: this.treasureMax,
+      heroesAlive: this.heroes.filter((h) => h.alive).length,
+      costUsed: this.aliveCost(),
+      costCap: this.costCap,
+    });
     Object.keys(this.spellCd).forEach((k) => {
       if (this.spellCd[k] > 0) this.spellCd[k] = Math.max(0, this.spellCd[k] - dt);
     });
@@ -1237,6 +1266,7 @@ export class CombatEngine {
       if (mod.defMul !== 1) h.tileDefMul = mod.defMul;
       else h.tileDefMul = 1;
       const terr = this.map.terrain[`${col},${row}`];
+      this.stats.recordTerrainPresence('hero', h, terr || 'NORMAL', dt);
       if (terr === 'FIRE' && Math.random() < dt * 1.2) {
         applyBurn(h, this.time, { dps: 14, duration: 1.6 });
       }
@@ -1277,6 +1307,7 @@ export class CombatEngine {
       }
       m.tileHealCut = !!mod.healCut;
       const terr = this.map.terrain[`${col},${row}`];
+      this.stats.recordTerrainPresence('monster', m, terr || 'NORMAL', dt);
       if (terr === 'FIRE' && Math.random() < dt * 1.1) {
         applyBurn(m, this.time, { dps: 14, duration: 1.8 });
       }
@@ -1420,7 +1451,9 @@ export class CombatEngine {
         }
       }
       if (this.treasureHp != null) {
-        this.treasureHp = Math.max(0, this.treasureHp - 5 * dt);
+        const tax = 5 * dt;
+        this.treasureHp = Math.max(0, this.treasureHp - tax);
+        this.stats.recordTreasureTax(m, tax, this.time);
       }
       m._rainbowAsMul = 0.7;
       return;
@@ -1479,6 +1512,7 @@ export class CombatEngine {
       const tax = 3 * dt;
       if (this.treasureHp != null) {
         this.treasureHp = Math.max(0, this.treasureHp - tax);
+        this.stats.recordTreasureTax(m, tax, this.time);
       }
       if (Math.random() < dt * 1.5) {
         this.particles.burst(m.x, m.y - 8, '#e53935');
@@ -1530,36 +1564,15 @@ export class CombatEngine {
   }
 
   _waveBaseDelay(waveIndex) {
-    const wi = waveIndex || 1;
-    let min = Infinity;
-    for (const h of this.spawnQueue) {
-      if ((h.waveIndex || 1) !== wi) continue;
-      min = Math.min(min, Number(h.spawnDelay) || 0);
-    }
-    return Number.isFinite(min) ? min : 0;
+    return waveBaseDelay(this.spawnQueue, waveIndex);
   }
 
   _isWaveCleared(waveIndex) {
-    const wi = waveIndex || 1;
-    const anyPending = this.spawnQueue.some(
-      (h) => !h.spawned && (h.waveIndex || 1) === wi
-    );
-    if (anyPending) return false;
-    return !this.heroes.some((h) => h.alive && (h.waveIndex || 1) === wi);
+    return isWaveCleared(this.spawnQueue, this.heroes, waveIndex);
   }
 
   _unlockWaves() {
-    if (!this._waveUnlocked) this._waveUnlocked = { 1: 0 };
-    let maxWave = 1;
-    for (const h of this.spawnQueue) {
-      maxWave = Math.max(maxWave, h.waveIndex || 1);
-    }
-    for (let wi = 2; wi <= maxWave; wi++) {
-      if (this._waveUnlocked[wi] != null) continue;
-      if (!this._isWaveCleared(wi - 1)) break;
-      this._waveUnlocked[wi] = this.time + 1.2;
-      this._float(this.CELL * 2, 36, `Đợt ${wi} tiến vào!`, '#ffcc80');
-    }
+    unlockWaves(this);
   }
 
   _spawnHeroes() {
@@ -1626,6 +1639,8 @@ export class CombatEngine {
         inStasis: false,
         stasisUntil: 0,
       });
+      this.stats.recordHeroSpawn(h, { waveIndex: wi });
+      this.stats.recordWaveSpawn(wi, this.time, h);
       this.particles.magic(gateX, entry.y, h.color);
       this.particles.burst(gateX, entry.y, '#81c784');
       this._float(gateX, entry.y - 24, `${h.name} vào!`, h.color);
@@ -1678,6 +1693,7 @@ export class CombatEngine {
       this._float(hero.x, hero.y, 'NỔ!', '#ff7043');
     } else {
       hero.alive = false;
+      this.stats.recordDeath(hero, { side: 'hero', time: this.time });
       this.particles.death(hero.x, hero.y, hero.color);
       this._float(hero.x, hero.y, 'Hạ!', '#fff');
       if (this.challengeStats) {
@@ -1914,9 +1930,11 @@ export class CombatEngine {
         if (this.treasureShield > 0 && this.time < this.treasureShieldUntil) {
           const absorb = Math.min(this.treasureShield, drain);
           this.treasureShield -= absorb;
+          this.stats.recordTreasureShield(absorb);
           drain -= absorb;
         }
         this.treasureHp -= drain;
+        this.stats.recordTreasureDrain(hero, drain, this.time, { dt });
         if (this.treasureHp <= 0) this.treasureHp = 0;
         if (Math.random() < dt * 10) this.particles.gold(hero.x, hero.y - 6);
       }
@@ -2115,10 +2133,10 @@ export class CombatEngine {
     ctx.restore();
   }
 
-  _heroAttack(hero, target, _pattern) {
+  _heroAttack(hero, target, pattern) {
     const elemColor =
       statusTelegraphColor(hero.skills) || hero.color || '#ef9a9a';
-    this._beam(hero, target, elemColor);
+    this._spawnAttackVfx(hero, target, pattern, 'hero', elemColor);
     hero.flash = 0.18;
     this.particles.hit(target.x, target.y, elemColor);
     if (hero.class === 'MAGE') this.particles.magic(target.x, target.y, hero.color);
@@ -2158,6 +2176,12 @@ export class CombatEngine {
       let dealt = Math.round(dmg / defMul);
       dealt = applyIncomingDamage(target, dealt, this.time);
       target.hp -= dealt;
+      this.stats.recordDamage(hero, target, dealt, {
+        attackerSide: 'hero',
+        targetSide: 'monster',
+        source: 'silence_hit',
+        time: this.time,
+      });
       reflectBase = dealt;
       target.flash = 0.2;
       if (target.stealth) {
@@ -2193,6 +2217,12 @@ export class CombatEngine {
           let dealt = Math.round(dmg / (pierce ? Math.max(0.55, mDef * 0.55) : mDef));
           dealt = applyIncomingDamage(m, dealt, this.time);
           m.hp -= dealt;
+          this.stats.recordDamage(hero, m, dealt, {
+            attackerSide: 'hero',
+            targetSide: 'monster',
+            source: 'aoe_attack',
+            time: this.time,
+          });
           reflectBase += dealt;
           m.flash = 0.15;
           if (m.stealth) {
@@ -2219,6 +2249,12 @@ export class CombatEngine {
       let dealt = Math.round(dmg / defMul);
       dealt = applyIncomingDamage(target, dealt, this.time);
       target.hp -= dealt;
+      this.stats.recordDamage(hero, target, dealt, {
+        attackerSide: 'hero',
+        targetSide: 'monster',
+        source: 'attack',
+        time: this.time,
+      });
       reflectBase = dealt;
       target.flash = 0.15;
       if (target.stealth) {
@@ -2227,6 +2263,10 @@ export class CombatEngine {
       }
       this._float(target.x, target.y, `-${dmg}`, '#ef9a9a');
       const applied = applyOnHitStatuses(hero, target, this.time, hitFlags);
+      this.stats.recordStatus(hero, target, applied, {
+        sourceSide: 'hero',
+        targetSide: 'monster',
+      });
       if (applied.includes('freeze')) {
         this.particles.frost(target.x, target.y);
         this._floatStatusOnce(target, 'freeze', 'ĐÓNG BĂNG', '#81d4fa');
@@ -2372,6 +2412,10 @@ export class CombatEngine {
       return 0;
     }
     unit.hp = Math.min(unit.maxHp, unit.hp + amount);
+    this.stats.recordHeal(unit, unit, amount, {
+      sourceSide: unit.class ? 'hero' : 'monster',
+      targetSide: unit.class ? 'hero' : 'monster',
+    });
     return amount;
   }
 
@@ -2427,6 +2471,12 @@ export class CombatEngine {
     }
 
     this.particles.death(m.x, m.y, m.color || '#fff');
+    this.stats.recordDeath(m, {
+      side: 'monster',
+      killer: killerHero,
+      killerSide: 'hero',
+      time: this.time,
+    });
 
     // Tự nổ
     if (m.passive === 'SELF_DESTRUCT' || m.skills?.includes('SELF_DESTRUCT')) {
@@ -2633,7 +2683,7 @@ export class CombatEngine {
   _monsterAttack(m, hero, pattern) {
     const elemColor =
       statusTelegraphColor(m.skills?.length ? m.skills : m.passive) || m.color || '#66bb6a';
-    this._beam(m, hero, elemColor);
+    this._spawnAttackVfx(m, hero, pattern, 'monster', elemColor);
     m.flash = 0.16;
     this.particles.hit(hero.x, hero.y, elemColor);
     let dmg = m.atk;
@@ -2720,6 +2770,12 @@ export class CombatEngine {
           splash = applyIncomingDamage(h, splash, this.time);
           splash = Math.round(splash / (h.tileDefMul || 1));
           h.hp -= splash;
+          this.stats.recordDamage(m, h, splash, {
+            attackerSide: 'monster',
+            targetSide: 'hero',
+            source: 'aoe_attack',
+            time: this.time,
+          });
           h.flash = 0.2;
           applyOnHitStatuses(m, h, this.time);
         }
@@ -2748,6 +2804,12 @@ export class CombatEngine {
       dmg = Math.round(dmg * (hero.frailMul || 1.25));
     }
     hero.hp -= dmg;
+    this.stats.recordDamage(m, hero, dmg, {
+      attackerSide: 'monster',
+      targetSide: 'hero',
+      source: 'attack',
+      time: this.time,
+    });
     hero.flash = 0.2;
     this._float(hero.x, hero.y, `-${dmg}`, '#ffab91');
     if (hero.alive && hero.hp > 0) this._propagateSoulLink(hero, dmg, '#7b6ba8');
@@ -2784,6 +2846,12 @@ export class CombatEngine {
         let splash = Math.round(dmg * 0.35);
         splash = applyIncomingDamage(h, splash, this.time);
         h.hp -= splash;
+        this.stats.recordDamage(m, h, splash, {
+          attackerSide: 'monster',
+          targetSide: 'hero',
+          source: 'splash_attack',
+          time: this.time,
+        });
         h.flash = 0.15;
       }
       this._float(hero.x, hero.y + 10, 'Cắt hồi!', '#a1887f');
@@ -2812,6 +2880,11 @@ export class CombatEngine {
 
   _float(x, y, text, color) {
     this.floatTexts.push({ x, y, text, color, ttl: 0.9 });
+  }
+
+  _spawnAttackVfx(from, to, pattern, side, color) {
+    const effects = createAttackVfx(from, to, pattern, { side, color });
+    for (const v of effects) this.vfx.push(v);
   }
 
   _beam(from, to, color) {
@@ -2981,15 +3054,7 @@ export class CombatEngine {
     }
 
     for (const v of this.vfx) {
-      if (v.type !== 'beam') continue;
-      ctx.globalAlpha = Math.min(1, v.ttl * 4);
-      ctx.strokeStyle = v.color;
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.moveTo(v.x1, v.y1);
-      ctx.lineTo(v.x2, v.y2);
-      ctx.stroke();
-      ctx.globalAlpha = 1;
+      drawAttackVfx(ctx, v);
     }
 
     for (const h of this.heroes) {

@@ -1,5 +1,5 @@
-import { COMBAT } from './constants.js?v=131';
-import { HERO_BY_ID, WAVE_PLANS, heroScaleForLevel } from './heroes.js?v=131';
+import { COMBAT } from './constants.js?v=135';
+import { HERO_BY_ID, WAVE_PLANS, heroScaleForLevel } from './heroes.js?v=135';
 
 const HARD_BOSS_BY_LEVEL = {
   5: 'hero_boss_05',

@@ -1,14 +1,15 @@
-import { CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_TITLES, getChallenge, CHALLENGE_ROLE_TAGS } from '../data/challenges.js?v=131';
-import { getChallengeMap } from '../data/mapsChallenge.js?v=131';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=131';
-import { HERO_BY_ID, assignHeroFormation } from '../data/heroes.js?v=131';
+import { CHALLENGES, CHALLENGE_BY_ID, CHALLENGE_TITLES, getChallenge, CHALLENGE_ROLE_TAGS } from '../data/challenges.js?v=135';
+import { getChallengeMap } from '../data/mapsChallenge.js?v=135';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=135';
+import { HERO_BY_ID, assignHeroFormation } from '../data/heroes.js?v=135';
 import {
   placeMaxCost,
   sanitizeLoadout,
   suggestLoadout,
   tryAddToLoadout,
   LOADOUT_POOL_MULT,
-} from './loadout.js?v=131';
+} from './loadout.js?v=135';
+import { buildRotationChallenge } from './liveOps.js?v=135';
 
 export { getChallenge, CHALLENGES, CHALLENGE_TITLES };
 
@@ -335,8 +336,10 @@ export function buildChallengeVault(playerState, ch) {
   return vault;
 }
 
-export function createChallengeRunState(playerState, challengeId) {
-  const ch = getChallenge(challengeId);
+export function createChallengeRunState(playerState, challengeRef) {
+  const isRotation = !!challengeRef && typeof challengeRef === 'object';
+  const challengeId = isRotation ? Number(challengeRef.challengeId) : Number(challengeRef);
+  const ch = isRotation ? buildRotationChallenge(challengeRef) : getChallenge(challengeId);
   if (!ch) return null;
   const map = getChallengeMap(ch.mapId);
   if (!map) return null;
@@ -390,6 +393,7 @@ export function createChallengeRunState(playerState, challengeId) {
     mode: 'challenge',
     challengeId,
     challenge: ch,
+    rotationMeta: ch.rotationMeta || null,
     map,
     rooms: [map],
     wave,

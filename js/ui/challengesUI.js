@@ -5,14 +5,23 @@ import {
   unlockHintChallenge,
   titleName,
   syncChallengeUnlocks,
-} from '../core/challenge.js?v=131';
-import { saveState } from '../core/storage.js?v=131';
-import { CHALLENGE_TITLES } from '../data/challenges.js?v=131';
+} from '../core/challenge.js?v=135';
+import {
+  ensureLiveOpsProgress,
+  getCurrentRotation,
+  getRotationEntries,
+  rotationEntryStatus,
+} from '../core/liveOps.js?v=135';
+import { saveState } from '../core/storage.js?v=135';
+import { CHALLENGE_TITLES } from '../data/challenges.js?v=135';
 
 export function renderChallenges(root, ctx) {
   const { state, go, toast, startChallenge } = ctx;
   ensureChallengeProgress(state);
+  ensureLiveOpsProgress(state);
   syncChallengeUnlocks(state);
+  const rotation = getCurrentRotation();
+  const rotationEntries = getRotationEntries(rotation);
 
   const titlesHtml = (state.titles || [])
     .map((id) => {
@@ -27,6 +36,35 @@ export function renderChallenges(root, ctx) {
         <p class="section-label">Chế độ Thử Thách</p>
         <h2 style="margin:0 0 8px;font-family:Fraunces,serif">10 ải puzzle</h2>
         <p class="muted" style="margin:0 0 16px">Mở từ ải thường ≥30. Mỗi màn chủ đề riêng, wave dài, thưởng Title độc bản.</p>
+        ${
+          rotationEntries.length
+            ? `
+        <div class="economy-guide" style="margin-bottom:16px">
+          <h3>${rotation.name}</h3>
+          <p class="muted" style="margin:0 0 10px">${rotation.blurb || ''}</p>
+          <div class="boss-picker" id="rotation-list">
+            ${rotationEntries
+              .map((entry) => {
+                const cleared = rotationEntryStatus(state, rotation.id, entry.id);
+                return `
+                  <button type="button" class="boss-card" data-rotation="${entry.id}">
+                    <div class="boss-card-top">
+                      <strong>${entry.name}</strong>
+                      ${cleared ? '<span class="boss-badge">Xong tuần</span>' : '<span class="boss-badge">Tuần này</span>'}
+                    </div>
+                    <div class="meta">${entry.blurb || entry.baseChallenge?.blurb || ''}</div>
+                    <div class="boss-spells">
+                      <span class="boss-spell">Base CH${entry.challengeId}</span>
+                      <span class="boss-spell">${entry.reward?.badgeLabel || 'Thưởng event'}</span>
+                    </div>
+                  </button>
+                `;
+              })
+              .join('')}
+          </div>
+        </div>`
+            : ''
+        }
         <div class="boss-picker" id="ch-list">
           ${CHALLENGES.map((c) => {
             const unlocked = isChallengeUnlocked(state, c.id);
@@ -58,6 +96,18 @@ export function renderChallenges(root, ctx) {
   `;
 
   root.querySelector('#btn-ch-hub').onclick = () => go('hub');
+  root.querySelectorAll('[data-rotation]').forEach((btn) => {
+    btn.onclick = () => {
+      const id = btn.getAttribute('data-rotation');
+      const entry = rotationEntries.find((item) => item.id === id);
+      if (!entry) return;
+      startChallenge?.({
+        ...entry,
+        rotationId: rotation.id,
+      });
+      go('scout');
+    };
+  });
   root.querySelectorAll('[data-ch]').forEach((btn) => {
     btn.onclick = () => {
       const id = Number(btn.getAttribute('data-ch'));

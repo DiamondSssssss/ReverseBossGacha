@@ -1,22 +1,24 @@
-import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=131';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=131';
-import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=131';
-import { CombatEngine } from '../core/combatEngine.js?v=131';
-import { saveState } from '../core/storage.js?v=131';
-import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=131';
+import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=135';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=135';
+import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=135';
+import { CombatEngine } from '../core/combatEngine.js?v=135';
+import { saveState } from '../core/storage.js?v=135';
+import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=135';
 import {
   evaluateChallengeResult,
   grantChallengeReward,
   titleName,
-} from '../core/challenge.js?v=131';
-import { loadoutPoolCost } from '../core/loadout.js?v=131';
+} from '../core/challenge.js?v=135';
+import { buildBattleReport } from '../core/combatReport.js?v=135';
+import { grantRotationReward } from '../core/liveOps.js?v=135';
+import { loadoutPoolCost } from '../core/loadout.js?v=135';
 import {
   frontierForMode,
   recordPersonalBestCost,
-} from '../data/hardMode.js?v=131';
-import { submitStageBestCost } from '../core/stageRecords.js?v=131';
-import { isLoggedIn } from '../core/auth.js?v=131';
-import { monsterSpriteUrl } from '../render/sprites.js?v=131';
+} from '../data/hardMode.js?v=135';
+import { submitStageBestCost } from '../core/stageRecords.js?v=135';
+import { isLoggedIn } from '../core/auth.js?v=135';
+import { monsterSpriteUrl } from '../render/sprites.js?v=135';
 import {
   addLoadoutWinStats,
   addMonsterDeployments,
@@ -24,7 +26,7 @@ import {
   getEquippedMonsterAppearance,
   recordHardWinWithLoadout,
   recordNormalWinWithLoadout,
-} from '../core/monsterSkins.js?v=131';
+} from '../core/monsterSkins.js?v=135';
 
 const REPLAY_REWARD_MUL = 0.35;
 
@@ -164,6 +166,12 @@ export function renderCombat(root, ctx) {
 
   let lastHandKey = '';
 
+  function goToBattleReportOrReward() {
+    ctx.lastBattleReport = buildBattleReport(run, engine);
+    if (ctx.lastBattleReport) go('battle-report');
+    else go('reward');
+  }
+
   function refreshHand(snap) {
     const key = `${JSON.stringify(snap.hand)}|${snap.selectedDeployId}|${snap.freeCost}|${snap.result || ''}`;
     if (key === lastHandKey) return;
@@ -197,6 +205,7 @@ export function renderCombat(root, ctx) {
       const ev = evaluateChallengeResult(ch, engine, { result });
       if (result === 'win' && ev.ok) {
         const reward = grantChallengeReward(state, ch);
+        const rotationReward = run.rotationMeta ? grantRotationReward(state, run) : null;
         const isReplay = !!reward.replay;
         souls = isReplay ? 0 : reward.souls || 40;
         gold = isReplay ? 0 : 20 + run.challengeId * 5;
@@ -221,11 +230,15 @@ export function renderCombat(root, ctx) {
           challengeId: ch.id,
           titleId: reward.titleId,
           titleName: titleName(reward.titleId),
+          rotationBadge: rotationReward?.badgeLabel || null,
+          rotationSouls: rotationReward?.souls || 0,
+          rotationGems: rotationReward?.gems || 0,
+          rotationTitleName: rotationReward?.titleName || '',
           unlockedSkins,
           objectivesFailed: [],
           replay: isReplay,
         };
-        go('reward');
+        goToBattleReportOrReward();
       } else {
         souls = REWARDS.LOSE_SOULS;
         state.souls += souls;
@@ -246,7 +259,7 @@ export function renderCombat(root, ctx) {
               ? 'Thắng kho nhưng trượt điều kiện phụ'
               : 'Thất bại',
         };
-        go('reward');
+        goToBattleReportOrReward();
       }
       return;
     }
@@ -331,7 +344,7 @@ export function renderCombat(root, ctx) {
         personalBest: isBest,
         unlockedSkins,
       };
-      go('reward');
+      goToBattleReportOrReward();
     } else {
       souls = REWARDS.LOSE_SOULS;
       const defeated = (engine?.heroes || []).filter((h) => !h.alive).length;
@@ -353,7 +366,7 @@ export function renderCombat(root, ctx) {
         isReplay: !!run.isReplay,
         unlockedSkins,
       };
-      go('reward');
+      goToBattleReportOrReward();
     }
   }
 
@@ -656,6 +669,20 @@ export function renderReward(root, ctx) {
       }</p>
       <div class="big-num">+${r.souls} LH</div>
       ${r.gold ? `<div class="muted">+${r.gold} Vàng</div>` : ''}
+      ${
+        r.rotationSouls || r.rotationGems || r.rotationTitleName || r.rotationBadge
+          ? `<div class="muted" style="margin-top:8px">Event: ${
+              [
+                r.rotationBadge,
+                r.rotationSouls ? `+${r.rotationSouls} LH` : '',
+                r.rotationGems ? `+${r.rotationGems} Gem` : '',
+                r.rotationTitleName ? `Title ${r.rotationTitleName}` : '',
+              ]
+                .filter(Boolean)
+                .join(' · ')
+            }</div>`
+          : ''
+      }
       ${
         (r.unlockedSkins || []).length
           ? `<div class="muted" style="margin-top:8px">Skin mới: ${(r.unlockedSkins || [])

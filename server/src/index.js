@@ -16,6 +16,11 @@ import {
   getUserAdmin,
   patchUserAdmin,
   deleteUserAdmin,
+  listPatchLogs,
+  listPatchLogsAdmin,
+  createPatchLogAdmin,
+  updatePatchLogAdmin,
+  deletePatchLogAdmin,
   listRedeemCodesAdmin,
   createRedeemCodeAdmin,
   updateRedeemCodeAdmin,
@@ -141,6 +146,10 @@ app.get('/api/players/:username', (req, res) => {
   res.json({ profile });
 });
 
+app.get('/api/patch-logs', (_req, res) => {
+  res.json({ logs: listPatchLogs({ activeOnly: true }) });
+});
+
 // ——— Admin ———
 app.get('/api/admin/stats', adminMiddleware, (_req, res) => {
   res.json({ stats: getAdminStats() });
@@ -179,6 +188,34 @@ app.delete('/api/admin/users/:id', adminMiddleware, (req, res) => {
 
 app.get('/api/admin/redeem-codes', adminMiddleware, (_req, res) => {
   res.json({ codes: listRedeemCodesAdmin() });
+});
+
+app.get('/api/admin/patch-logs', adminMiddleware, (_req, res) => {
+  res.json({ logs: listPatchLogsAdmin() });
+});
+
+app.post('/api/admin/patch-logs', adminMiddleware, (req, res) => {
+  try {
+    const log = createPatchLogAdmin(req.body || {});
+    res.json({ log });
+  } catch (e) {
+    res.status(400).json({ error: e.message || 'Không tạo được patch log' });
+  }
+});
+
+app.patch('/api/admin/patch-logs/:id', adminMiddleware, (req, res) => {
+  try {
+    const log = updatePatchLogAdmin(Number(req.params.id), req.body || {});
+    if (!log) return res.status(404).json({ error: 'Không tìm thấy patch log' });
+    res.json({ log });
+  } catch (e) {
+    res.status(400).json({ error: e.message || 'Không cập nhật được patch log' });
+  }
+});
+
+app.delete('/api/admin/patch-logs/:id', adminMiddleware, (req, res) => {
+  deletePatchLogAdmin(Number(req.params.id));
+  res.json({ ok: true });
 });
 
 app.post('/api/admin/redeem-codes', adminMiddleware, (req, res) => {

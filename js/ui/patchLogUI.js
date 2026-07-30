@@ -1,4 +1,22 @@
-import { PATCH_LOGS, latestPatchLog } from '../data/patchLog.js?v=131';
+import { PATCH_LOGS, latestPatchLog } from '../data/patchLog.js?v=135';
+import { fetchPublicPatchLogs } from '../core/patchLogApi.js?v=135';
+
+let remoteLogsCache = null;
+
+function mergedPatchLogs() {
+  const local = PATCH_LOGS || [];
+  const remote = remoteLogsCache || [];
+  const out = [...remote];
+  const seen = new Set(
+    out.map((entry) => `${entry.slug || ''}|${entry.version || ''}|${entry.title || ''}`)
+  );
+  for (const entry of local) {
+    const key = `${entry.slug || ''}|${entry.version || ''}|${entry.title || ''}`;
+    if (seen.has(key)) continue;
+    out.push(entry);
+  }
+  return out;
+}
 
 function patchCardHtml(entry, featured = false) {
   const highlights = Array.isArray(entry.highlights) ? entry.highlights.filter(Boolean) : [];
@@ -31,7 +49,8 @@ function patchCardHtml(entry, featured = false) {
 
 export function renderPatchLog(root, ctx) {
   const { go } = ctx;
-  const latest = latestPatchLog();
+  const logs = mergedPatchLogs();
+  const latest = logs[0] || latestPatchLog();
 
   root.innerHTML = `
     <div class="patchlog-page">
@@ -45,7 +64,7 @@ export function renderPatchLog(root, ctx) {
       </div>
       ${latest ? `<section class="patchlog-feature">${patchCardHtml(latest, true)}</section>` : ''}
       <section class="patchlog-list">
-        ${(PATCH_LOGS || [])
+        ${(logs || [])
           .slice(latest ? 1 : 0)
           .map((entry) => patchCardHtml(entry, false))
           .join('')}
@@ -54,4 +73,14 @@ export function renderPatchLog(root, ctx) {
   `;
 
   root.querySelector('#btn-patchlog-hub')?.addEventListener('click', () => go('hub'));
+  if (remoteLogsCache == null) {
+    fetchPublicPatchLogs()
+      .then((logs) => {
+        remoteLogsCache = Array.isArray(logs) ? logs : [];
+        renderPatchLog(root, ctx);
+      })
+      .catch(() => {
+        remoteLogsCache = [];
+      });
+  }
 }
