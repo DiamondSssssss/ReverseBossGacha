@@ -1,5 +1,5 @@
-import { CHALLENGE_TITLES, CHALLENGE_BY_ID } from '../data/challenges.js?v=135';
-import { ROTATIONS } from '../data/rotations.js?v=135';
+import { CHALLENGE_TITLES, CHALLENGE_BY_ID } from '../data/challenges.js?v=136';
+import { ROTATIONS } from '../data/rotations.js?v=136';
 
 export function ensureLiveOpsProgress(state) {
   if (!state.liveOpsProgress || typeof state.liveOpsProgress !== 'object') {

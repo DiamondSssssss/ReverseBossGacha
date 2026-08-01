@@ -1,24 +1,24 @@
-import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=135';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=135';
-import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=135';
-import { CombatEngine } from '../core/combatEngine.js?v=135';
-import { saveState } from '../core/storage.js?v=135';
-import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=135';
+import { SPELLS, REWARDS, RARITY_COLORS, MAX_STAGE } from '../data/constants.js?v=136';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=136';
+import { bossSpells, getBoss, syncUnlockedBosses } from '../data/dungeonBosses.js?v=136';
+import { CombatEngine } from '../core/combatEngine.js?v=136';
+import { saveState } from '../core/storage.js?v=136';
+import { evaluateAchievements, isGameCleared } from '../core/achievements.js?v=136';
 import {
   evaluateChallengeResult,
   grantChallengeReward,
   titleName,
-} from '../core/challenge.js?v=135';
-import { buildBattleReport } from '../core/combatReport.js?v=135';
-import { grantRotationReward } from '../core/liveOps.js?v=135';
-import { loadoutPoolCost } from '../core/loadout.js?v=135';
+} from '../core/challenge.js?v=136';
+import { buildBattleReport } from '../core/combatReport.js?v=136';
+import { grantRotationReward } from '../core/liveOps.js?v=136';
+import { loadoutPoolCost } from '../core/loadout.js?v=136';
 import {
   frontierForMode,
   recordPersonalBestCost,
-} from '../data/hardMode.js?v=135';
-import { submitStageBestCost } from '../core/stageRecords.js?v=135';
-import { isLoggedIn } from '../core/auth.js?v=135';
-import { monsterSpriteUrl } from '../render/sprites.js?v=135';
+} from '../data/hardMode.js?v=136';
+import { submitStageBestCost } from '../core/stageRecords.js?v=136';
+import { isLoggedIn } from '../core/auth.js?v=136';
+import { monsterSpriteUrl } from '../render/sprites.js?v=136';
 import {
   addLoadoutWinStats,
   addMonsterDeployments,
@@ -26,7 +26,7 @@ import {
   getEquippedMonsterAppearance,
   recordHardWinWithLoadout,
   recordNormalWinWithLoadout,
-} from '../core/monsterSkins.js?v=135';
+} from '../core/monsterSkins.js?v=136';
 
 const REPLAY_REWARD_MUL = 0.35;
 

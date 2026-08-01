@@ -1,5 +1,5 @@
-import { PATCH_LOGS, latestPatchLog } from '../data/patchLog.js?v=135';
-import { fetchPublicPatchLogs } from '../core/patchLogApi.js?v=135';
+import { PATCH_LOGS, latestPatchLog } from '../data/patchLog.js?v=136';
+import { fetchPublicPatchLogs } from '../core/patchLogApi.js?v=136';
 
 let remoteLogsCache = null;
 

@@ -1,26 +1,26 @@
-import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=135';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=135';
-import { terrainAt, isPlaceable } from '../data/maps.js?v=135';
-import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=135';
-import { mapUsedCost } from './dungeon.js?v=135';
-import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=135';
-import { ParticleSystem } from '../render/particles.js?v=135';
-import { getEquippedMonsterAppearance } from './monsterSkins.js?v=135';
-import { CombatStatsTracker } from './combatStats.js?v=135';
+import { COMBAT, SPELLS, HERO_CLASS_LABELS } from '../data/constants.js?v=136';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=136';
+import { terrainAt, isPlaceable } from '../data/maps.js?v=136';
+import { bossSpells, DEFAULT_BOSS_ID, getBoss } from '../data/dungeonBosses.js?v=136';
+import { mapUsedCost } from './dungeon.js?v=136';
+import { buildBlockedFromMap, cellCenterWorld } from './pathfinding.js?v=136';
+import { ParticleSystem } from '../render/particles.js?v=136';
+import { getEquippedMonsterAppearance } from './monsterSkins.js?v=136';
+import { CombatStatsTracker } from './combatStats.js?v=136';
 import {
   createSpawnQueue,
   isWaveCleared,
   unlockWaves,
   waveBaseDelay,
-} from './combatWave.js?v=135';
+} from './combatWave.js?v=136';
 import {
   getMonsterSprite,
   getHeroSprite,
   drawSpriteAt,
-} from '../render/sprites.js?v=135';
-import { createAttackVfx, drawAttackVfx } from '../render/attackVfx.js?v=135';
-import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=135';
-import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=135';
+} from '../render/sprites.js?v=136';
+import { createAttackVfx, drawAttackVfx } from '../render/attackVfx.js?v=136';
+import { tickHeroBrain, heroSpeedMultiplier, rebuildHeroPath, rebuildKitePath } from './ai/heroBrain.js?v=136';
+import { tickMonsterBrain, inferMonsterAi } from './ai/monsterBrain.js?v=136';
 import {
   computeHeroAttackDamage,
   applyIncomingDamage,
@@ -56,10 +56,10 @@ import {
   ensureHeroSkillState,
   tryEnterStasisRevive,
   tickStasisRevive,
-} from './ai/skills.js?v=135';
-import { getTileModifiers, spawnMonsterStats, elementAuraActive, elementAuraTag } from './ai/tileModifiers.js?v=135';
-import { dist } from './ai/targeting.js?v=135';
-import { getHeroProfile } from './ai/profiles.js?v=135';
+} from './ai/skills.js?v=136';
+import { getTileModifiers, spawnMonsterStats, elementAuraActive, elementAuraTag } from './ai/tileModifiers.js?v=136';
+import { dist } from './ai/targeting.js?v=136';
+import { getHeroProfile } from './ai/profiles.js?v=136';
 import {
   patternForHero,
   patternForMonster,
@@ -67,7 +67,7 @@ import {
   tickAttack,
   ensureAttackState,
   resolveDisplayAnim,
-} from './ai/attackPatterns.js?v=135';
+} from './ai/attackPatterns.js?v=136';
 
 function uid() {
   return Math.random().toString(36).slice(2, 10);
@@ -175,6 +175,7 @@ export class CombatEngine {
     this.cameraX = COMBAT.CAMERA_MIN_X;
     this.cameraY = 0;
     this.drawScale = 1;
+    this.drawOffsetX = 0;
     this.drawOffsetY = 40;
     this.speedMul = 1;
     /** Manual pan — no auto-follow */
@@ -502,7 +503,7 @@ export class CombatEngine {
   /** CSS pixel trên canvas → ô map (hoặc null) */
   screenToCell(cssX, cssY) {
     const scale = this.drawScale || 1;
-    const worldX = cssX / scale + this.cameraX;
+    const worldX = (cssX - (this.drawOffsetX || 0)) / scale + this.cameraX;
     const worldY = (cssY - (this.drawOffsetY || 0)) / scale + this.cameraY;
     const col = Math.floor(worldX / this.CELL);
     const row = Math.floor((worldY - this.originY) / this.CELL);
@@ -543,12 +544,18 @@ export class CombatEngine {
 
   _updateDrawLayout() {
     const contentH = this.map.rows * this.CELL + 96;
+    // Pad 2 bên khớp CAMERA_MIN_X / mép phải totalWidth — map ngắn thì căn giữa
+    const padX = 40;
+    const contentW = this.totalWidth + padX * 2;
     const marginT = 36;
     const marginB = 28;
     const avail = Math.max(120, this.viewH - marginT - marginB);
+    // Scale theo chiều cao (map dài vẫn pan ngang); chỉ căn giữa khi vừa khung
     this.drawScale = Math.min(2.2, Math.max(0.6, avail / contentH));
     const scaledH = contentH * this.drawScale;
+    const scaledW = contentW * this.drawScale;
     this.drawOffsetY = marginT + Math.max(0, (avail - scaledH) / 2);
+    this.drawOffsetX = Math.max(0, (this.viewW - scaledW) / 2);
   }
 
   _viewWorldW() {
@@ -2913,12 +2920,13 @@ export class CombatEngine {
 
     this._updateDrawLayout();
     const scale = this.drawScale;
+    const offsetX = this.drawOffsetX || 0;
     const offsetY = this.drawOffsetY;
     const CELL = this.CELL;
     const gridTop = this.originY;
 
     ctx.save();
-    ctx.translate(0, offsetY);
+    ctx.translate(offsetX, offsetY);
     ctx.scale(scale, scale);
     ctx.translate(-this.cameraX, -this.cameraY);
 

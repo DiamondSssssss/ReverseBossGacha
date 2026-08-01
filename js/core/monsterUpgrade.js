@@ -1,7 +1,7 @@
-import { MONSTER_UPGRADE } from '../data/constants.js?v=135';
-import { MONSTER_BY_ID } from '../data/monsters.js?v=135';
-import { monsterScaleForLevel } from '../data/heroes.js?v=135';
-import { saveState } from './storage.js?v=135';
+import { MONSTER_UPGRADE } from '../data/constants.js?v=136';
+import { MONSTER_BY_ID } from '../data/monsters.js?v=136';
+import { monsterScaleForLevel } from '../data/heroes.js?v=136';
+import { saveState } from './storage.js?v=136';
 
 export function getMonsterUpgradeLevel(state, monsterId) {
   return Math.max(0, Number(state.monsterUpgrades?.[monsterId]) || 0);

@@ -5,15 +5,15 @@ import {
   unlockHintChallenge,
   titleName,
   syncChallengeUnlocks,
-} from '../core/challenge.js?v=135';
+} from '../core/challenge.js?v=136';
 import {
   ensureLiveOpsProgress,
   getCurrentRotation,
   getRotationEntries,
   rotationEntryStatus,
-} from '../core/liveOps.js?v=135';
-import { saveState } from '../core/storage.js?v=135';
-import { CHALLENGE_TITLES } from '../data/challenges.js?v=135';
+} from '../core/liveOps.js?v=136';
+import { saveState } from '../core/storage.js?v=136';
+import { CHALLENGE_TITLES } from '../data/challenges.js?v=136';
 
 export function renderChallenges(root, ctx) {
   const { state, go, toast, startChallenge } = ctx;
